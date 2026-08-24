@@ -1,6 +1,6 @@
 //! Baseline benchmark grid implementations for Argon2id, scrypt, bcrypt, and PBKDF2.
 
-use crate::metrics::{compute_stats, get_hardware_info, get_process_memory_bytes};
+use crate::metrics::{compute_stats, get_hardware_info};
 use crate::schema::{BenchmarkResult, RunInfo};
 use argon2::{Algorithm, Argon2, ParamsBuilder, Version};
 use pbkdf2::hmac::Hmac;
@@ -41,9 +41,7 @@ pub fn run_argon2id_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult>
                     let _ = argon2_inst.hash_password_into(password, &salt, &mut out);
                 }
 
-                let start_mem = get_process_memory_bytes();
                 let mut durations = Vec::with_capacity(iterations as usize);
-                let mut peak_mem = start_mem;
 
                 for _ in 0..iterations {
                     let mut out = [0u8; 32];
@@ -51,13 +49,13 @@ pub fn run_argon2id_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult>
                     let _ = argon2_inst.hash_password_into(password, &salt, &mut out);
                     let elapsed = t0.elapsed();
                     durations.push(elapsed);
-                    peak_mem = peak_mem.max(get_process_memory_bytes());
                 }
 
-                let bytes_read = (mem as u64) * 1024 * (t as u64);
-                let bytes_written = (mem as u64) * 1024 * (t as u64);
+                let alloc_bytes = (mem as u64) * 1024;
+                let bytes_read = alloc_bytes * (t as u64);
+                let bytes_written = alloc_bytes * (t as u64);
 
-                let stats = compute_stats(&durations, peak_mem, bytes_read, bytes_written);
+                let stats = compute_stats(&durations, alloc_bytes, alloc_bytes, bytes_read, bytes_written);
 
                 results.push(BenchmarkResult {
                     algorithm: "argon2id".to_string(),
@@ -100,9 +98,7 @@ pub fn run_scrypt_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult> {
                     let _ = scrypt::scrypt(password, &salt, &scrypt_params, &mut out);
                 }
 
-                let start_mem = get_process_memory_bytes();
                 let mut durations = Vec::with_capacity(iterations as usize);
-                let mut peak_mem = start_mem;
 
                 for _ in 0..iterations {
                     let mut out = [0u8; 32];
@@ -110,11 +106,10 @@ pub fn run_scrypt_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult> {
                     let _ = scrypt::scrypt(password, &salt, &scrypt_params, &mut out);
                     let elapsed = t0.elapsed();
                     durations.push(elapsed);
-                    peak_mem = peak_mem.max(get_process_memory_bytes());
                 }
 
                 let mem_bytes = 128 * (r as u64) * (n as u64);
-                let stats = compute_stats(&durations, peak_mem, mem_bytes * 2, mem_bytes * 2);
+                let stats = compute_stats(&durations, mem_bytes, mem_bytes, mem_bytes, mem_bytes);
 
                 results.push(BenchmarkResult {
                     algorithm: "scrypt".to_string(),
@@ -144,19 +139,17 @@ pub fn run_bcrypt_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult> {
             let _ = bcrypt::hash(password, cost);
         }
 
-        let start_mem = get_process_memory_bytes();
         let mut durations = Vec::with_capacity(iterations as usize);
-        let mut peak_mem = start_mem;
 
         for _ in 0..iterations {
             let t0 = Instant::now();
             let _ = bcrypt::hash(password, cost);
             let elapsed = t0.elapsed();
             durations.push(elapsed);
-            peak_mem = peak_mem.max(get_process_memory_bytes());
         }
 
-        let stats = compute_stats(&durations, peak_mem, 4096 * (1 << cost), 4096 * (1 << cost));
+        // bcrypt 4 KiB L1 cache state array
+        let stats = compute_stats(&durations, 4096, 4096, 4096 * (1 << cost), 4096 * (1 << cost));
 
         results.push(BenchmarkResult {
             algorithm: "bcrypt".to_string(),
@@ -186,9 +179,7 @@ pub fn run_pbkdf2_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult> {
             pbkdf2::pbkdf2::<Hmac<Sha256>>(password, &salt, iters, &mut out).unwrap();
         }
 
-        let start_mem = get_process_memory_bytes();
         let mut durations = Vec::with_capacity(iterations as usize);
-        let mut peak_mem = start_mem;
 
         for _ in 0..iterations {
             let mut out = [0u8; 32];
@@ -196,10 +187,10 @@ pub fn run_pbkdf2_matrix(warmup: u32, iterations: u32) -> Vec<BenchmarkResult> {
             pbkdf2::pbkdf2::<Hmac<Sha256>>(password, &salt, iters, &mut out).unwrap();
             let elapsed = t0.elapsed();
             durations.push(elapsed);
-            peak_mem = peak_mem.max(get_process_memory_bytes());
         }
 
-        let stats = compute_stats(&durations, peak_mem, 64 * (iters as u64), 64 * (iters as u64));
+        // PBKDF2 64 bytes register state
+        let stats = compute_stats(&durations, 64, 64, 64 * (iters as u64), 64 * (iters as u64));
 
         results.push(BenchmarkResult {
             algorithm: "pbkdf2-sha256".to_string(),

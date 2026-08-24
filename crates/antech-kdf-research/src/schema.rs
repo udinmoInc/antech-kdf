@@ -1,6 +1,28 @@
-//! JSON & CSV schema data structures for benchmark results.
+//! JSON & CSV schema data structures for Phase B validation audit & research results.
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Measurement source classification tag.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MeasurementSource {
+    /// Directly measured from hardware/OS counters or high-res timers.
+    Measured,
+    /// Calculated from deterministic algorithm specification or memory access model.
+    Estimated,
+    /// Analytical mathematical model.
+    Modeled,
+    /// Synthetic workload simulation.
+    Simulated,
+    /// Metric cannot be measured on host environment.
+    Unavailable,
+}
+
+impl fmt::Display for MeasurementSource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 /// Hardware profile specification.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,6 +40,26 @@ pub struct RunInfo {
     pub warmup_iterations: u32,
 }
 
+/// Detailed memory breakdown distinguishing allocation tiers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RamBreakdown {
+    pub requested_allocation_bytes: u64,
+    pub resident_memory_bytes: u64,
+    pub kdf_working_memory_bytes: u64,
+    pub temporary_allocation_bytes: u64,
+    pub ram_classification: MeasurementSource,
+}
+
+/// Detailed bandwidth breakdown distinguishing cache tiers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BandwidthBreakdown {
+    pub bytes_read: u64,
+    pub bytes_written: u64,
+    pub estimated_bandwidth_gb_per_sec: f64,
+    pub cache_locality_tier: String,
+    pub bandwidth_classification: MeasurementSource,
+}
+
 /// Detailed defender performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricStats {
@@ -27,14 +69,22 @@ pub struct MetricStats {
     pub p99_ms: f64,
     pub min_ms: f64,
     pub max_ms: f64,
-    pub peak_ram_bytes: u64,
-    pub avg_ram_bytes: u64,
+    pub latency_classification: MeasurementSource,
+    pub ram: RamBreakdown,
+    pub bandwidth: BandwidthBreakdown,
     pub cpu_cycles: Option<u64>,
-    pub memory_bytes_read: u64,
-    pub memory_bytes_written: u64,
 }
 
-/// Single benchmark measurement output matching required JSON research schema.
+/// Raw individual un-aggregated measurement entry.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RawBenchmarkRecord {
+    pub algorithm: String,
+    pub iteration: u32,
+    pub duration_us: u64,
+    pub timestamp_epoch_ms: u64,
+}
+
+/// Single benchmark measurement output matching JSON research schema.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
     pub algorithm: String,
@@ -63,10 +113,16 @@ pub struct CsvBenchmarkRecord {
     pub p99_ms: f64,
     pub min_ms: f64,
     pub max_ms: f64,
-    pub peak_ram_bytes: u64,
-    pub avg_ram_bytes: u64,
-    pub memory_bytes_read: u64,
-    pub memory_bytes_written: u64,
+    pub latency_classification: String,
+    pub requested_allocation_bytes: u64,
+    pub resident_memory_bytes: u64,
+    pub kdf_working_memory_bytes: u64,
+    pub ram_classification: String,
+    pub bytes_read: u64,
+    pub bytes_written: u64,
+    pub estimated_bandwidth_gb_per_sec: f64,
+    pub cache_locality_tier: String,
+    pub bandwidth_classification: String,
 }
 
 impl From<&BenchmarkResult> for CsvBenchmarkRecord {
@@ -87,23 +143,18 @@ impl From<&BenchmarkResult> for CsvBenchmarkRecord {
             p99_ms: b.metrics.p99_ms,
             min_ms: b.metrics.min_ms,
             max_ms: b.metrics.max_ms,
-            peak_ram_bytes: b.metrics.peak_ram_bytes,
-            avg_ram_bytes: b.metrics.avg_ram_bytes,
-            memory_bytes_read: b.metrics.memory_bytes_read,
-            memory_bytes_written: b.metrics.memory_bytes_written,
+            latency_classification: b.metrics.latency_classification.to_string(),
+            requested_allocation_bytes: b.metrics.ram.requested_allocation_bytes,
+            resident_memory_bytes: b.metrics.ram.resident_memory_bytes,
+            kdf_working_memory_bytes: b.metrics.ram.kdf_working_memory_bytes,
+            ram_classification: b.metrics.ram.ram_classification.to_string(),
+            bytes_read: b.metrics.bandwidth.bytes_read,
+            bytes_written: b.metrics.bandwidth.bytes_written,
+            estimated_bandwidth_gb_per_sec: b.metrics.bandwidth.estimated_bandwidth_gb_per_sec,
+            cache_locality_tier: b.metrics.bandwidth.cache_locality_tier.clone(),
+            bandwidth_classification: b.metrics.bandwidth.bandwidth_classification.to_string(),
         }
     }
-}
-
-/// Bandwidth record for CSV export.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BandwidthRecord {
-    pub algorithm: String,
-    pub parameters: String,
-    pub memory_bytes_read: u64,
-    pub memory_bytes_written: u64,
-    pub total_bandwidth_bytes: u64,
-    pub median_latency_ms: f64,
 }
 
 /// Concurrency scaling measurement entry.
@@ -113,11 +164,14 @@ pub struct ConcurrencyResult {
     pub concurrent_requests: usize,
     pub total_peak_ram_bytes: u64,
     pub ram_per_request_bytes: u64,
-    pub median_latency_ms: f64,
-    pub p95_latency_ms: f64,
+    pub per_request_median_ms: f64,
+    pub per_request_p95_ms: f64,
+    pub per_request_p99_ms: f64,
+    pub wall_clock_batch_ms: f64,
     pub throughput_ops_per_sec: f64,
     pub queueing_delay_ms: f64,
     pub failure_count: usize,
+    pub latency_classification: MeasurementSource,
 }
 
 /// Attacker cost model measurement entry.
@@ -133,4 +187,6 @@ pub struct AttackerModelResult {
     pub gpu_simulated_parallel_guesses_per_sec: f64,
     pub max_practical_parallelism: u64,
     pub memory_bus_bottleneck: String,
+    pub cpu_throughput_classification: MeasurementSource,
+    pub gpu_throughput_classification: MeasurementSource,
 }
