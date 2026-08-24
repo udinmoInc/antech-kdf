@@ -83,7 +83,7 @@ fn main() -> Result<(), Error> {
     let config = AntechConfig::builder()
         .algorithm(Algorithm::Antech)
         .salt_length(32)           // 8 to 256 bytes validated
-        .memory_mib(24)            // 16 to 256 MiB supported
+        .memory_mib(24)            // 1 to 1024 MiB (1 GiB) supported
         .passes(3)                 // Execution passes
         .dependency_depth(700_000) // Sequential steps
         .output_length(32)         // 8 to 128 bytes digest
