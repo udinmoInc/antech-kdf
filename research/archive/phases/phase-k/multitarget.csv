@@ -1,7 +1,0 @@
-target_hashes_count,attacker_total_work_qps,amortization_factor,shared_precomputation_detected
-1,18.5,1.0,false
-10,185.0,1.0,false
-100,1850.0,1.0,false
-1000,18500.0,1.0,false
-100000,1850000.0,1.0,false
-1000000,18500000.0,1.0,false

@@ -1,6 +1,0 @@
-label,gpu_model,simulated_gpu_qps,max_parallel_threads,classification
-var-a-graph,NVIDIA RTX 4090 (24GB VRAM),18450.0,1500,MODELED
-var-b-addr,NVIDIA RTX 4090 (24GB VRAM),16200.0,1500,MODELED
-var-c-mix,NVIDIA RTX 4090 (24GB VRAM),14100.0,1500,MODELED
-var-d-tmto,NVIDIA RTX 4090 (24GB VRAM),12500.0,1500,MODELED
-var-e-combined,NVIDIA RTX 4090 (24GB VRAM),9800.0,1500,MODELED

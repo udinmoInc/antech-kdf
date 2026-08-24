@@ -1,7 +1,0 @@
-target_hashes_count,candidate_004_amortization_factor,argon2id_amortization_factor,salt_isolation_enforced
-1,1.0,1.0,true
-10,1.0,1.0,true
-100,1.0,1.0,true
-1000,1.0,1.0,true
-100000,1.0,1.0,true
-1000000,1.0,1.0,true

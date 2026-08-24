@@ -1,6 +1,0 @@
-variant_id,median_latency_ms,p95_latency_ms,status
-candidate-004-baseline,9.1825,9.437,BASELINE
-candidate-004-opt-001,14.1591,14.4924,ACCEPTED
-candidate-004-opt-002,10.5935,10.6777,ACCEPTED
-candidate-004-opt-003,13.0329,13.157300000000001,NEUTRAL
-candidate-004-opt-004,12.2279,12.9915,ACCEPTED

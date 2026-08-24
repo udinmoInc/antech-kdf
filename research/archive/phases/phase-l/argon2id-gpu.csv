@@ -1,2 +1,0 @@
-algorithm_name,gpu_model,vram_usage_mb,max_concurrent_instances,simulated_gpu_qps,kernel_p50_ms,classification
-Argon2id Baseline (64MB),NVIDIA RTX 4090 (24GB VRAM),24576,375,375.0,1000.0,MODELED

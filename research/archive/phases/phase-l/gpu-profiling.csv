@@ -1,4 +1,0 @@
-algorithm_name,global_memory_traffic_gb_s,l2_cache_hit_rate_pct,sm_occupancy_pct,registers_per_thread,warp_divergence_pct
-Argon2id Baseline (64MB),980.5,12.4,25.0,128,2.1
-Antech Variant K1 (16MB),850.2,35.8,65.0,64,38.5
-Antech Variant K2 (16MB),910.8,28.4,55.0,80,48.2

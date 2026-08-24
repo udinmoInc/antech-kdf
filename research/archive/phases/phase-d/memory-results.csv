@@ -1,6 +1,0 @@
-variant_id,working_set_bytes,status
-candidate-004-baseline,16777216,BASELINE
-candidate-004-opt-001,16777216,ACCEPTED
-candidate-004-opt-002,16777216,ACCEPTED
-candidate-004-opt-003,16777216,NEUTRAL
-candidate-004-opt-004,16777216,ACCEPTED

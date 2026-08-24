@@ -1,4 +1,0 @@
-label,gpu_simulated_qps,classification
-Argon2id Baseline (64MB),375.0,MODELED
-Variant E Normal (t=700k),9800.0,MODELED
-Variant E Deep-DAG (t=1.8M),4100.0,MODELED

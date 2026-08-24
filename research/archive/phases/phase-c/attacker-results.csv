@@ -1,3 +1,0 @@
-algorithm,parameters,ram_per_guess_bytes,compute_per_guess_ops,bandwidth_per_guess_bytes,single_cpu_guesses_per_sec,multicore_16c_guesses_per_sec,gpu_simulated_parallel_guesses_per_sec,max_practical_parallelism,memory_bus_bottleneck,cpu_throughput_classification,gpu_throughput_classification
-candidate-004 (Family D),"working_set_bytes=16777216,rounds=4,dependency_depth=200",16777216,50000,67108864,15.0,220.0,1200.0,1500,DRAM Memory Bus Bandwidth & Sequential State Chain,Measured,Modeled
-candidate-008 (Control Group),"working_set_bytes=1048576,churn=false",1048576,1000,1048576,1500.0,22000.0,24000.0,24000,"FAIL — Zero Memory Churn allows 24,000 thread GPU parallelism",Measured,Modeled

@@ -1,7 +1,0 @@
-Metric,Argon2id Baseline,Antech Variant K1,Antech Variant K2
-RAM,64 MB,16 MB,16 MB
-p50 Latency,138.20 ms,110.53 ms,108.07 ms
-16-Core CPU Attacker Speed,24.2 g/s,19.2 g/s,18.8 g/s
-GPU Attacker Speed,375.0 g/s [MODELED],7800.0 g/s [MODELED],6400.0 g/s [MODELED]
-TMTO @ 50% RAM,3.25x,4.00x,13.93x (Quad-DAG)
-Concurrency Control,Unbounded (Host Crash Risk),Strictly Bounded (128 MB),Strictly Bounded (128 MB)

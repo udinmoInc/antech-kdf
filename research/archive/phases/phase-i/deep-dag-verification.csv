@@ -1,4 +1,0 @@
-label,ram_mb,dependency_depth,passes,defender_p50_ms,defender_p95_ms,defender_p99_ms,attacker_16c_cpu_qps,gpu_simulated_qps,tmto_50pct_penalty,concurrency_status,contention_degradation_pct,satisfies_ram_target,satisfies_latency_target,satisfies_attacker_target,overall_pass
-Argon2id Baseline (64MB),64,3,1,138.2,142.5,148.1,24.2,375.0,3.25,Unbounded RAM under 1000 reqs (~1.6GB),18.2,false,true,true,false
-Variant E Normal (t=700k),16,700000,1,119.2008,120.1541,120.1541,55.36213409954527,9800.0,4.29,Bounded RAM (128MB budget),7.55,true,true,false,false
-Variant E Deep-DAG (t=1.8M),16,1800000,1,262.4104,263.23069999999996,263.23069999999996,27.306662006329685,4100.0,5.12,Bounded RAM (128MB budget),8.1,true,false,false,false

@@ -1,2 +1,0 @@
-algorithm_name,gpu_model,vram_usage_mb,max_concurrent_instances,simulated_gpu_qps,kernel_p50_ms,quad_dag_memory_stall_pct,classification
-Antech Variant K2 (16MB),NVIDIA RTX 4090 (24GB VRAM),23961,1500,6400.0,234.3,48.2,MODELED

@@ -1,5 +1,0 @@
-label,gpu_model,simulated_gpu_qps,max_parallel_threads,vram_usage_gb,classification
-variant-k1-parallelism-reduction,NVIDIA RTX 4090 (24GB VRAM),7800.0,1500,23.4,MODELED
-variant-k2-quad-tmto,NVIDIA RTX 4090 (24GB VRAM),6400.0,1500,23.4,MODELED
-variant-k3-gpu-unfriendly,NVIDIA RTX 4090 (24GB VRAM),4200.0,1500,23.4,MODELED
-variant-k4-sha512-mixing,NVIDIA RTX 4090 (24GB VRAM),7100.0,1500,23.4,MODELED

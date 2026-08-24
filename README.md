@@ -15,6 +15,51 @@ Antech KDF explores candidate constructions designed to operate within a **16 MB
 
 ---
 
+## 🎨 Cryptographic Engine Architecture
+
+```mermaid
+graph TD
+    subgraph Input ["1. Input Credential Binding"]
+        PWD["Password String"]
+        SALT["Salt (16 bytes)"]
+        PARAM["Params (m=16MB, t=650k)"]
+    end
+
+    subgraph Seed ["2. Domain-Separated Seed Expansion"]
+        SHA1["SHA-256 Domain Separator"]
+        SEED["256-bit Initial Seed"]
+    end
+
+    subgraph Buffer ["3. 16 MB Memory Buffer Filling"]
+        MEM["Contiguous 16 MB Buffer (524,288 Blocks)"]
+    end
+
+    subgraph Execution ["4. State Evolution & Dependency Mixing"]
+        K1["Variant K1: Dynamic S-Box Feedback"]
+        K2["Variant K2: Quad-Node TMTO Graph"]
+        ARX["4-Round ARX Permutation"]
+    end
+
+    subgraph Output ["5. Hash Encoding"]
+        FINAL["SHA-256 Final Extraction"]
+        FMT["$antech$v1$m=16384,t=650000..."]
+    end
+
+    PWD --> SHA1
+    SALT --> SHA1
+    PARAM --> SHA1
+    SHA1 --> SEED
+    SEED --> MEM
+    MEM --> K1
+    MEM --> K2
+    K1 --> ARX
+    K2 --> ARX
+    ARX --> FINAL
+    FINAL --> FMT
+```
+
+---
+
 ## 🚦 Research Status & Implementation State
 
 > [!CAUTION]
@@ -22,14 +67,17 @@ Antech KDF explores candidate constructions designed to operate within a **16 MB
 
 * **Implemented (Stable API)**: The Rust crate [`antech-kdf`](crates/antech-kdf) provides the public interface (`hash`, `verify`, `needs_rehash`).
 * **Experimental Core**: Candidate-004 variants (**Variant K1** and **Variant K2**) reside in [`crates/antech-kdf-research`](crates/antech-kdf-research).
-* **Current Status Summary**: See [`RESEARCH_STATUS.md`](RESEARCH_STATUS.md) for active research results.
+* **Paper-Style Research Documentation**: See [`research/README.md`](research/README.md) for the 7-chapter research paper.
 
 ---
 
-## 📊 Measured vs Modeled Terminology
+## 📊 Measured Benchmark Summary
 
-* **`MEASURED`**: Physical benchmarking executed on hardware devices (e.g. 16-core CPU cracking throughput of **19.2 g/s** for Variant K1 and **18.8 g/s** for Variant K2).
-* **`MODELED`**: Calculated spatial allocation limits or theoretical memory bounds.
+| Algorithm / Variant | Memory Footprint | Defender p50 Latency | 16-Core CPU Attacker Speed | Metric Classification |
+| :--- | :--- | :--- | :--- | :--- |
+| **Argon2id Baseline** | 64 MB | 138.20 ms | 24.20 guesses/sec | **MEASURED** |
+| **Antech Variant K1** | 16 MB | 108.00 ms | 19.20 guesses/sec | **MEASURED** |
+| **Antech Variant K2** | 16 MB | 112.00 ms | 18.80 guesses/sec | **MEASURED** |
 
 ---
 
@@ -41,9 +89,6 @@ An interactive single-file browser simulator comparing Argon2id vs Antech KDF un
 
 ## 🛠️ Building & Running Benchmarks
 
-### Prerequisites
-* Rust 1.70+ (`cargo`)
-
 ### Build Workspace
 
 ```bash
@@ -52,21 +97,10 @@ cd antech-kdf
 cargo build --release
 ```
 
-### Run CPU Attacker & Research Benchmarks
+### Run Research Benchmark Suite
 
 ```bash
-# Run Phase K Attacker Throughput Reduction Benchmark
-cargo run --release -p antech-kdf-cli -- benchmark --phase-k --output research/archive/phases/phase-k
-
-# Run Fair Argon2id vs Antech Comparison
-cargo run --release -p antech-kdf-cli -- benchmark --final-comparison --output research/archive/phases/final-comparison
-```
-
-### Run CUDA GPU Benchmark
-
-```bash
-# Run CUDA GPU Attacker Benchmark
-cargo run --release -p antech-kdf-cli -- benchmark --phase-m --output research/archive/phases/phase-m
+cargo run --release -p antech-kdf-cli -- benchmark --output research/data
 ```
 
 ---
@@ -74,20 +108,11 @@ cargo run --release -p antech-kdf-cli -- benchmark --phase-m --output research/a
 ## 📖 Architecture & Documentation
 
 * [`ARCHITECTURE.md`](ARCHITECTURE.md): Component layout and system design.
-* [`RESEARCH_STATUS.md`](RESEARCH_STATUS.md): Current active benchmark results.
-* [`research/gpu/README.md`](research/gpu/README.md): CUDA GPU attacker specifications and hardware taxonomy.
-* [`research/archive/phases/`](research/archive/phases/): Historical Phase A through Phase M research reports and CSV datasets.
-
----
-
-## 🤝 Contributing
-
-Feedback, cryptanalysis, and contributions are welcome! Please review [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`SECURITY.md`](SECURITY.md).
+* [`research/README.md`](research/README.md): 7-chapter paper-style research documentation.
+* [`research/archive/phase-history.md`](research/archive/phase-history.md): Historical Phase A–M development progression.
 
 ---
 
 ## 📄 License
 
-Licensed under either of:
-* Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+Licensed under either of Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE)) or MIT license ([LICENSE-MIT](LICENSE-MIT)).

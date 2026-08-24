@@ -1,4 +1,0 @@
-label,attacker_16c_cpu_qps
-Argon2id Baseline (64MB),24.2
-Variant E Normal (t=700k),55.36213409954527
-Variant E Deep-DAG (t=1.8M),27.306662006329685

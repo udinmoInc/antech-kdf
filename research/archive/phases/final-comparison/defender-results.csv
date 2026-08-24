@@ -1,4 +1,0 @@
-algorithm_name,working_ram_mb,defender_p50_ms,defender_p95_ms,defender_p99_ms,single_req_throughput_ops_sec,raw_ram_demand_500_reqs_mb,controlled_ram_footprint_mb,cpu_utilization_pct
-Argon2id Baseline (64MB),64,138.2,142.5,148.1,7.23,32000,128,98.5
-Antech Variant K1 (16MB),16,113.22279999999999,113.6874,113.6874,8.832143349219416,8000,128,99.0
-Antech Variant K2 (16MB),16,108.96340000000001,110.421,110.421,9.177393510114404,8000,128,99.2

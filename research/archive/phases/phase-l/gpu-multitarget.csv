@@ -1,7 +1,0 @@
-target_hashes_count,gpu_batch_throughput_qps,amortization_factor,shared_precomputation_detected
-1,6400.0,1.0,false
-10,64000.0,1.0,false
-100,640000.0,1.0,false
-1000,6400000.0,1.0,false
-100000,640000000.0,1.0,false
-1000000,6400000000.0,1.0,false

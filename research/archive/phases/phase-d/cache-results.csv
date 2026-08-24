@@ -1,6 +1,0 @@
-variant_id,cache_locality_tier
-candidate-004-baseline,L3 Cache Hit (256KB-16MB)
-candidate-004-opt-001,L3 Cache Hit (256KB-16MB)
-candidate-004-opt-002,L3 Cache Hit (256KB-16MB)
-candidate-004-opt-003,L3 Cache Hit (256KB-16MB)
-candidate-004-opt-004,L3 Cache Hit (256KB-16MB)
