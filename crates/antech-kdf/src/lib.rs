@@ -87,10 +87,7 @@ pub fn hash(password: impl AsRef<[u8]>) -> Result<String, Error> {
 /// assert_eq!(verify("my password", &encoded).unwrap(), true);
 /// assert_eq!(verify("wrong password", &encoded).unwrap(), false);
 /// ```
-pub fn verify(
-    password: impl AsRef<[u8]>,
-    encoded_hash: impl AsRef<str>,
-) -> Result<bool, Error> {
+pub fn verify(password: impl AsRef<[u8]>, encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     antech_kdf_core::core_verify(password.as_ref(), encoded_hash.as_ref()).map_err(Into::into)
 }
 
@@ -102,9 +99,7 @@ pub fn verify(
 /// let encoded = hash("my password").unwrap();
 /// assert_eq!(needs_rehash(&encoded).unwrap(), false);
 /// ```
-pub fn needs_rehash(
-    encoded_hash: impl AsRef<str>,
-) -> Result<bool, Error> {
+pub fn needs_rehash(encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     antech_kdf_core::core_needs_rehash(encoded_hash.as_ref()).map_err(Into::into)
 }
 

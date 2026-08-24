@@ -1,0 +1,4 @@
+Algorithm Name,GPU Hardware,Per-Instance VRAM,Max CUDA Parallel Threads,Execution Status
+Argon2id Baseline,NVIDIA RTX 3050 (8GB),64 MB,125 threads,UNAVAILABLE (NO NVCC COMPILER)
+Antech Variant K1,NVIDIA RTX 3050 (8GB),16 MB,500 threads,UNAVAILABLE (NO NVCC COMPILER)
+Antech Variant K2,NVIDIA RTX 3050 (8GB),16 MB,500 threads,UNAVAILABLE (NO NVCC COMPILER)

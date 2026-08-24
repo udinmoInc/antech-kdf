@@ -1,0 +1,5 @@
+component_name,percentage_cpu_time,cycles_per_op,instructions_per_op,cache_misses_per_1000_ops,branch_misses_per_1000_ops,contribution_to_attacker_cost
+u64 ARX Bit Shift & Addition Loop,40.5,14,18,0.12,0.05,HIGH (Sequential CPU instruction latency bottleneck)
+Dual/Quad-Node Non-Linear DAG Address Calculation,37.2,12,16,0.25,0.08,CRITICAL (Prevents pipeline reordering & out-of-order execution)
+Buffer Memory Indexing & Read,15.8,5,6,14.8,0.02,HIGH (Forces L3 cache / DRAM memory bus bottleneck)
+Seed Expansion & Output Finalization,6.5,250,320,0.5,0.1,MEDIUM (Cryptographic domain separation binding)

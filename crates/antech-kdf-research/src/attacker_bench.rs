@@ -18,7 +18,9 @@ pub struct RealAttackerBenchResult {
 /// Runs empirical multi-core CPU candidate-password evaluation across 1..16 threads.
 pub fn run_real_attacker_benchmarks() -> Vec<RealAttackerBenchResult> {
     let worker_counts = [1, 2, 4, 8, 16];
-    let candidate_passwords: Vec<String> = (0..200).map(|i| format!("candidate_password_{}", i)).collect();
+    let candidate_passwords: Vec<String> = (0..200)
+        .map(|i| format!("candidate_password_{}", i))
+        .collect();
     let target_hash = antech_kdf::hash("candidate_password_199").unwrap();
 
     let mut results = Vec::new();

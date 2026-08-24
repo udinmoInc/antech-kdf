@@ -35,10 +35,26 @@ pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, FormatError> {
         let val_str = sub_parts.next().ok_or(FormatError::InvalidEncoding)?;
 
         match key {
-            "m" => memory_kib = val_str.parse().map_err(|_| FormatError::InvalidParameter("m".to_string()))?,
-            "t" => time_cost = val_str.parse().map_err(|_| FormatError::InvalidParameter("t".to_string()))?,
-            "p" => parallelism = val_str.parse().map_err(|_| FormatError::InvalidParameter("p".to_string()))?,
-            "bw" => bandwidth_target = val_str.parse().map_err(|_| FormatError::InvalidParameter("bw".to_string()))?,
+            "m" => {
+                memory_kib = val_str
+                    .parse()
+                    .map_err(|_| FormatError::InvalidParameter("m".to_string()))?
+            }
+            "t" => {
+                time_cost = val_str
+                    .parse()
+                    .map_err(|_| FormatError::InvalidParameter("t".to_string()))?
+            }
+            "p" => {
+                parallelism = val_str
+                    .parse()
+                    .map_err(|_| FormatError::InvalidParameter("p".to_string()))?
+            }
+            "bw" => {
+                bandwidth_target = val_str
+                    .parse()
+                    .map_err(|_| FormatError::InvalidParameter("bw".to_string()))?
+            }
             _ => return Err(FormatError::InvalidParameter(key.to_string())),
         }
     }

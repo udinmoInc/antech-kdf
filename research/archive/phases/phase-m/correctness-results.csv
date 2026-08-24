@@ -1,0 +1,7 @@
+algorithm_name,test_vectors_count,matches_count,status
+Antech Variant K1 (16MB),10,10,PASS
+Antech Variant K2 (16MB),10,10,PASS
+Antech Variant K1 (16MB),50,50,PASS
+Antech Variant K2 (16MB),50,50,PASS
+Antech Variant K1 (16MB),100,100,PASS
+Antech Variant K2 (16MB),100,100,PASS

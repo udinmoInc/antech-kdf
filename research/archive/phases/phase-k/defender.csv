@@ -1,0 +1,4 @@
+variant-k1-parallelism-reduction,112.76063333333333
+variant-k2-quad-tmto,111.4823
+variant-k3-gpu-unfriendly,109.08086666666667
+variant-k4-sha512-mixing,93.31423333333333

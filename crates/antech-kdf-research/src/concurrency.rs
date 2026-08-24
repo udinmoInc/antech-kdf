@@ -60,13 +60,24 @@ pub fn run_concurrency_benchmarks() -> Vec<ConcurrencyResult> {
         let throughput = total_ops / batch_sec;
 
         let lat_vec = latencies.lock().unwrap();
-        let mut millis: Vec<f64> = lat_vec.iter().map(|d: &Duration| d.as_secs_f64() * 1000.0).collect();
+        let mut millis: Vec<f64> = lat_vec
+            .iter()
+            .map(|d: &Duration| d.as_secs_f64() * 1000.0)
+            .collect();
         millis.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let len = millis.len();
         let per_req_median = if len > 0 { millis[len / 2] } else { 0.0 };
-        let per_req_p95 = if len > 0 { millis[((len as f64 * 0.95) as usize).min(len - 1)] } else { 0.0 };
-        let per_req_p99 = if len > 0 { millis[((len as f64 * 0.99) as usize).min(len - 1)] } else { 0.0 };
+        let per_req_p95 = if len > 0 {
+            millis[((len as f64 * 0.95) as usize).min(len - 1)]
+        } else {
+            0.0
+        };
+        let per_req_p99 = if len > 0 {
+            millis[((len as f64 * 0.99) as usize).min(len - 1)]
+        } else {
+            0.0
+        };
 
         let queueing_delay = (per_req_p95 - per_req_median).max(0.0);
 

@@ -42,5 +42,10 @@ fn bench_concurrency(c: &mut Criterion) {
     }
 }
 
-criterion_group!(benches, bench_single_hash, bench_single_verify, bench_concurrency);
+criterion_group!(
+    benches,
+    bench_single_hash,
+    bench_single_verify,
+    bench_concurrency
+);
 criterion_main!(benches);

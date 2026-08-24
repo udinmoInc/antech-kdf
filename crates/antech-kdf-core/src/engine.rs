@@ -17,11 +17,7 @@ use zeroize::Zeroizing;
 /// Internal engine trait for research KDF implementations.
 pub(crate) trait KdfEngine {
     /// Derive a secret digest of standard length from input password, salt, and parameters.
-    fn derive(
-        password: &[u8],
-        salt: &[u8],
-        params: &InternalParams,
-    ) -> Result<Vec<u8>, CoreError>;
+    fn derive(password: &[u8], salt: &[u8], params: &InternalParams) -> Result<Vec<u8>, CoreError>;
 }
 
 /// Temporary experimental research placeholder engine.
@@ -30,11 +26,7 @@ pub(crate) trait KdfEngine {
 pub struct PlaceholderKdfEngine;
 
 impl KdfEngine for PlaceholderKdfEngine {
-    fn derive(
-        password: &[u8],
-        salt: &[u8],
-        params: &InternalParams,
-    ) -> Result<Vec<u8>, CoreError> {
+    fn derive(password: &[u8], salt: &[u8], params: &InternalParams) -> Result<Vec<u8>, CoreError> {
         params.validate()?;
 
         // Allocate working memory buffer based on parameters
@@ -45,8 +37,16 @@ impl KdfEngine for PlaceholderKdfEngine {
 
         // 1. Initial seed pass combining password + salt
         for (i, byte) in mut_slice.iter_mut().enumerate() {
-            let pass_byte = if !password.is_empty() { password[i % password.len()] } else { 0 };
-            let salt_byte = if !salt.is_empty() { salt[i % salt.len()] } else { 0 };
+            let pass_byte = if !password.is_empty() {
+                password[i % password.len()]
+            } else {
+                0
+            };
+            let salt_byte = if !salt.is_empty() {
+                salt[i % salt.len()]
+            } else {
+                0
+            };
             *byte = pass_byte ^ salt_byte ^ ((i & 0xFF) as u8);
         }
 

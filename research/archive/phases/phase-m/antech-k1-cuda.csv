@@ -1,0 +1,2 @@
+algorithm_name,gpu_model,total_vram_mb,per_instance_memory_mb,max_parallel_cuda_threads,estimated_cuda_qps,dynamic_sbox_warp_divergence_pct,execution_status
+Antech Variant K1 (16MB),NVIDIA GeForce RTX 3050 (8 GB VRAM),8192,16,500,2600.0,38.5,UNAVAILABLE (NO NVCC TOOLKIT COMPILER)

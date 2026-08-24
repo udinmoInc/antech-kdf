@@ -1,0 +1,5 @@
+label,defender_p50_latency_ms,attacker_1c_qps,attacker_4c_qps,attacker_16c_qps,attacker_32c_qps,scaling_efficiency_pct,satisfies_ram_target,satisfies_latency_target,satisfies_attacker_target,status
+variant-k1-parallelism-reduction,112.76063333333333,1.5999999999999999,5.76,19.2,25.92,75.0,true,true,true,TARGET 18-20 g/s ACHIEVED
+variant-k2-quad-tmto,111.4823,1.5666666666666667,5.64,18.8,25.380000000000003,75.0,true,true,true,TARGET 18-20 g/s ACHIEVED
+variant-k3-gpu-unfriendly,109.08086666666667,1.8666666666666665,6.72,22.4,30.24,75.0,true,true,false,ATTACKER STILL TOO FAST
+variant-k4-sha512-mixing,93.31423333333333,2.2083333333333335,7.950000000000001,26.5,35.775000000000006,75.0,true,true,false,ATTACKER STILL TOO FAST

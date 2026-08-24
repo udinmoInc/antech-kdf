@@ -76,7 +76,8 @@ pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
             multicore_16c_guesses_per_sec: 22_000.0,
             gpu_simulated_parallel_guesses_per_sec: 24_000.0, // 24 GB VRAM / 1 MB = 24,000 threads (Attacker win)
             max_practical_parallelism: 24_000,
-            memory_bus_bottleneck: "FAIL — Low RAM without bandwidth churn allows massive GPU parallelism".to_string(),
+            memory_bus_bottleneck:
+                "FAIL — Low RAM without bandwidth churn allows massive GPU parallelism".to_string(),
             cpu_throughput_classification: MeasurementSource::Measured,
             gpu_throughput_classification: MeasurementSource::Modeled,
         },

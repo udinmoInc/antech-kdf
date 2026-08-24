@@ -1,0 +1,2 @@
+algorithm_name,gpu_model,total_vram_mb,per_instance_memory_mb,max_parallel_cuda_threads,estimated_cuda_qps,execution_status
+Argon2id Baseline (64MB),NVIDIA GeForce RTX 3050 (8 GB VRAM),8192,64,125,125.0,UNAVAILABLE (NO NVCC TOOLKIT COMPILER)

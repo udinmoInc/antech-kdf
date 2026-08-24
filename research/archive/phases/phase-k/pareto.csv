@@ -1,0 +1,6 @@
+label,ram_mb,defender_latency_ms,attacker_16c_cpu_qps,defender_cost_multiplier,attacker_cost_multiplier,satisfies_ram_target,satisfies_latency_target,satisfies_attacker_target,pareto_status
+Argon2id Baseline Matrix (64MB),64,138.2,24.2,1.0,1.0,false,true,true,BASELINE
+Variant K1 (Parallelism Reduction),16,108.0,19.2,1.28,1.26,true,true,true,PARETO-OPTIMAL / TARGET ACHIEVED
+Variant K2 (Stronger Quad-TMTO),16,112.0,18.8,1.23,1.29,true,true,true,PARETO-OPTIMAL / TARGET ACHIEVED
+Variant K3 (GPU Unfriendly),16,115.0,22.4,1.2,1.08,true,true,false,ATTACKER-STILL-TOO-FAST
+Variant K4 (Sha512 Mixing),16,100.0,26.5,1.38,0.91,true,true,false,ATTACKER-STILL-TOO-FAST

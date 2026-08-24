@@ -1,0 +1,5 @@
+scenario,argon2id_degradation_pct,antech_k1_degradation_pct,antech_k2_degradation_pct
+Isolated Execution,0.0,0.0,0.0
+Unrelated CPU-Heavy Neighbor Workload,4.2,2.1,2.15
+Unrelated Memory-Heavy DRAM Churn Neighbor Workload,18.2,6.48,6.7
+Combined CPU + Memory Contention Neighbor Workload,22.5,8.55,8.85

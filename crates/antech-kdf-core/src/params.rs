@@ -20,10 +20,10 @@ impl InternalParams {
     /// Recommended default parameters for current production version.
     pub fn current_parameters() -> Self {
         Self {
-            memory_kib: 65536,    // 64 MiB low-RAM footprint
-            time_cost: 3,         // 3 iterations
-            parallelism: 1,       // Single-lane sequential execution
-            bandwidth_target: 100,// 100 MB/s sustained churn target
+            memory_kib: 65536,     // 64 MiB low-RAM footprint
+            time_cost: 3,          // 3 iterations
+            parallelism: 1,        // Single-lane sequential execution
+            bandwidth_target: 100, // 100 MB/s sustained churn target
         }
     }
 
