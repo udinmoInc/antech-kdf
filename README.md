@@ -1,96 +1,47 @@
 # Antech KDF
 
-> **An experimental bandwidth-hard, low-RAM password hashing research construction designed for resource-constrained servers and microservices.**
+Antech KDF is an experimental key derivation function research project investigating whether password hashing can be made significantly more memory-efficient for small servers without sacrificing resistance to offline password-guessing attacks.
 
-[![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://www.rust-lang.org)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](#license)
+## Why
 
----
+Standard memory-hard password functions like Argon2id generally require **64 MB of working memory** per verification attempt to provide robust security against GPU and ASIC cracking. On small virtual private servers (such as entry-level 1 GB VPS instances) or containerized microservices, concurrent authentication bursts can quickly saturate available host RAM. Under heavy load, memory exhaustion triggers Out-Of-Memory (OOM) kernel process termination, causing authentication outages.
 
-## 🔍 What is Antech KDF?
+Simply reducing memory allocations in conventional KDFs proportionally lowers the cost for offline password attackers. Antech investigates whether candidate constructions operating within a **16 MB memory footprint**—achieving a **4x server memory reduction**—can maintain offline attacker costs comparable to or higher than standard 64 MB Argon2id configurations.
 
-**Antech KDF** is an open-source cryptography research project investigating low-resource password hashing algorithms. Standard memory-hard functions like **Argon2id** require **64 MB of RAM** per password verification. On small virtual servers (such as a 1GB VPS or containerized microservice), concurrent login bursts can exceed host RAM and trigger Out-Of-Memory (OOM) process termination.
+## Current Research
 
-Antech KDF explores candidate constructions designed to operate within a **16 MB memory footprint** per verification while evaluating trade-offs in defender latency, CPU attacker throughput, TMTO recomputation penalties, and DRAM bus contention.
+The project currently evaluates two experimental variants of Candidate-004:
 
----
+* **Variant K1 (Parallelism Reduction)**: Incorporates candidate-dependent dynamic state feedback into the ARX mixing step to induce SIMD vector divergence and warp execution stalls across parallel password guessing threads.
+* **Variant K2 (Quad-Node TMTO Graph)**: Implements a 4-way directed acyclic memory graph reading 4 pseudo-random blocks per step, enforcing a steep $O((N/M)^4)$ recomputation penalty against low-memory attackers.
 
-## 🎨 Cryptographic Engine Architecture
+## Results
 
-```mermaid
-graph TD
-    subgraph Input ["1. Input Credential Binding"]
-        PWD["Password String"]
-        SALT["Salt (16 bytes)"]
-        PARAM["Params (m=16MB, t=650k)"]
-    end
-
-    subgraph Seed ["2. Domain-Separated Seed Expansion"]
-        SHA1["SHA-256 Domain Separator"]
-        SEED["256-bit Initial Seed"]
-    end
-
-    subgraph Buffer ["3. 16 MB Memory Buffer Filling"]
-        MEM["Contiguous 16 MB Buffer (524,288 Blocks)"]
-    end
-
-    subgraph Execution ["4. State Evolution & Dependency Mixing"]
-        K1["Variant K1: Dynamic S-Box Feedback"]
-        K2["Variant K2: Quad-Node TMTO Graph"]
-        ARX["4-Round ARX Permutation"]
-    end
-
-    subgraph Output ["5. Hash Encoding"]
-        FINAL["SHA-256 Final Extraction"]
-        FMT["$antech$v1$m=16384,t=650000..."]
-    end
-
-    PWD --> SHA1
-    SALT --> SHA1
-    PARAM --> SHA1
-    SHA1 --> SEED
-    SEED --> MEM
-    MEM --> K1
-    MEM --> K2
-    K1 --> ARX
-    K2 --> ARX
-    ARX --> FINAL
-    FINAL --> FMT
-```
-
----
-
-## 🚦 Research Status & Implementation State
-
-> [!CAUTION]
-> **Research Notice**: Antech KDF is an experimental research project under active cryptanalysis audit. It is **NOT** production-ready, and experimental candidate variants are not connected to the stable public hashing API.
-
-* **Implemented (Stable API)**: The Rust crate [`antech-kdf`](crates/antech-kdf) provides the public interface (`hash`, `verify`, `needs_rehash`).
-* **Experimental Core**: Candidate-004 variants (**Variant K1** and **Variant K2**) reside in [`crates/antech-kdf-research`](crates/antech-kdf-research).
-* **Measured Benchmark Results**: See [Chapter 5: Measured Results](research/05-results.md) and [Chapter 7: Future Work](research/07-future-work.md).
-* **7-Chapter Research Paper**: See [`research/README.md`](research/README.md).
-
----
-
-## 📊 Measured Benchmark Summary
+The table below summarizes measured defender verification latencies and 16-core CPU offline cracking throughput from reference benchmarks:
 
 | Algorithm / Variant | Memory Footprint | Defender p50 Latency | 16-Core CPU Attacker Speed | Metric Classification |
-| :--- | :--- | :--- | :--- | :--- |
-| **Argon2id Baseline** | 64 MB | 138.20 ms | 24.20 guesses/sec | **MEASURED** |
-| **Antech Variant K1** | 16 MB | 108.00 ms | 19.20 guesses/sec | **MEASURED** |
-| **Antech Variant K2** | 16 MB | 112.00 ms | 18.80 guesses/sec | **MEASURED** |
+| :--- | :---: | :---: | :---: | :--- |
+| **Argon2id Baseline** | 64 MB | 138.2 ms | 24.2 guesses/sec | **MEASURED** |
+| **Antech Variant K1** | 16 MB | 108.0 ms | 19.2 guesses/sec | **MEASURED** |
+| **Antech Variant K2** | 16 MB | 112.0 ms | 18.8 guesses/sec | **MEASURED** |
 
----
+*Note: Measured CPU throughput numbers reflect offline password-guessing performance on a reference 16-core x86 host; they do not by themselves establish overall security equivalence across all hardware architectures.*
 
-## 🎮 Interactive Browser Simulator
+## Security Status
 
-An interactive single-file browser simulator comparing Argon2id vs Antech KDF under real-world server workloads is available at [`index.html`](index.html).
+This project is an **experimental research construction** under active evaluation.
 
----
+* **Not for production use**: The experimental candidate variants are not connected to the stable public API and should not be used for production password storage.
+* **Unmeasured GPU Execution**: GPU spatial memory bounds have been modeled, but physical CUDA execution throughput remains unmeasured due to host build environment limits.
+* **Cryptographic Audit Required**: The construction has not undergone independent third-party peer review or formal security reductions.
 
-## 🛠️ Building & Running Benchmarks
+## Research
 
-### Build Workspace
+Detailed technical design, adversarial cost analysis, time-memory trade-off bounds, and methodology documentation are available under [Research and Evaluation](./research/).
+
+## Build
+
+Building the project workspace requires Rust 1.70 or newer:
 
 ```bash
 git clone https://github.com/udinmoInc/antech-kdf.git
@@ -98,24 +49,14 @@ cd antech-kdf
 cargo build --release
 ```
 
-### Run Research Benchmark Suite
+## Benchmarks
+
+To execute the research benchmark suite and export dataset CSV files to `research/data/`:
 
 ```bash
 cargo run --release -p antech-kdf-cli -- benchmark --output research/data
 ```
 
----
-
-## 📖 System Architecture & Documentation
-
-* [**System Architecture & Layering**](docs/architecture.md): Component layout, crate taxonomy, and memory allocation sequence flows.
-* [**Developer API Guide**](docs/api.md): Developer guide, Rust snippets, error handling, and C ABI FFI bindings.
-* [**Hash String Format**](docs/format.md): `$antech$v1$...` character encoding specification.
-* [**Adversarial Threat Model**](docs/threat-model.md): Multicancer CPU, GPU spatial bounds, TMTO DAG penalties, and cloud denial-of-service protections.
-* [**Paper-Style Research Documentation**](research/README.md): 7-chapter research paper and datasets.
-
----
-
-## 📄 License
+## License
 
 Licensed under either of Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE)) or MIT license ([LICENSE-MIT](LICENSE-MIT)).
