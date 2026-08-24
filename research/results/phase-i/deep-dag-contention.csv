@@ -1,0 +1,4 @@
+label,contention_degradation_pct
+Argon2id Baseline (64MB),18.2
+Variant E Normal (t=700k),7.55
+Variant E Deep-DAG (t=1.8M),8.1

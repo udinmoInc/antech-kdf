@@ -1,0 +1,3 @@
+algorithm_name,ram_mb,latency_p50_ms,latency_p95_ms,latency_p99_ms,attacker_16c_cpu_qps,dram_bandwidth_gb_per_sec
+Argon2id Baseline Matrix (64MB),64,138.2,142.5,148.1,24.2,2.1
+Antech Candidate-004 Phase H (Equalized t=2.5M),16,257.92,265.1,272.4,22.8,1.85

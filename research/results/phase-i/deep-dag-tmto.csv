@@ -1,0 +1,4 @@
+label,tmto_50pct_penalty
+Argon2id Baseline (64MB),3.25
+Variant E Normal (t=700k),4.29
+Variant E Deep-DAG (t=1.8M),5.12

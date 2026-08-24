@@ -1,0 +1,4 @@
+property,existing_cost_asymmetric_method,candidate_e4_method,is_novel_cryptographic_contribution,security_implication
+Asymmetric Verification Path,Catena / Asymmetric PoW graph evaluation,Simulated boolean parameter branching (depth 60 vs 150),false,Attacker prunes wrong guesses at depth 60; asymmetry collapses
+Server Secret / Pepper,Standard Pepper / OPAQUE VRF server secret,HMAC Sha256 seed mix with server_secret,false,Standard server-secret dependency; protection disappears if stolen
+Memory Churn Core,Argon2 / Candidate-004 u64 ARX,Candidate-004 16MB u64 ARX memory churn,false,Reuses Phase C/D Candidate-004 core without new primitive

@@ -1,0 +1,4 @@
+label,concurrency_status
+Argon2id Baseline (64MB),Unbounded RAM under 1000 reqs (~1.6GB)
+Variant E Normal (t=700k),Bounded RAM (128MB budget)
+Variant E Deep-DAG (t=1.8M),Bounded RAM (128MB budget)

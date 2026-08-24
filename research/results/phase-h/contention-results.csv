@@ -1,0 +1,2 @@
+scenario,process_a_isolated_latency_ms,process_a_contended_latency_ms,latency_degradation_pct,process_b_degradation_pct,dram_bandwidth_gb_per_sec,cpu_utilization_pct
+Antech KDF + Unrelated DRAM Memory Churn,14.08612,17.2847,22.70731755799327,12.4,1.85,98.2

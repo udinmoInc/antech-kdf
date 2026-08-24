@@ -1,7 +1,6 @@
 //! Phase E.1 audit runner for Candidate-E4 prior-art, cryptanalysis & novelty audit.
 
 use crate::phase_e::{cand_e4::CandidateE4, PhaseEKdf, PhaseEParams};
-use crate::schema::{AttackerModelResult, MeasurementSource};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;

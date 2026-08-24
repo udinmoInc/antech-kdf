@@ -1,0 +1,4 @@
+label,ram_mb,defender_p50_ms,defender_p95_ms,defender_p99_ms
+Argon2id Baseline (64MB),64,138.2,142.5,148.1
+Variant E Normal (t=700k),16,119.2008,120.1541,120.1541
+Variant E Deep-DAG (t=1.8M),16,262.4104,263.23069999999996,263.23069999999996

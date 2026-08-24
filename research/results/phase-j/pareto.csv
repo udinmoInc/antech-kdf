@@ -1,0 +1,8 @@
+label,ram_mb,defender_latency_ms,attacker_16c_cpu_qps,satisfies_ram_target,satisfies_latency_target,satisfies_attacker_target,pareto_status
+Argon2id Baseline Matrix (64MB),64,138.2,24.2,false,true,true,BASELINE
+Variant E Normal (t=700k),16,119.2,55.4,true,true,false,ATTACKER-TOO-FAST
+Variant E Deep-DAG (t=1.8M),16,262.4,27.3,true,false,false,LATENCY-EXCEEDED
+Variant A (Batch Resistant),16,82.5,64.2,true,true,false,ATTACKER-TOO-FAST
+Variant B (Stronger TMTO),16,95.0,52.1,true,true,false,ATTACKER-TOO-FAST
+Variant C (GPU Unfriendly),16,102.0,46.8,true,true,false,PARETO-OPTIMAL (LOWEST GPU QPS)
+Variant D (Blake-ARX),16,88.0,58.5,true,true,false,ATTACKER-TOO-FAST

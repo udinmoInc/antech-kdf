@@ -1,0 +1,2 @@
+scenario,isolated_latency_ms,contended_latency_ms,degradation_pct
+Variant E (16MB) + Unrelated DRAM Churn,112.5,121.0,7.55

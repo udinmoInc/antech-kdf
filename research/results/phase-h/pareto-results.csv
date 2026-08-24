@@ -1,0 +1,5 @@
+algorithm_label,legitimate_ram_mb,legitimate_latency_ms,attacker_16c_cpu_qps,pareto_status
+Argon2id Baseline (64MB),64,138.2,24.2,PARETO-OPTIMAL
+scrypt Baseline (32MB),32,45.1,72.8,PARETO-OPTIMAL
+"Candidate-004 Phase F (16MB, t=120)",16,10.83,225.2,PARETO-OPTIMAL
+"Candidate-004 Equalized (16MB, t=2.5M)",16,257.92,22.8,PARETO-OPTIMAL

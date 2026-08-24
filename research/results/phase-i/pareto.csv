@@ -1,0 +1,4 @@
+label,ram_mb,defender_latency_ms,attacker_16c_cpu_qps,satisfies_ram_target,satisfies_latency_target,satisfies_attacker_target,pareto_status
+Argon2id Baseline Matrix (64MB),64,138.2,24.2,false,true,true,BASELINE
+Candidate-004 Phase H (Equalized t=2.5M),16,257.92,22.8,true,false,true,LATENCY-EXCEEDED
+Candidate-004 Phase I (Variant E Combined),16,112.5,21.4,true,true,true,PARETO-OPTIMAL / TARGET-ACHIEVED
