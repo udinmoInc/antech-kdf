@@ -65,7 +65,7 @@ pub struct Candidate004 {
 impl Candidate004 {
     pub fn new() -> Self {
         Self {
-            memory_kib: 16384,     // 16 MB
+            memory_kib: 16384, // 16 MB
             dependency_depth: 120,
             passes: 1,
         }

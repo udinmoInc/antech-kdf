@@ -27,9 +27,15 @@ impl VariantK1 {
         let b3 = u64::from_le_bytes(block[24..32].try_into().unwrap());
 
         let rot = (pwd_byte as u32 % 16) + 1;
-        state[0] = state[0].wrapping_add(b0 ^ (pwd_byte as u64)).rotate_left(19 ^ rot) ^ state[3];
+        state[0] = state[0]
+            .wrapping_add(b0 ^ (pwd_byte as u64))
+            .rotate_left(19 ^ rot)
+            ^ state[3];
         state[1] = state[1].wrapping_add(b1).rotate_left(29 ^ rot) ^ state[0];
-        state[2] = state[2].wrapping_add(b2 ^ (pwd_byte as u64).rotate_left(8)).rotate_left(13) ^ state[1];
+        state[2] = state[2]
+            .wrapping_add(b2 ^ (pwd_byte as u64).rotate_left(8))
+            .rotate_left(13)
+            ^ state[1];
         state[3] = state[3].wrapping_add(b3).rotate_left(37 ^ rot) ^ state[2];
     }
 }

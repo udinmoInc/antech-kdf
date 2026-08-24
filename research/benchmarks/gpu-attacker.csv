@@ -1,0 +1,4 @@
+algorithm_name,gpu_hardware,per_instance_vram_mb,max_parallel_cuda_threads,status_classification
+Argon2id Baseline (64MB),NVIDIA GeForce RTX 3050 (8GB VRAM),64,125,CUDA UNAVAILABLE (NO NVCC COMPILER)
+Antech Variant K1 (16MB),NVIDIA GeForce RTX 3050 (8GB VRAM),16,500,CUDA UNAVAILABLE (NO NVCC COMPILER)
+Antech Variant K2 (16MB),NVIDIA GeForce RTX 3050 (8GB VRAM),16,500,CUDA UNAVAILABLE (NO NVCC COMPILER)

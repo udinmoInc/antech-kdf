@@ -1,0 +1,4 @@
+algorithm_name,attacker_1c_qps,attacker_4c_qps,attacker_16c_qps,attacker_32c_qps,scaling_efficiency_pct
+Argon2id Baseline (64MB),2.02,7.27,24.2,32.67,74.8
+Antech Variant K1 (16MB),1.5999999999999999,5.76,19.2,25.92,75.0
+Antech Variant K2 (16MB),1.5666666666666667,5.64,18.8,25.380000000000003,75.0

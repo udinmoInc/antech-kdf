@@ -34,7 +34,10 @@ pub fn run_cpu_attacker_benchmark() -> Vec<CpuAttackerRecord> {
     let passwords: Vec<Vec<u8>> = (0..24)
         .map(|i| format!("pass_k1_{}", i).into_bytes())
         .collect();
-    let pool16 = rayon::ThreadPoolBuilder::new().num_threads(16).build().unwrap();
+    let pool16 = rayon::ThreadPoolBuilder::new()
+        .num_threads(16)
+        .build()
+        .unwrap();
 
     let t0_k1 = Instant::now();
     pool16.install(|| {

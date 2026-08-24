@@ -61,7 +61,10 @@ fn main() {
                     eprintln!("Error running research suite: {}", e);
                 }
             } else {
-                println!("Running Antech KDF benchmark ({} iterations)...", iterations);
+                println!(
+                    "Running Antech KDF benchmark ({} iterations)...",
+                    iterations
+                );
                 let start = Instant::now();
                 for i in 0..iterations {
                     let pass = format!("pass_{}", i);

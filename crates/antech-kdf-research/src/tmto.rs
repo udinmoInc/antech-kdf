@@ -15,9 +15,21 @@ pub fn run_tmto_benchmark() -> Vec<TmtoRecord> {
     targets
         .iter()
         .map(|&pct| {
-            let mult_arg = if pct >= 100.0 { 1.0 } else { (100.0f64 / pct).powf(1.7f64) };
-            let mult_k1 = if pct >= 100.0 { 1.0 } else { (100.0f64 / pct).powf(2.0f64) };
-            let mult_k2 = if pct >= 100.0 { 1.0 } else { (100.0f64 / pct).powf(3.8f64) }; // Quad-DAG O((N/M)^4)
+            let mult_arg = if pct >= 100.0 {
+                1.0
+            } else {
+                (100.0f64 / pct).powf(1.7f64)
+            };
+            let mult_k1 = if pct >= 100.0 {
+                1.0
+            } else {
+                (100.0f64 / pct).powf(2.0f64)
+            };
+            let mult_k2 = if pct >= 100.0 {
+                1.0
+            } else {
+                (100.0f64 / pct).powf(3.8f64)
+            }; // Quad-DAG O((N/M)^4)
             TmtoRecord {
                 memory_target_pct: pct,
                 argon2id_penalty_factor: mult_arg,
