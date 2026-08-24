@@ -67,7 +67,8 @@ graph TD
 
 * **Implemented (Stable API)**: The Rust crate [`antech-kdf`](crates/antech-kdf) provides the public interface (`hash`, `verify`, `needs_rehash`).
 * **Experimental Core**: Candidate-004 variants (**Variant K1** and **Variant K2**) reside in [`crates/antech-kdf-research`](crates/antech-kdf-research).
-* **Paper-Style Research Documentation**: See [`research/README.md`](research/README.md) for the 7-chapter research paper.
+* **Measured Benchmark Results**: See [Chapter 5: Measured Results](research/05-results.md) and [Chapter 7: Future Work](research/07-future-work.md).
+* **7-Chapter Research Paper**: See [`research/README.md`](research/README.md).
 
 ---
 
@@ -105,11 +106,13 @@ cargo run --release -p antech-kdf-cli -- benchmark --output research/data
 
 ---
 
-## 📖 Architecture & Documentation
+## 📖 System Architecture & Documentation
 
-* [`ARCHITECTURE.md`](ARCHITECTURE.md): Component layout and system design.
-* [`research/README.md`](research/README.md): 7-chapter paper-style research documentation.
-* [`research/archive/phase-history.md`](research/archive/phase-history.md): Historical Phase A–M development progression.
+* [**System Architecture & Layering**](docs/architecture.md): Component layout, crate taxonomy, and memory allocation sequence flows.
+* [**Developer API Guide**](docs/api.md): Developer guide, Rust snippets, error handling, and C ABI FFI bindings.
+* [**Hash String Format**](docs/format.md): `$antech$v1$...` character encoding specification.
+* [**Adversarial Threat Model**](docs/threat-model.md): Multicancer CPU, GPU spatial bounds, TMTO DAG penalties, and cloud denial-of-service protections.
+* [**Paper-Style Research Documentation**](research/README.md): 7-chapter research paper and datasets.
 
 ---
 
