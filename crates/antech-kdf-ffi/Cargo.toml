@@ -1,0 +1,14 @@
+[package]
+name = "antech-kdf-ffi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+antech-kdf = { workspace = true }
+libc = "0.2"

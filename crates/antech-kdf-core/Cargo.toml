@@ -1,0 +1,15 @@
+[package]
+name = "antech-kdf-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+antech-kdf-types = { workspace = true }
+antech-kdf-format = { workspace = true }
+getrandom = { workspace = true }
+subtle = { workspace = true }
+zeroize = { workspace = true }
+thiserror = { workspace = true }

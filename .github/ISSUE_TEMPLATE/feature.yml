@@ -1,0 +1,11 @@
+name: Feature Request / Research Idea
+description: Propose a new feature, candidate, or research hypothesis
+labels: ["enhancement", "research"]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: Proposal Summary
+      description: Describe the feature or research hypothesis.
+    validations:
+      required: true

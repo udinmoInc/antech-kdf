@@ -1,0 +1,21 @@
+[package]
+name = "antech-kdf-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+antech-kdf = { path = "../crates/antech-kdf" }
+antech-kdf-format = { path = "../crates/antech-kdf-format" }
+
+[[bin]]
+name = "hash_parser"
+path = "fuzz_targets/hash_parser.rs"
+
+[[bin]]
+name = "verify_input"
+path = "fuzz_targets/verify_input.rs"

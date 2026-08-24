@@ -1,0 +1,8 @@
+name: Security Inquiry
+description: Guidance on security disclosures (Do not post public vulnerabilities here)
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **PLEASE DO NOT FILE PUBLIC ISSUES FOR VULNERABILITIES.**
+        Please follow our [Security Policy](https://github.com/antech-kdf/antech-kdf/blob/main/SECURITY.md) and report vulnerabilities confidentially to `security@antech-kdf.org`.

@@ -1,0 +1,23 @@
+[package]
+name = "antech-kdf-research"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+antech-kdf = { workspace = true }
+antech-kdf-core = { workspace = true }
+antech-kdf-types = { workspace = true }
+argon2 = { workspace = true }
+scrypt = { workspace = true }
+bcrypt = { workspace = true }
+pbkdf2 = { workspace = true }
+sha2 = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+csv = { workspace = true }
+getrandom = { workspace = true }
+zeroize = { workspace = true }

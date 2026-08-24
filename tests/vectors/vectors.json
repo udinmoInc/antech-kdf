@@ -1,0 +1,14 @@
+[
+  {
+    "version": "v1",
+    "password": "password",
+    "salt_b64": "AQIDBAUGBwgJCgsMDQ4PEA==",
+    "params": {
+      "memory_kib": 65536,
+      "time_cost": 3,
+      "parallelism": 1,
+      "bandwidth_target": 100
+    },
+    "expected_encoded": "$antech$v1$m=65536,t=3,p=1,bw=100$AQIDBAUGBwgJCgsMDQ4PEA==$placeholder_digest"
+  }
+]
