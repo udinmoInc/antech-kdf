@@ -1,9 +1,6 @@
-# Research Candidate 003: Multi-Threaded Lane Churn
+# Candidate 003 — Family C: Sequential Dependency Chain
 
-> **STATUS**: `DRAFT`
+**Status: EXPERIMENTAL / NOT PRODUCTION SAFE**
 
 ## Overview
-Candidate 003 evaluates parallel lane execution combined with cross-lane memory synchronization to maximize bandwidth strain on multi-channel memory architectures.
-
-## Status: `DRAFT`
-Design specification in progress.
+Deep state dependency chain ($S_0 \to S_1 \to \dots \to S_N$) preventing step parallelization.

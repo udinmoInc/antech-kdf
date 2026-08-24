@@ -1,0 +1,6 @@
+variant_id,estimated_bandwidth_gb_per_sec,cache_locality_tier
+candidate-004-baseline,2.7529037628890953,L3 Cache Hit (256KB-16MB)
+candidate-004-opt-001,1.8987466752945716,L3 Cache Hit (256KB-16MB)
+candidate-004-opt-002,2.362421992825797,L3 Cache Hit (256KB-16MB)
+candidate-004-opt-003,1.9543861898381296,L3 Cache Hit (256KB-16MB)
+candidate-004-opt-004,2.0746819097695943,L3 Cache Hit (256KB-16MB)

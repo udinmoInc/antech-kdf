@@ -14,17 +14,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 7.2549,
-      "p50_ms": 7.2549,
-      "p95_ms": 7.463100000000001,
-      "p99_ms": 7.463100000000001,
-      "min_ms": 7.2454,
-      "max_ms": 7.463100000000001,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 8388608,
-      "memory_bytes_written": 8388608
+      "median_ms": 7.3406,
+      "p50_ms": 7.3406,
+      "p95_ms": 7.4975,
+      "p99_ms": 7.4975,
+      "min_ms": 7.2511,
+      "max_ms": 7.4975,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 8388608,
+        "bytes_written": 8388608,
+        "estimated_bandwidth_gb_per_sec": 0.7073592524853775,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -42,17 +53,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 6.3622000000000005,
-      "p50_ms": 6.3622000000000005,
-      "p95_ms": 6.6800999999999995,
-      "p99_ms": 6.6800999999999995,
-      "min_ms": 5.855700000000001,
-      "max_ms": 6.6800999999999995,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 8388608,
-      "memory_bytes_written": 8388608
+      "median_ms": 5.9487000000000005,
+      "p50_ms": 5.9487000000000005,
+      "p95_ms": 6.6013,
+      "p99_ms": 6.6013,
+      "min_ms": 5.4935,
+      "max_ms": 6.6013,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 8388608,
+        "bytes_written": 8388608,
+        "estimated_bandwidth_gb_per_sec": 0.8659628120929974,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -70,17 +92,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 6.4249,
-      "p50_ms": 6.4249,
-      "p95_ms": 6.991899999999999,
-      "p99_ms": 6.991899999999999,
-      "min_ms": 6.037599999999999,
-      "max_ms": 6.991899999999999,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 8388608,
-      "memory_bytes_written": 8388608
+      "median_ms": 6.4958,
+      "p50_ms": 6.4958,
+      "p95_ms": 7.3982,
+      "p99_ms": 7.3982,
+      "min_ms": 6.3581,
+      "max_ms": 7.3982,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 8388608,
+        "bytes_written": 8388608,
+        "estimated_bandwidth_gb_per_sec": 0.7715249282790426,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -98,17 +131,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 10.8263,
-      "p50_ms": 10.8263,
-      "p95_ms": 11.2727,
-      "p99_ms": 11.2727,
-      "min_ms": 10.293,
-      "max_ms": 11.2727,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 10.769300000000001,
+      "p50_ms": 10.769300000000001,
+      "p95_ms": 11.183399999999999,
+      "p99_ms": 11.183399999999999,
+      "min_ms": 9.7257,
+      "max_ms": 11.183399999999999,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.986476589726754,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -126,17 +170,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 10.7761,
-      "p50_ms": 10.7761,
-      "p95_ms": 11.1255,
-      "p99_ms": 11.1255,
-      "min_ms": 9.8087,
-      "max_ms": 11.1255,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 11.5201,
+      "p50_ms": 11.5201,
+      "p95_ms": 11.607,
+      "p99_ms": 11.607,
+      "min_ms": 9.7757,
+      "max_ms": 11.607,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.9497671930656358,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -154,17 +209,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 10.8716,
-      "p50_ms": 10.8716,
-      "p95_ms": 13.7068,
-      "p99_ms": 13.7068,
-      "min_ms": 10.155000000000001,
-      "max_ms": 13.7068,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 10.8781,
+      "p50_ms": 10.8781,
+      "p95_ms": 12.0967,
+      "p99_ms": 12.0967,
+      "min_ms": 10.3217,
+      "max_ms": 12.0967,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.9385370834772424,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -182,17 +248,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 14.2859,
-      "p50_ms": 14.2859,
-      "p95_ms": 14.8176,
-      "p99_ms": 14.8176,
-      "min_ms": 13.9689,
-      "max_ms": 14.8176,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 25165824,
-      "memory_bytes_written": 25165824
+      "median_ms": 15.0694,
+      "p50_ms": 15.0694,
+      "p95_ms": 15.4848,
+      "p99_ms": 15.4848,
+      "min_ms": 14.736,
+      "max_ms": 15.4848,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 25165824,
+        "bytes_written": 25165824,
+        "estimated_bandwidth_gb_per_sec": 1.034992117500033,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -210,17 +287,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 15.184700000000001,
-      "p50_ms": 15.184700000000001,
-      "p95_ms": 15.2528,
-      "p99_ms": 15.2528,
-      "min_ms": 14.6282,
-      "max_ms": 15.2528,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 25165824,
-      "memory_bytes_written": 25165824
+      "median_ms": 15.038499999999999,
+      "p50_ms": 15.038499999999999,
+      "p95_ms": 15.8754,
+      "p99_ms": 15.8754,
+      "min_ms": 14.8999,
+      "max_ms": 15.8754,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 25165824,
+        "bytes_written": 25165824,
+        "estimated_bandwidth_gb_per_sec": 1.0231633263339868,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -238,17 +326,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 14.7506,
-      "p50_ms": 14.7506,
-      "p95_ms": 15.7703,
-      "p99_ms": 15.7703,
-      "min_ms": 14.5283,
-      "max_ms": 15.7703,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 25165824,
-      "memory_bytes_written": 25165824
+      "median_ms": 15.646500000000001,
+      "p50_ms": 15.646500000000001,
+      "p95_ms": 17.3068,
+      "p99_ms": 17.3068,
+      "min_ms": 15.456100000000001,
+      "max_ms": 17.3068,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 25165824,
+        "bytes_written": 25165824,
+        "estimated_bandwidth_gb_per_sec": 0.9683036765586849,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -266,17 +365,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 19.2549,
-      "p50_ms": 19.2549,
-      "p95_ms": 20.099,
-      "p99_ms": 20.099,
-      "min_ms": 19.212300000000003,
-      "max_ms": 20.099,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 21.7824,
+      "p50_ms": 21.7824,
+      "p95_ms": 23.5689,
+      "p99_ms": 23.5689,
+      "min_ms": 20.3518,
+      "max_ms": 23.5689,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.951248875623829,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -294,17 +404,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 21.6656,
-      "p50_ms": 21.6656,
-      "p95_ms": 22.3395,
-      "p99_ms": 22.3395,
-      "min_ms": 20.0494,
-      "max_ms": 22.3395,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 20.449599999999997,
+      "p50_ms": 20.449599999999997,
+      "p95_ms": 21.3226,
+      "p99_ms": 21.3226,
+      "min_ms": 19.7565,
+      "max_ms": 21.3226,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 1.0157861290747245,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -322,17 +443,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 19.6459,
-      "p50_ms": 19.6459,
-      "p95_ms": 20.8628,
-      "p99_ms": 20.8628,
-      "min_ms": 19.3428,
-      "max_ms": 20.8628,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 21.4429,
+      "p50_ms": 21.4429,
+      "p95_ms": 22.6552,
+      "p99_ms": 22.6552,
+      "min_ms": 20.1189,
+      "max_ms": 22.6552,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.9732625317283586,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -350,17 +482,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 13.1353,
-      "p50_ms": 13.1353,
-      "p95_ms": 14.1748,
-      "p99_ms": 14.1748,
-      "min_ms": 11.729099999999999,
-      "max_ms": 14.1748,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 13.6122,
+      "p50_ms": 13.6122,
+      "p95_ms": 13.9201,
+      "p99_ms": 13.9201,
+      "min_ms": 12.5898,
+      "max_ms": 13.9201,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.7788724917190276,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -378,17 +521,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 13.207699999999999,
-      "p50_ms": 13.207699999999999,
-      "p95_ms": 13.740499999999999,
-      "p99_ms": 13.740499999999999,
-      "min_ms": 12.8887,
-      "max_ms": 13.740499999999999,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 13.3186,
+      "p50_ms": 13.3186,
+      "p95_ms": 15.512,
+      "p99_ms": 15.512,
+      "min_ms": 13.079500000000001,
+      "max_ms": 15.512,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.7456436515302994,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -406,17 +560,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 13.089,
-      "p50_ms": 13.089,
-      "p95_ms": 13.1039,
-      "p99_ms": 13.1039,
-      "min_ms": 12.926,
-      "max_ms": 13.1039,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 13.965399999999999,
+      "p50_ms": 13.965399999999999,
+      "p95_ms": 14.5499,
+      "p99_ms": 14.5499,
+      "min_ms": 13.3995,
+      "max_ms": 14.5499,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.7455600408447614,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -434,17 +599,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 22.8277,
-      "p50_ms": 22.8277,
-      "p95_ms": 24.3819,
-      "p99_ms": 24.3819,
-      "min_ms": 22.7572,
-      "max_ms": 24.3819,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 23.2827,
+      "p50_ms": 23.2827,
+      "p95_ms": 25.188200000000002,
+      "p99_ms": 25.188200000000002,
+      "min_ms": 23.017300000000002,
+      "max_ms": 25.188200000000002,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.8742701592710405,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -462,17 +638,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 22.983,
-      "p50_ms": 22.983,
-      "p95_ms": 24.025100000000002,
-      "p99_ms": 24.025100000000002,
-      "min_ms": 22.0276,
-      "max_ms": 24.025100000000002,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 23.9966,
+      "p50_ms": 23.9966,
+      "p95_ms": 24.0328,
+      "p99_ms": 24.0328,
+      "min_ms": 23.3664,
+      "max_ms": 24.0328,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.8754016342698029,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -490,17 +677,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 23.5678,
-      "p50_ms": 23.5678,
-      "p95_ms": 24.0668,
-      "p99_ms": 24.0668,
-      "min_ms": 21.9971,
-      "max_ms": 24.0668,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 22.4639,
+      "p50_ms": 22.4639,
+      "p95_ms": 24.444899999999997,
+      "p99_ms": 24.444899999999997,
+      "min_ms": 22.3501,
+      "max_ms": 24.444899999999997,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.9024110980682627,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -518,17 +716,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 32.3979,
-      "p50_ms": 32.3979,
-      "p95_ms": 33.1065,
-      "p99_ms": 33.1065,
-      "min_ms": 32.0543,
-      "max_ms": 33.1065,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 50331648,
-      "memory_bytes_written": 50331648
+      "median_ms": 32.0886,
+      "p50_ms": 32.0886,
+      "p95_ms": 33.0629,
+      "p99_ms": 33.0629,
+      "min_ms": 32.0432,
+      "max_ms": 33.0629,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 50331648,
+        "bytes_written": 50331648,
+        "estimated_bandwidth_gb_per_sec": 0.9645587670932675,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -546,17 +755,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 31.9377,
-      "p50_ms": 31.9377,
-      "p95_ms": 32.510400000000004,
-      "p99_ms": 32.510400000000004,
-      "min_ms": 31.784100000000002,
-      "max_ms": 32.510400000000004,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 50331648,
-      "memory_bytes_written": 50331648
+      "median_ms": 33.9684,
+      "p50_ms": 33.9684,
+      "p95_ms": 36.3987,
+      "p99_ms": 36.3987,
+      "min_ms": 33.7784,
+      "max_ms": 36.3987,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 50331648,
+        "bytes_written": 50331648,
+        "estimated_bandwidth_gb_per_sec": 0.9001829171687686,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -574,17 +794,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 31.975900000000003,
-      "p50_ms": 31.975900000000003,
-      "p95_ms": 32.2292,
-      "p99_ms": 32.2292,
-      "min_ms": 31.556099999999997,
-      "max_ms": 32.2292,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 50331648,
-      "memory_bytes_written": 50331648
+      "median_ms": 31.926299999999998,
+      "p50_ms": 31.926299999999998,
+      "p95_ms": 32.598299999999995,
+      "p99_ms": 32.598299999999995,
+      "min_ms": 31.281999999999996,
+      "max_ms": 32.598299999999995,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 50331648,
+        "bytes_written": 50331648,
+        "estimated_bandwidth_gb_per_sec": 0.9785338379610591,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -602,17 +833,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 42.9965,
-      "p50_ms": 42.9965,
-      "p95_ms": 46.275499999999994,
-      "p99_ms": 46.275499999999994,
-      "min_ms": 42.5473,
-      "max_ms": 46.275499999999994,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 39.3754,
+      "p50_ms": 39.3754,
+      "p95_ms": 40.795199999999994,
+      "p99_ms": 40.795199999999994,
+      "min_ms": 38.8634,
+      "max_ms": 40.795199999999994,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 1.0501201337433002,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -630,17 +872,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 41.8819,
-      "p50_ms": 41.8819,
-      "p95_ms": 42.275800000000004,
-      "p99_ms": 42.275800000000004,
-      "min_ms": 41.4579,
-      "max_ms": 42.275800000000004,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 40.4027,
+      "p50_ms": 40.4027,
+      "p95_ms": 41.334,
+      "p99_ms": 41.334,
+      "min_ms": 39.702,
+      "max_ms": 41.334,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 1.0293259068155374,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -658,17 +911,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 42.7477,
-      "p50_ms": 42.7477,
-      "p95_ms": 46.6025,
-      "p99_ms": 46.6025,
-      "min_ms": 40.751000000000005,
-      "max_ms": 46.6025,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 40.9135,
+      "p50_ms": 40.9135,
+      "p95_ms": 41.0936,
+      "p99_ms": 41.0936,
+      "min_ms": 40.882099999999994,
+      "max_ms": 41.0936,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 1.0171764483778882,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -686,17 +950,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 27.847299999999997,
-      "p50_ms": 27.847299999999997,
-      "p95_ms": 28.7031,
-      "p99_ms": 28.7031,
-      "min_ms": 26.5162,
-      "max_ms": 28.7031,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 27.2265,
+      "p50_ms": 27.2265,
+      "p95_ms": 27.2443,
+      "p99_ms": 27.2443,
+      "min_ms": 26.129900000000003,
+      "max_ms": 27.2443,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.7754275086940933,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -714,17 +989,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 27.169900000000002,
-      "p50_ms": 27.169900000000002,
-      "p95_ms": 28.0092,
-      "p99_ms": 28.0092,
-      "min_ms": 25.927100000000003,
-      "max_ms": 28.0092,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 26.576999999999998,
+      "p50_ms": 26.576999999999998,
+      "p95_ms": 26.587400000000002,
+      "p99_ms": 26.587400000000002,
+      "min_ms": 25.6948,
+      "max_ms": 26.587400000000002,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.7925517885040679,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -742,17 +1028,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 28.8148,
-      "p50_ms": 28.8148,
-      "p95_ms": 30.0029,
-      "p99_ms": 30.0029,
-      "min_ms": 27.662499999999998,
-      "max_ms": 30.0029,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 31.1237,
+      "p50_ms": 31.1237,
+      "p95_ms": 37.6624,
+      "p99_ms": 37.6624,
+      "min_ms": 27.2943,
+      "max_ms": 37.6624,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.6504968755334075,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -770,17 +1067,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 47.1493,
-      "p50_ms": 47.1493,
-      "p95_ms": 47.6458,
-      "p99_ms": 47.6458,
-      "min_ms": 46.5085,
-      "max_ms": 47.6458,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 80.8644,
+      "p50_ms": 80.8644,
+      "p95_ms": 88.5969,
+      "p99_ms": 88.5969,
+      "min_ms": 50.549499999999995,
+      "max_ms": 88.5969,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.5681539269890387,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -798,17 +1106,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 47.1456,
-      "p50_ms": 47.1456,
-      "p95_ms": 48.8877,
-      "p99_ms": 48.8877,
-      "min_ms": 47.1341,
-      "max_ms": 48.8877,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 45.5124,
+      "p50_ms": 45.5124,
+      "p95_ms": 49.5863,
+      "p99_ms": 49.5863,
+      "min_ms": 44.3117,
+      "max_ms": 49.5863,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.8966332497432041,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -826,17 +1145,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 48.7096,
-      "p50_ms": 48.7096,
-      "p95_ms": 49.2792,
-      "p99_ms": 49.2792,
-      "min_ms": 47.9527,
-      "max_ms": 49.2792,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 44.2171,
+      "p50_ms": 44.2171,
+      "p95_ms": 44.720000000000006,
+      "p99_ms": 44.720000000000006,
+      "min_ms": 43.96,
+      "max_ms": 44.720000000000006,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.9405773338921616,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -854,17 +1184,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 66.95089999999999,
-      "p50_ms": 66.95089999999999,
-      "p95_ms": 68.318,
-      "p99_ms": 68.318,
-      "min_ms": 64.9867,
-      "max_ms": 68.318,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 100663296,
-      "memory_bytes_written": 100663296
+      "median_ms": 62.240700000000004,
+      "p50_ms": 62.240700000000004,
+      "p95_ms": 66.8226,
+      "p99_ms": 66.8226,
+      "min_ms": 61.987300000000005,
+      "max_ms": 66.8226,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 100663296,
+        "bytes_written": 100663296,
+        "estimated_bandwidth_gb_per_sec": 0.9814153946650782,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -882,17 +1223,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 65.45769999999999,
-      "p50_ms": 65.45769999999999,
-      "p95_ms": 65.50309999999999,
-      "p99_ms": 65.50309999999999,
-      "min_ms": 65.2677,
-      "max_ms": 65.50309999999999,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 100663296,
-      "memory_bytes_written": 100663296
+      "median_ms": 63.0797,
+      "p50_ms": 63.0797,
+      "p95_ms": 65.75930000000001,
+      "p99_ms": 65.75930000000001,
+      "min_ms": 62.8837,
+      "max_ms": 65.75930000000001,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 100663296,
+        "bytes_written": 100663296,
+        "estimated_bandwidth_gb_per_sec": 0.9779749607114858,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -910,17 +1262,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 67.85199999999999,
-      "p50_ms": 67.85199999999999,
-      "p95_ms": 69.0624,
-      "p99_ms": 69.0624,
-      "min_ms": 66.06389999999999,
-      "max_ms": 69.0624,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 100663296,
-      "memory_bytes_written": 100663296
+      "median_ms": 65.6765,
+      "p50_ms": 65.6765,
+      "p95_ms": 68.92049999999999,
+      "p99_ms": 68.92049999999999,
+      "min_ms": 65.5056,
+      "max_ms": 68.92049999999999,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 100663296,
+        "bytes_written": 100663296,
+        "estimated_bandwidth_gb_per_sec": 0.9370193090944346,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -938,17 +1301,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 84.7753,
-      "p50_ms": 84.7753,
-      "p95_ms": 88.98150000000001,
-      "p99_ms": 88.98150000000001,
-      "min_ms": 84.4675,
-      "max_ms": 88.98150000000001,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 80.9397,
+      "p50_ms": 80.9397,
+      "p95_ms": 84.1402,
+      "p99_ms": 84.1402,
+      "min_ms": 80.2549,
+      "max_ms": 84.1402,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 1.0190156471890657,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -966,17 +1340,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 87.4457,
-      "p50_ms": 87.4457,
-      "p95_ms": 91.1737,
-      "p99_ms": 91.1737,
-      "min_ms": 85.77260000000001,
-      "max_ms": 91.1737,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 83.9941,
+      "p50_ms": 83.9941,
+      "p95_ms": 84.4636,
+      "p99_ms": 84.4636,
+      "min_ms": 83.075,
+      "max_ms": 84.4636,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.9939065576761987,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -994,17 +1379,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 88.1769,
-      "p50_ms": 88.1769,
-      "p95_ms": 90.00070000000001,
-      "p99_ms": 90.00070000000001,
-      "min_ms": 87.2175,
-      "max_ms": 90.00070000000001,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 92.9778,
+      "p50_ms": 92.9778,
+      "p95_ms": 105.56790000000001,
+      "p99_ms": 105.56790000000001,
+      "min_ms": 83.5447,
+      "max_ms": 105.56790000000001,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.8862407228321133,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1022,17 +1418,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 65.9517,
-      "p50_ms": 65.9517,
-      "p95_ms": 72.6652,
-      "p99_ms": 72.6652,
-      "min_ms": 58.9333,
-      "max_ms": 72.6652,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 70.4809,
+      "p50_ms": 70.4809,
+      "p95_ms": 76.0098,
+      "p99_ms": 76.0098,
+      "min_ms": 55.6804,
+      "max_ms": 76.0098,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.6182881727408122,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1050,17 +1457,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 61.8522,
-      "p50_ms": 61.8522,
-      "p95_ms": 65.4149,
-      "p99_ms": 65.4149,
-      "min_ms": 60.7391,
-      "max_ms": 65.4149,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 58.2842,
+      "p50_ms": 58.2842,
+      "p95_ms": 64.84270000000001,
+      "p99_ms": 64.84270000000001,
+      "min_ms": 57.1781,
+      "max_ms": 64.84270000000001,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.6932697373894234,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1078,17 +1496,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 57.484300000000005,
-      "p50_ms": 57.484300000000005,
-      "p95_ms": 60.4033,
-      "p99_ms": 60.4033,
-      "min_ms": 56.8748,
-      "max_ms": 60.4033,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 64.5195,
+      "p50_ms": 64.5195,
+      "p95_ms": 67.4349,
+      "p99_ms": 67.4349,
+      "min_ms": 60.6891,
+      "max_ms": 67.4349,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.648866948534469,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1106,17 +1535,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 107.1323,
-      "p50_ms": 107.1323,
-      "p95_ms": 115.091,
-      "p99_ms": 115.091,
-      "min_ms": 101.2305,
-      "max_ms": 115.091,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 109.1968,
+      "p50_ms": 109.1968,
+      "p95_ms": 169.579,
+      "p99_ms": 169.579,
+      "min_ms": 95.6872,
+      "max_ms": 169.579,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.6676227023764698,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1134,17 +1574,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 121.2379,
-      "p50_ms": 121.2379,
-      "p95_ms": 122.03890000000001,
-      "p99_ms": 122.03890000000001,
-      "min_ms": 109.5847,
-      "max_ms": 122.03890000000001,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 105.4759,
+      "p50_ms": 105.4759,
+      "p95_ms": 108.6444,
+      "p99_ms": 108.6444,
+      "min_ms": 99.18169999999999,
+      "max_ms": 108.6444,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.797952135639096,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1162,17 +1613,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 106.712,
-      "p50_ms": 106.712,
-      "p95_ms": 127.82560000000001,
-      "p99_ms": 127.82560000000001,
-      "min_ms": 105.31169999999999,
-      "max_ms": 127.82560000000001,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 98.4705,
+      "p50_ms": 98.4705,
+      "p95_ms": 100.7928,
+      "p99_ms": 100.7928,
+      "min_ms": 94.796,
+      "max_ms": 100.7928,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.850168656458068,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1190,17 +1652,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 138.25390000000002,
-      "p50_ms": 138.25390000000002,
-      "p95_ms": 138.7237,
-      "p99_ms": 138.7237,
-      "min_ms": 136.4768,
-      "max_ms": 138.7237,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 201326592,
-      "memory_bytes_written": 201326592
+      "median_ms": 142.2572,
+      "p50_ms": 142.2572,
+      "p95_ms": 143.4948,
+      "p99_ms": 143.4948,
+      "min_ms": 140.8524,
+      "max_ms": 143.4948,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 201326592,
+        "bytes_written": 201326592,
+        "estimated_bandwidth_gb_per_sec": 0.8790345341023206,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1218,17 +1691,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 139.9414,
-      "p50_ms": 139.9414,
-      "p95_ms": 143.1876,
-      "p99_ms": 143.1876,
-      "min_ms": 138.9478,
-      "max_ms": 143.1876,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 201326592,
-      "memory_bytes_written": 201326592
+      "median_ms": 144.1295,
+      "p50_ms": 144.1295,
+      "p95_ms": 151.71509999999998,
+      "p99_ms": 151.71509999999998,
+      "min_ms": 135.40879999999999,
+      "max_ms": 151.71509999999998,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 201326592,
+        "bytes_written": 201326592,
+        "estimated_bandwidth_gb_per_sec": 0.8695583617427711,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1246,17 +1730,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 175.0874,
-      "p50_ms": 175.0874,
-      "p95_ms": 184.4842,
-      "p99_ms": 184.4842,
-      "min_ms": 144.535,
-      "max_ms": 184.4842,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 201326592,
-      "memory_bytes_written": 201326592
+      "median_ms": 137.62079999999997,
+      "p50_ms": 137.62079999999997,
+      "p95_ms": 140.5998,
+      "p99_ms": 140.5998,
+      "min_ms": 134.3245,
+      "max_ms": 140.5998,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 201326592,
+        "bytes_written": 201326592,
+        "estimated_bandwidth_gb_per_sec": 0.9089915260173979,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1274,17 +1769,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 182.50930000000002,
-      "p50_ms": 182.50930000000002,
-      "p95_ms": 184.5865,
-      "p99_ms": 184.5865,
-      "min_ms": 174.8654,
-      "max_ms": 184.5865,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 176.2919,
+      "p50_ms": 176.2919,
+      "p95_ms": 186.5342,
+      "p99_ms": 186.5342,
+      "min_ms": 172.6924,
+      "max_ms": 186.5342,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 268435456,
+        "bytes_written": 268435456,
+        "estimated_bandwidth_gb_per_sec": 0.933674560262624,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1302,17 +1808,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 183.8683,
-      "p50_ms": 183.8683,
-      "p95_ms": 209.4924,
-      "p99_ms": 209.4924,
-      "min_ms": 181.0364,
-      "max_ms": 209.4924,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 175.52960000000002,
+      "p50_ms": 175.52960000000002,
+      "p95_ms": 182.84619999999998,
+      "p99_ms": 182.84619999999998,
+      "min_ms": 172.0183,
+      "max_ms": 182.84619999999998,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 268435456,
+        "bytes_written": 268435456,
+        "estimated_bandwidth_gb_per_sec": 0.9426952524547312,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1330,17 +1847,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 185.5029,
-      "p50_ms": 185.5029,
-      "p95_ms": 190.3133,
-      "p99_ms": 190.3133,
-      "min_ms": 184.60989999999998,
-      "max_ms": 190.3133,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 170.8439,
+      "p50_ms": 170.8439,
+      "p95_ms": 172.45569999999998,
+      "p99_ms": 172.45569999999998,
+      "min_ms": 170.2753,
+      "max_ms": 172.45569999999998,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 268435456,
+        "bytes_written": 268435456,
+        "estimated_bandwidth_gb_per_sec": 0.973567828178519,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1358,17 +1886,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 123.6861,
-      "p50_ms": 123.6861,
-      "p95_ms": 140.731,
-      "p99_ms": 140.731,
-      "min_ms": 122.1671,
-      "max_ms": 140.731,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 112.17280000000001,
+      "p50_ms": 112.17280000000001,
+      "p95_ms": 114.5154,
+      "p99_ms": 114.5154,
+      "min_ms": 111.729,
+      "max_ms": 114.5154,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.7387331376773995,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1386,17 +1925,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 121.8583,
-      "p50_ms": 121.8583,
-      "p95_ms": 125.0191,
-      "p99_ms": 125.0191,
-      "min_ms": 117.64429999999999,
-      "max_ms": 125.0191,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 116.9996,
+      "p50_ms": 116.9996,
+      "p95_ms": 160.4692,
+      "p99_ms": 160.4692,
+      "min_ms": 116.0094,
+      "max_ms": 160.4692,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.6353592143097128,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1414,17 +1964,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 117.20949999999999,
-      "p50_ms": 117.20949999999999,
-      "p95_ms": 123.2891,
-      "p99_ms": 123.2891,
-      "min_ms": 113.745,
-      "max_ms": 123.2891,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 118.1744,
+      "p50_ms": 118.1744,
+      "p95_ms": 120.909,
+      "p99_ms": 120.909,
+      "min_ms": 116.26450000000001,
+      "max_ms": 120.909,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.7035358869434715,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1442,17 +2003,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 206.362,
-      "p50_ms": 206.362,
-      "p95_ms": 223.1599,
-      "p99_ms": 223.1599,
-      "min_ms": 201.4985,
-      "max_ms": 223.1599,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 196.0032,
+      "p50_ms": 196.0032,
+      "p95_ms": 199.17280000000002,
+      "p99_ms": 199.17280000000002,
+      "min_ms": 195.96620000000001,
+      "max_ms": 199.17280000000002,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 268435456,
+        "bytes_written": 268435456,
+        "estimated_bandwidth_gb_per_sec": 0.8458201766004864,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1470,17 +2042,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 203.8296,
-      "p50_ms": 203.8296,
-      "p95_ms": 209.4694,
-      "p99_ms": 209.4694,
-      "min_ms": 200.16410000000002,
-      "max_ms": 209.4694,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 202.4209,
+      "p50_ms": 202.4209,
+      "p95_ms": 209.2097,
+      "p99_ms": 209.2097,
+      "min_ms": 199.84879999999998,
+      "max_ms": 209.2097,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 268435456,
+        "bytes_written": 268435456,
+        "estimated_bandwidth_gb_per_sec": 0.8176890341686082,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1498,17 +2081,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 206.8556,
-      "p50_ms": 206.8556,
-      "p95_ms": 231.79340000000002,
-      "p99_ms": 231.79340000000002,
-      "min_ms": 203.36499999999998,
-      "max_ms": 231.79340000000002,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 199.2738,
+      "p50_ms": 199.2738,
+      "p95_ms": 213.2443,
+      "p99_ms": 213.2443,
+      "min_ms": 198.5516,
+      "max_ms": 213.2443,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 268435456,
+        "bytes_written": 268435456,
+        "estimated_bandwidth_gb_per_sec": 0.8182372649142969,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1526,17 +2120,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 298.832,
-      "p50_ms": 298.832,
-      "p95_ms": 307.8018,
-      "p99_ms": 307.8018,
-      "min_ms": 289.4513,
-      "max_ms": 307.8018,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 402653184,
-      "memory_bytes_written": 402653184
+      "median_ms": 343.8408,
+      "p50_ms": 343.8408,
+      "p95_ms": 383.3587,
+      "p99_ms": 383.3587,
+      "min_ms": 325.159,
+      "max_ms": 383.3587,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 402653184,
+        "bytes_written": 402653184,
+        "estimated_bandwidth_gb_per_sec": 0.7126848882771413,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1554,17 +2159,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 292.68739999999997,
-      "p50_ms": 292.68739999999997,
-      "p95_ms": 339.8794,
-      "p99_ms": 339.8794,
-      "min_ms": 284.9141,
-      "max_ms": 339.8794,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 402653184,
-      "memory_bytes_written": 402653184
+      "median_ms": 386.78200000000004,
+      "p50_ms": 386.78200000000004,
+      "p95_ms": 394.0664,
+      "p99_ms": 394.0664,
+      "min_ms": 356.8315,
+      "max_ms": 394.0664,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 402653184,
+        "bytes_written": 402653184,
+        "estimated_bandwidth_gb_per_sec": 0.6592363985687011,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1582,17 +2198,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 284.9048,
-      "p50_ms": 284.9048,
-      "p95_ms": 288.44550000000004,
-      "p99_ms": 288.44550000000004,
-      "min_ms": 283.93940000000003,
-      "max_ms": 288.44550000000004,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 402653184,
-      "memory_bytes_written": 402653184
+      "median_ms": 346.09929999999997,
+      "p50_ms": 346.09929999999997,
+      "p95_ms": 349.6259,
+      "p99_ms": 349.6259,
+      "min_ms": 322.2776,
+      "max_ms": 349.6259,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 402653184,
+        "bytes_written": 402653184,
+        "estimated_bandwidth_gb_per_sec": 0.7367366769521656,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1610,17 +2237,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 367.0294,
-      "p50_ms": 367.0294,
-      "p95_ms": 368.22450000000003,
-      "p99_ms": 368.22450000000003,
-      "min_ms": 363.999,
-      "max_ms": 368.22450000000003,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 536870912,
-      "memory_bytes_written": 536870912
+      "median_ms": 457.648,
+      "p50_ms": 457.648,
+      "p95_ms": 482.9475,
+      "p99_ms": 482.9475,
+      "min_ms": 385.2584,
+      "max_ms": 482.9475,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 536870912,
+        "bytes_written": 536870912,
+        "estimated_bandwidth_gb_per_sec": 0.7542309148843626,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1638,17 +2276,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 379.1502,
-      "p50_ms": 379.1502,
-      "p95_ms": 414.4843,
-      "p99_ms": 414.4843,
-      "min_ms": 367.92,
-      "max_ms": 414.4843,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 536870912,
-      "memory_bytes_written": 536870912
+      "median_ms": 394.2639,
+      "p50_ms": 394.2639,
+      "p95_ms": 530.2883,
+      "p99_ms": 530.2883,
+      "min_ms": 365.3943,
+      "max_ms": 530.2883,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 536870912,
+        "bytes_written": 536870912,
+        "estimated_bandwidth_gb_per_sec": 0.7752259492932458,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1666,17 +2315,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 369.79089999999997,
-      "p50_ms": 369.79089999999997,
-      "p95_ms": 372.925,
-      "p99_ms": 372.925,
-      "min_ms": 368.74109999999996,
-      "max_ms": 372.925,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 536870912,
-      "memory_bytes_written": 536870912
+      "median_ms": 409.37760000000003,
+      "p50_ms": 409.37760000000003,
+      "p95_ms": 421.1073,
+      "p99_ms": 421.1073,
+      "min_ms": 370.4913,
+      "max_ms": 421.1073,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 536870912,
+        "bytes_written": 536870912,
+        "estimated_bandwidth_gb_per_sec": 0.8326559677036065,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1694,17 +2354,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 1.9393,
-      "p50_ms": 1.9393,
-      "p95_ms": 2.104,
-      "p99_ms": 2.104,
-      "min_ms": 1.8591,
-      "max_ms": 2.104,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 2097152,
-      "memory_bytes_written": 2097152
+      "median_ms": 1.8247,
+      "p50_ms": 1.8247,
+      "p95_ms": 1.9900999999999998,
+      "p99_ms": 1.9900999999999998,
+      "min_ms": 1.7669000000000001,
+      "max_ms": 1.9900999999999998,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 1048576,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 1048576,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 1048576,
+        "bytes_written": 1048576,
+        "estimated_bandwidth_gb_per_sec": 0.3499157962627873,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1722,17 +2393,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 3.5029000000000003,
-      "p50_ms": 3.5029000000000003,
-      "p95_ms": 3.6616,
-      "p99_ms": 3.6616,
-      "min_ms": 3.4768,
-      "max_ms": 3.6616,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 2097152,
-      "memory_bytes_written": 2097152
+      "median_ms": 3.4261,
+      "p50_ms": 3.4261,
+      "p95_ms": 3.4881,
+      "p99_ms": 3.4881,
+      "min_ms": 3.3086,
+      "max_ms": 3.4881,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 1048576,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 1048576,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 1048576,
+        "bytes_written": 1048576,
+        "estimated_bandwidth_gb_per_sec": 0.19105577728215362,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1750,17 +2432,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 3.5761,
-      "p50_ms": 3.5761,
-      "p95_ms": 4.0662,
-      "p99_ms": 4.0662,
-      "min_ms": 3.5193999999999996,
-      "max_ms": 4.0662,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 4194304,
-      "memory_bytes_written": 4194304
+      "median_ms": 3.5694,
+      "p50_ms": 3.5694,
+      "p95_ms": 3.6695,
+      "p99_ms": 3.6695,
+      "min_ms": 3.5255,
+      "max_ms": 3.6695,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 2097152,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 2097152,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 2097152,
+        "bytes_written": 2097152,
+        "estimated_bandwidth_gb_per_sec": 0.3628859945747092,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1778,17 +2471,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 6.7372,
-      "p50_ms": 6.7372,
-      "p95_ms": 7.0332,
-      "p99_ms": 7.0332,
-      "min_ms": 6.6547,
-      "max_ms": 7.0332,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 4194304,
-      "memory_bytes_written": 4194304
+      "median_ms": 7.0083,
+      "p50_ms": 7.0083,
+      "p95_ms": 7.0742,
+      "p99_ms": 7.0742,
+      "min_ms": 6.6015,
+      "max_ms": 7.0742,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 2097152,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 2097152,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 2097152,
+        "bytes_written": 2097152,
+        "estimated_bandwidth_gb_per_sec": 0.1888537033455811,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1806,17 +2510,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 7.7688999999999995,
-      "p50_ms": 7.7688999999999995,
-      "p95_ms": 8.6592,
-      "p99_ms": 8.6592,
-      "min_ms": 7.2657,
-      "max_ms": 8.6592,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 8388608,
-      "memory_bytes_written": 8388608
+      "median_ms": 7.2889,
+      "p50_ms": 7.2889,
+      "p95_ms": 7.6857999999999995,
+      "p99_ms": 7.6857999999999995,
+      "min_ms": 7.0469,
+      "max_ms": 7.6857999999999995,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 4194304,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 4194304,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 4194304,
+        "bytes_written": 4194304,
+        "estimated_bandwidth_gb_per_sec": 0.3547653213208849,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1834,17 +2549,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 14.908,
-      "p50_ms": 14.908,
-      "p95_ms": 15.4325,
-      "p99_ms": 15.4325,
-      "min_ms": 14.072799999999999,
-      "max_ms": 15.4325,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 8388608,
-      "memory_bytes_written": 8388608
+      "median_ms": 14.0793,
+      "p50_ms": 14.0793,
+      "p95_ms": 14.6067,
+      "p99_ms": 14.6067,
+      "min_ms": 13.9152,
+      "max_ms": 14.6067,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 4194304,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 4194304,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 4194304,
+        "bytes_written": 4194304,
+        "estimated_bandwidth_gb_per_sec": 0.18338685295249896,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1862,17 +2588,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 15.2736,
-      "p50_ms": 15.2736,
-      "p95_ms": 15.5218,
-      "p99_ms": 15.5218,
-      "min_ms": 15.046199999999999,
-      "max_ms": 15.5218,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 15.067,
+      "p50_ms": 15.067,
+      "p95_ms": 15.3081,
+      "p99_ms": 15.3081,
+      "min_ms": 14.492899999999999,
+      "max_ms": 15.3081,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 8388608,
+        "bytes_written": 8388608,
+        "estimated_bandwidth_gb_per_sec": 0.3482437371846304,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1890,17 +2627,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 29.1347,
-      "p50_ms": 29.1347,
-      "p95_ms": 29.9363,
-      "p99_ms": 29.9363,
-      "min_ms": 28.6188,
-      "max_ms": 29.9363,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 16777216,
-      "memory_bytes_written": 16777216
+      "median_ms": 28.7046,
+      "p50_ms": 28.7046,
+      "p95_ms": 29.347,
+      "p99_ms": 29.347,
+      "min_ms": 28.067899999999998,
+      "max_ms": 29.347,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 8388608,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 8388608,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 8388608,
+        "bytes_written": 8388608,
+        "estimated_bandwidth_gb_per_sec": 0.1814339377260667,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1918,17 +2666,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 31.2429,
-      "p50_ms": 31.2429,
-      "p95_ms": 31.520899999999997,
-      "p99_ms": 31.520899999999997,
-      "min_ms": 30.2707,
-      "max_ms": 31.520899999999997,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 29.8768,
+      "p50_ms": 29.8768,
+      "p95_ms": 30.5471,
+      "p99_ms": 30.5471,
+      "min_ms": 29.7826,
+      "max_ms": 30.5471,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.3464273638817602,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1946,17 +2705,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 59.1734,
-      "p50_ms": 59.1734,
-      "p95_ms": 59.4139,
-      "p99_ms": 59.4139,
-      "min_ms": 58.2583,
-      "max_ms": 59.4139,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 33554432,
-      "memory_bytes_written": 33554432
+      "median_ms": 57.615,
+      "p50_ms": 57.615,
+      "p95_ms": 57.68729999999999,
+      "p99_ms": 57.68729999999999,
+      "min_ms": 57.3245,
+      "max_ms": 57.68729999999999,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 16777216,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 16777216,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 16777216,
+        "bytes_written": 16777216,
+        "estimated_bandwidth_gb_per_sec": 0.18102635280269344,
+        "cache_locality_tier": "L3 Cache Hit (256KB-16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -1974,17 +2744,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 61.784600000000005,
-      "p50_ms": 61.784600000000005,
-      "p95_ms": 62.58519999999999,
-      "p99_ms": 62.58519999999999,
-      "min_ms": 60.3616,
-      "max_ms": 62.58519999999999,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 59.7181,
+      "p50_ms": 59.7181,
+      "p95_ms": 60.0621,
+      "p99_ms": 60.0621,
+      "min_ms": 59.2802,
+      "max_ms": 60.0621,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.34904423311910393,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2002,17 +2783,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 119.3188,
-      "p50_ms": 119.3188,
-      "p95_ms": 119.36869999999999,
-      "p99_ms": 119.36869999999999,
-      "min_ms": 118.2612,
-      "max_ms": 119.36869999999999,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 67108864,
-      "memory_bytes_written": 67108864
+      "median_ms": 115.2311,
+      "p50_ms": 115.2311,
+      "p95_ms": 115.7056,
+      "p99_ms": 115.7056,
+      "min_ms": 114.4223,
+      "max_ms": 115.7056,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 33554432,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 33554432,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 33554432,
+        "bytes_written": 33554432,
+        "estimated_bandwidth_gb_per_sec": 0.18097110542942274,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2030,17 +2822,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 126.5286,
-      "p50_ms": 126.5286,
-      "p95_ms": 128.0147,
-      "p99_ms": 128.0147,
-      "min_ms": 125.999,
-      "max_ms": 128.0147,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 125.7006,
+      "p50_ms": 125.7006,
+      "p95_ms": 134.6318,
+      "p99_ms": 134.6318,
+      "min_ms": 124.99340000000001,
+      "max_ms": 134.6318,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.3244008057596974,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2058,17 +2861,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 244.4768,
-      "p50_ms": 244.4768,
-      "p95_ms": 257.61990000000003,
-      "p99_ms": 257.61990000000003,
-      "min_ms": 244.2808,
-      "max_ms": 257.61990000000003,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 134217728,
-      "memory_bytes_written": 134217728
+      "median_ms": 237.0537,
+      "p50_ms": 237.0537,
+      "p95_ms": 238.9595,
+      "p99_ms": 238.9595,
+      "min_ms": 237.01520000000002,
+      "max_ms": 238.9595,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 67108864,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 67108864,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 67108864,
+        "bytes_written": 67108864,
+        "estimated_bandwidth_gb_per_sec": 0.17530858518398426,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2086,17 +2900,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 248.63309999999998,
-      "p50_ms": 248.63309999999998,
-      "p95_ms": 253.06669999999997,
-      "p99_ms": 253.06669999999997,
-      "min_ms": 247.70809999999997,
-      "max_ms": 253.06669999999997,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 258.883,
+      "p50_ms": 258.883,
+      "p95_ms": 276.57710000000003,
+      "p99_ms": 276.57710000000003,
+      "min_ms": 258.46029999999996,
+      "max_ms": 276.57710000000003,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.31489302957828014,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2114,17 +2939,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 491.2068,
-      "p50_ms": 491.2068,
-      "p95_ms": 507.14380000000006,
-      "p99_ms": 507.14380000000006,
-      "min_ms": 482.7203,
-      "max_ms": 507.14380000000006,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 268435456,
-      "memory_bytes_written": 268435456
+      "median_ms": 480.2086,
+      "p50_ms": 480.2086,
+      "p95_ms": 488.83169999999996,
+      "p99_ms": 488.83169999999996,
+      "min_ms": 474.1349,
+      "max_ms": 488.83169999999996,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 134217728,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 134217728,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 134217728,
+        "bytes_written": 134217728,
+        "estimated_bandwidth_gb_per_sec": 0.17322914085552468,
+        "cache_locality_tier": "DRAM Memory Bus (>16MB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2142,17 +2978,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 0.8598,
-      "p50_ms": 0.8598,
-      "p95_ms": 0.9179999999999999,
-      "p99_ms": 0.9179999999999999,
-      "min_ms": 0.8327,
-      "max_ms": 0.9179999999999999,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 65536,
-      "memory_bytes_written": 65536
+      "median_ms": 0.82,
+      "p50_ms": 0.82,
+      "p95_ms": 0.847,
+      "p99_ms": 0.847,
+      "min_ms": 0.8191999999999999,
+      "max_ms": 0.847,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 4096,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 4096,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 65536,
+        "bytes_written": 65536,
+        "estimated_bandwidth_gb_per_sec": 0.04909915232081088,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2170,17 +3017,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 3.2063,
-      "p50_ms": 3.2063,
-      "p95_ms": 3.2371000000000003,
-      "p99_ms": 3.2371000000000003,
-      "min_ms": 3.2001999999999997,
-      "max_ms": 3.2371000000000003,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 262144,
-      "memory_bytes_written": 262144
+      "median_ms": 3.1982,
+      "p50_ms": 3.1982,
+      "p95_ms": 3.2464,
+      "p99_ms": 3.2464,
+      "min_ms": 3.1824000000000003,
+      "max_ms": 3.2464,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 4096,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 4096,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 262144,
+        "bytes_written": 262144,
+        "estimated_bandwidth_gb_per_sec": 0.05071998026384128,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2198,17 +3056,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 12.718200000000001,
-      "p50_ms": 12.718200000000001,
-      "p95_ms": 12.8179,
-      "p99_ms": 12.8179,
-      "min_ms": 12.71,
-      "max_ms": 12.8179,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 1048576,
-      "memory_bytes_written": 1048576
+      "median_ms": 12.683399999999999,
+      "p50_ms": 12.683399999999999,
+      "p95_ms": 12.8052,
+      "p99_ms": 12.8052,
+      "min_ms": 12.681899999999999,
+      "max_ms": 12.8052,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 4096,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 4096,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 1048576,
+        "bytes_written": 1048576,
+        "estimated_bandwidth_gb_per_sec": 0.05116844159756881,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2226,17 +3095,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 51.0582,
-      "p50_ms": 51.0582,
-      "p95_ms": 51.0962,
-      "p99_ms": 51.0962,
-      "min_ms": 50.9028,
-      "max_ms": 51.0962,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 4194304,
-      "memory_bytes_written": 4194304
+      "median_ms": 50.8215,
+      "p50_ms": 50.8215,
+      "p95_ms": 51.119699999999995,
+      "p99_ms": 51.119699999999995,
+      "min_ms": 50.554,
+      "max_ms": 51.119699999999995,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 4096,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 4096,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 4194304,
+        "bytes_written": 4194304,
+        "estimated_bandwidth_gb_per_sec": 0.05123112071724225,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2254,17 +3134,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 0.0992,
-      "p50_ms": 0.0992,
-      "p95_ms": 0.1026,
-      "p99_ms": 0.1026,
-      "min_ms": 0.0992,
-      "max_ms": 0.1026,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 64000,
-      "memory_bytes_written": 64000
+      "median_ms": 0.1003,
+      "p50_ms": 0.1003,
+      "p95_ms": 0.1033,
+      "p99_ms": 0.1033,
+      "min_ms": 0.1003,
+      "max_ms": 0.1033,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 64,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 64,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 64000,
+        "bytes_written": 64000,
+        "estimated_bandwidth_gb_per_sec": 0.39226485538262995,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2282,17 +3173,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 1.0051,
-      "p50_ms": 1.0051,
-      "p95_ms": 1.0177999999999998,
-      "p99_ms": 1.0177999999999998,
-      "min_ms": 0.9999,
-      "max_ms": 1.0177999999999998,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 640000,
-      "memory_bytes_written": 640000
+      "median_ms": 1.0037,
+      "p50_ms": 1.0037,
+      "p95_ms": 1.0098,
+      "p99_ms": 1.0098,
+      "min_ms": 0.9964999999999999,
+      "max_ms": 1.0098,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 64,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 64,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 640000,
+        "bytes_written": 640000,
+        "estimated_bandwidth_gb_per_sec": 0.39604415133149923,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2310,17 +3212,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 4.966500000000001,
-      "p50_ms": 4.966500000000001,
-      "p95_ms": 5.1268,
-      "p99_ms": 5.1268,
-      "min_ms": 4.9626,
-      "max_ms": 5.1268,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 3200000,
-      "memory_bytes_written": 3200000
+      "median_ms": 4.991899999999999,
+      "p50_ms": 4.991899999999999,
+      "p95_ms": 5.007700000000001,
+      "p99_ms": 5.007700000000001,
+      "min_ms": 4.975099999999999,
+      "max_ms": 5.007700000000001,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 64,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 64,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 3200000,
+        "bytes_written": 3200000,
+        "estimated_bandwidth_gb_per_sec": 0.3980356519689251,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   },
   {
@@ -2338,17 +3251,28 @@
       "warmup_iterations": 1
     },
     "metrics": {
-      "median_ms": 10.1933,
-      "p50_ms": 10.1933,
-      "p95_ms": 10.217600000000001,
-      "p99_ms": 10.217600000000001,
-      "min_ms": 9.9819,
-      "max_ms": 10.217600000000001,
-      "peak_ram_bytes": 0,
-      "avg_ram_bytes": 0,
-      "cpu_cycles": null,
-      "memory_bytes_read": 6400000,
-      "memory_bytes_written": 6400000
+      "median_ms": 10.616999999999999,
+      "p50_ms": 10.616999999999999,
+      "p95_ms": 10.857199999999999,
+      "p99_ms": 10.857199999999999,
+      "min_ms": 10.02,
+      "max_ms": 10.857199999999999,
+      "latency_classification": "Measured",
+      "ram": {
+        "requested_allocation_bytes": 64,
+        "resident_memory_bytes": 0,
+        "kdf_working_memory_bytes": 64,
+        "temporary_allocation_bytes": 0,
+        "ram_classification": "Estimated"
+      },
+      "bandwidth": {
+        "bytes_read": 6400000,
+        "bytes_written": 6400000,
+        "estimated_bandwidth_gb_per_sec": 0.37851188330162777,
+        "cache_locality_tier": "L1/L2 Cache Hit (<256KB)",
+        "bandwidth_classification": "Estimated"
+      },
+      "cpu_cycles": null
     }
   }
 ]

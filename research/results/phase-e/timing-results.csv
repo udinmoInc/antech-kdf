@@ -1,0 +1,7 @@
+candidate_id,correct_password_ms,wrong_password_ms,timing_delta_ms,timing_side_channel_risk
+candidate-e1,1221.3977,1212.9452999999999,8.452400000000125,MODERATE — Timing delta requires constant-time masking
+candidate-e2,1217.5918000000001,1228.4074,10.815599999999904,MODERATE — Timing delta requires constant-time masking
+candidate-e3,305.8053,1215.9594,910.1541,MODERATE — Timing delta requires constant-time masking
+candidate-e4,9.8021,9.5648,0.2372999999999994,LOW — Constant-time bounds maintained
+candidate-e5,1216.4416,1214.5183,1.9233000000001539,LOW — Constant-time bounds maintained
+candidate-e6,492.9912,1296.4224,803.4312,MODERATE — Timing delta requires constant-time masking

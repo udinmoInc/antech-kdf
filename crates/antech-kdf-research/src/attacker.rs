@@ -1,6 +1,6 @@
 //! Offline attacker cost modeling and H1 trade-off analysis.
 
-use crate::schema::AttackerModelResult;
+use crate::schema::{AttackerModelResult, MeasurementSource};
 
 /// Computes attacker throughput and parallel bottleneck models for baseline algorithms.
 pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
@@ -17,6 +17,8 @@ pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
             gpu_simulated_parallel_guesses_per_sec: 375.0, // VRAM capacity bottlenecked (24 GB VRAM / 64 MB = ~375 concurrent threads)
             max_practical_parallelism: 375,
             memory_bus_bottleneck: "VRAM Spatial Allocation Capacity Limit".to_string(),
+            cpu_throughput_classification: MeasurementSource::Measured,
+            gpu_throughput_classification: MeasurementSource::Modeled,
         },
         // 2. scrypt (N=16384, r=8, p=1)
         AttackerModelResult {
@@ -30,6 +32,8 @@ pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
             gpu_simulated_parallel_guesses_per_sec: 1500.0, // 24 GB VRAM / 16 MB = ~1500 threads
             max_practical_parallelism: 1500,
             memory_bus_bottleneck: "VRAM Allocation & Memory Bus Bandwidth".to_string(),
+            cpu_throughput_classification: MeasurementSource::Measured,
+            gpu_throughput_classification: MeasurementSource::Modeled,
         },
         // 3. bcrypt (cost=10)
         AttackerModelResult {
@@ -43,6 +47,8 @@ pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
             gpu_simulated_parallel_guesses_per_sec: 45_000.0, // High GPU parallelism due to tiny 4 KiB L1 footprint
             max_practical_parallelism: 524_288,
             memory_bus_bottleneck: "Pure Compute ALUs / Register File (L1 Cache fit)".to_string(),
+            cpu_throughput_classification: MeasurementSource::Measured,
+            gpu_throughput_classification: MeasurementSource::Modeled,
         },
         // 4. PBKDF2-SHA256 (100,000 iterations)
         AttackerModelResult {
@@ -56,6 +62,8 @@ pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
             gpu_simulated_parallel_guesses_per_sec: 1_200_000.0, // Extremely vulnerable to GPU parallelism
             max_practical_parallelism: 2_000_000,
             memory_bus_bottleneck: "None — Zero Memory Pressure (Pure SHA256 ALUs)".to_string(),
+            cpu_throughput_classification: MeasurementSource::Measured,
+            gpu_throughput_classification: MeasurementSource::Modeled,
         },
         // 5. CONTROL — EXPECTED TO FAIL H1 (Low RAM 1 MiB, low iterations, zero churn)
         AttackerModelResult {
@@ -69,6 +77,8 @@ pub fn run_attacker_cost_models() -> Vec<AttackerModelResult> {
             gpu_simulated_parallel_guesses_per_sec: 24_000.0, // 24 GB VRAM / 1 MB = 24,000 threads (Attacker win)
             max_practical_parallelism: 24_000,
             memory_bus_bottleneck: "FAIL — Low RAM without bandwidth churn allows massive GPU parallelism".to_string(),
+            cpu_throughput_classification: MeasurementSource::Measured,
+            gpu_throughput_classification: MeasurementSource::Modeled,
         },
     ]
 }

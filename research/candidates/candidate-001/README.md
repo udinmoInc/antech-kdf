@@ -1,19 +1,11 @@
-# Research Candidate 001: Bandwidth-Hard Low-RAM Churn
+# Candidate 001 — Family A: Low-Capacity Memory Churn
 
-> **STATUS**: `EXPERIMENTAL`  
-> **WARNING**: *Not production safe. Under active cryptographic evaluation.*
+**Status: EXPERIMENTAL / NOT PRODUCTION SAFE**
 
 ## Overview
+Candidate 001 tests whether repeatedly churning a small memory working set (4–32 MiB) can produce sustained DRAM memory bus pressure without consuming large peak RAM allocations.
 
-Candidate 001 explores reducing peak RAM consumption to 1-64 MB while maintaining high attacker latency and cost through sustained memory bus bandwidth churn and strict sequential dependency constraints.
-
-## Candidate Metadata
-
-- **Candidate ID**: Candidate-001
-- **Status**: `EXPERIMENTAL`
-- **Hypothesis**: Low peak memory + high latency + sustained memory bandwidth churn yields equal attacker economic penalty as large peak memory.
-- **Expected Benefit**: 10x-50x lower server peak memory usage, enabling higher concurrent login capacity without DoS risk.
-- **Threat Model**: Offline brute-force dictionary attack on derived hashes using high-end GPUs, multi-core CPUs, and customized ASICs.
-- **Known Weaknesses**: Low peak RAM allows high spatial concurrency on GPUs if bandwidth utilization is not memory bus saturated.
-- **Measurements**: Initial baseline benchmark pending.
-- **Attack Results**: Formal ASIC/GPU model under construction.
+- **Hypothesis**: High-frequency memory churn over a compact buffer forces memory bus traffic while maintaining low peak RAM overhead.
+- **Threat Model**: Attacker attempts parallel GPU/ASIC cracking by storing many candidate states in VRAM.
+- **Defender RAM Target**: 4 MiB to 32 MiB.
+- **Known Risks**: Working sets $\le 16$ MiB may fit entirely in CPU L3 cache and fail to generate DRAM bus traffic.

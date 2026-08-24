@@ -1,0 +1,506 @@
+[
+  {
+    "algorithm": "argon2id",
+    "iteration": 1,
+    "duration_us": 7340,
+    "timestamp_epoch_ms": 1700000000000
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 2,
+    "duration_us": 5948,
+    "timestamp_epoch_ms": 1700000000010
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 3,
+    "duration_us": 6495,
+    "timestamp_epoch_ms": 1700000000020
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 4,
+    "duration_us": 10769,
+    "timestamp_epoch_ms": 1700000000030
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 5,
+    "duration_us": 11520,
+    "timestamp_epoch_ms": 1700000000040
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 6,
+    "duration_us": 10878,
+    "timestamp_epoch_ms": 1700000000050
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 7,
+    "duration_us": 15069,
+    "timestamp_epoch_ms": 1700000000060
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 8,
+    "duration_us": 15038,
+    "timestamp_epoch_ms": 1700000000070
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 9,
+    "duration_us": 15646,
+    "timestamp_epoch_ms": 1700000000080
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 10,
+    "duration_us": 21782,
+    "timestamp_epoch_ms": 1700000000090
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 11,
+    "duration_us": 20449,
+    "timestamp_epoch_ms": 1700000000100
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 12,
+    "duration_us": 21442,
+    "timestamp_epoch_ms": 1700000000110
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 13,
+    "duration_us": 13612,
+    "timestamp_epoch_ms": 1700000000120
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 14,
+    "duration_us": 13318,
+    "timestamp_epoch_ms": 1700000000130
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 15,
+    "duration_us": 13965,
+    "timestamp_epoch_ms": 1700000000140
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 16,
+    "duration_us": 23282,
+    "timestamp_epoch_ms": 1700000000150
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 17,
+    "duration_us": 23996,
+    "timestamp_epoch_ms": 1700000000160
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 18,
+    "duration_us": 22463,
+    "timestamp_epoch_ms": 1700000000170
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 19,
+    "duration_us": 32088,
+    "timestamp_epoch_ms": 1700000000180
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 20,
+    "duration_us": 33968,
+    "timestamp_epoch_ms": 1700000000190
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 21,
+    "duration_us": 31926,
+    "timestamp_epoch_ms": 1700000000200
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 22,
+    "duration_us": 39375,
+    "timestamp_epoch_ms": 1700000000210
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 23,
+    "duration_us": 40402,
+    "timestamp_epoch_ms": 1700000000220
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 24,
+    "duration_us": 40913,
+    "timestamp_epoch_ms": 1700000000230
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 25,
+    "duration_us": 27226,
+    "timestamp_epoch_ms": 1700000000240
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 26,
+    "duration_us": 26577,
+    "timestamp_epoch_ms": 1700000000250
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 27,
+    "duration_us": 31123,
+    "timestamp_epoch_ms": 1700000000260
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 28,
+    "duration_us": 80864,
+    "timestamp_epoch_ms": 1700000000270
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 29,
+    "duration_us": 45512,
+    "timestamp_epoch_ms": 1700000000280
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 30,
+    "duration_us": 44217,
+    "timestamp_epoch_ms": 1700000000290
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 31,
+    "duration_us": 62240,
+    "timestamp_epoch_ms": 1700000000300
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 32,
+    "duration_us": 63079,
+    "timestamp_epoch_ms": 1700000000310
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 33,
+    "duration_us": 65676,
+    "timestamp_epoch_ms": 1700000000320
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 34,
+    "duration_us": 80939,
+    "timestamp_epoch_ms": 1700000000330
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 35,
+    "duration_us": 83994,
+    "timestamp_epoch_ms": 1700000000340
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 36,
+    "duration_us": 92977,
+    "timestamp_epoch_ms": 1700000000350
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 37,
+    "duration_us": 70480,
+    "timestamp_epoch_ms": 1700000000360
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 38,
+    "duration_us": 58284,
+    "timestamp_epoch_ms": 1700000000370
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 39,
+    "duration_us": 64519,
+    "timestamp_epoch_ms": 1700000000380
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 40,
+    "duration_us": 109196,
+    "timestamp_epoch_ms": 1700000000390
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 41,
+    "duration_us": 105475,
+    "timestamp_epoch_ms": 1700000000400
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 42,
+    "duration_us": 98470,
+    "timestamp_epoch_ms": 1700000000410
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 43,
+    "duration_us": 142257,
+    "timestamp_epoch_ms": 1700000000420
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 44,
+    "duration_us": 144129,
+    "timestamp_epoch_ms": 1700000000430
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 45,
+    "duration_us": 137620,
+    "timestamp_epoch_ms": 1700000000440
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 46,
+    "duration_us": 176291,
+    "timestamp_epoch_ms": 1700000000450
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 47,
+    "duration_us": 175529,
+    "timestamp_epoch_ms": 1700000000460
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 48,
+    "duration_us": 170843,
+    "timestamp_epoch_ms": 1700000000470
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 49,
+    "duration_us": 112172,
+    "timestamp_epoch_ms": 1700000000480
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 50,
+    "duration_us": 116999,
+    "timestamp_epoch_ms": 1700000000490
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 51,
+    "duration_us": 118174,
+    "timestamp_epoch_ms": 1700000000500
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 52,
+    "duration_us": 196003,
+    "timestamp_epoch_ms": 1700000000510
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 53,
+    "duration_us": 202420,
+    "timestamp_epoch_ms": 1700000000520
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 54,
+    "duration_us": 199273,
+    "timestamp_epoch_ms": 1700000000530
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 55,
+    "duration_us": 343840,
+    "timestamp_epoch_ms": 1700000000540
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 56,
+    "duration_us": 386782,
+    "timestamp_epoch_ms": 1700000000550
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 57,
+    "duration_us": 346099,
+    "timestamp_epoch_ms": 1700000000560
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 58,
+    "duration_us": 457648,
+    "timestamp_epoch_ms": 1700000000570
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 59,
+    "duration_us": 394263,
+    "timestamp_epoch_ms": 1700000000580
+  },
+  {
+    "algorithm": "argon2id",
+    "iteration": 60,
+    "duration_us": 409377,
+    "timestamp_epoch_ms": 1700000000590
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 61,
+    "duration_us": 1824,
+    "timestamp_epoch_ms": 1700000000600
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 62,
+    "duration_us": 3426,
+    "timestamp_epoch_ms": 1700000000610
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 63,
+    "duration_us": 3569,
+    "timestamp_epoch_ms": 1700000000620
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 64,
+    "duration_us": 7008,
+    "timestamp_epoch_ms": 1700000000630
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 65,
+    "duration_us": 7288,
+    "timestamp_epoch_ms": 1700000000640
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 66,
+    "duration_us": 14079,
+    "timestamp_epoch_ms": 1700000000650
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 67,
+    "duration_us": 15067,
+    "timestamp_epoch_ms": 1700000000660
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 68,
+    "duration_us": 28704,
+    "timestamp_epoch_ms": 1700000000670
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 69,
+    "duration_us": 29876,
+    "timestamp_epoch_ms": 1700000000680
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 70,
+    "duration_us": 57615,
+    "timestamp_epoch_ms": 1700000000690
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 71,
+    "duration_us": 59718,
+    "timestamp_epoch_ms": 1700000000700
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 72,
+    "duration_us": 115231,
+    "timestamp_epoch_ms": 1700000000710
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 73,
+    "duration_us": 125700,
+    "timestamp_epoch_ms": 1700000000720
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 74,
+    "duration_us": 237053,
+    "timestamp_epoch_ms": 1700000000730
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 75,
+    "duration_us": 258882,
+    "timestamp_epoch_ms": 1700000000740
+  },
+  {
+    "algorithm": "scrypt",
+    "iteration": 76,
+    "duration_us": 480208,
+    "timestamp_epoch_ms": 1700000000750
+  },
+  {
+    "algorithm": "bcrypt",
+    "iteration": 77,
+    "duration_us": 820,
+    "timestamp_epoch_ms": 1700000000760
+  },
+  {
+    "algorithm": "bcrypt",
+    "iteration": 78,
+    "duration_us": 3198,
+    "timestamp_epoch_ms": 1700000000770
+  },
+  {
+    "algorithm": "bcrypt",
+    "iteration": 79,
+    "duration_us": 12683,
+    "timestamp_epoch_ms": 1700000000780
+  },
+  {
+    "algorithm": "bcrypt",
+    "iteration": 80,
+    "duration_us": 50821,
+    "timestamp_epoch_ms": 1700000000790
+  },
+  {
+    "algorithm": "pbkdf2-sha256",
+    "iteration": 81,
+    "duration_us": 100,
+    "timestamp_epoch_ms": 1700000000800
+  },
+  {
+    "algorithm": "pbkdf2-sha256",
+    "iteration": 82,
+    "duration_us": 1003,
+    "timestamp_epoch_ms": 1700000000810
+  },
+  {
+    "algorithm": "pbkdf2-sha256",
+    "iteration": 83,
+    "duration_us": 4991,
+    "timestamp_epoch_ms": 1700000000820
+  },
+  {
+    "algorithm": "pbkdf2-sha256",
+    "iteration": 84,
+    "duration_us": 10617,
+    "timestamp_epoch_ms": 1700000000830
+  }
+]

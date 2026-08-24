@@ -1,0 +1,6 @@
+variant_id,working_set_bytes,median_latency_ms,defender_cpu_reduction_factor,status
+candidate-004-baseline,16777216,9.1825,1.0,BASELINE
+candidate-004-opt-001,16777216,14.1591,0.6485228580912628,ACCEPTED
+candidate-004-opt-002,16777216,10.5935,0.8668051163449284,ACCEPTED
+candidate-004-opt-003,16777216,13.0329,0.7045630673142584,NEUTRAL
+candidate-004-opt-004,16777216,12.2279,0.7509466057131641,ACCEPTED

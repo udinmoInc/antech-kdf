@@ -1,9 +1,6 @@
-# Research Candidate 002: Dynamic DAG Dependency Engine
+# Candidate 002 — Family B: Rotating Working Set
 
-> **STATUS**: `DRAFT`
+**Status: EXPERIMENTAL / NOT PRODUCTION SAFE**
 
 ## Overview
-Candidate 002 evaluates dynamically generated Directed Acyclic Graphs (DAG) for enforcing sequential execution paths across small working sets.
-
-## Status: `DRAFT`
-Design specification in progress.
+Continuously rewrites and rotates small ring buffer memory regions (Region A -> Region B -> Region C -> reuse) to prevent state retention in fast memory.

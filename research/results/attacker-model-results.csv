@@ -1,6 +1,6 @@
-algorithm,parameters,ram_per_guess_bytes,compute_per_guess_ops,bandwidth_per_guess_bytes,single_cpu_guesses_per_sec,multicore_16c_guesses_per_sec,gpu_simulated_parallel_guesses_per_sec,max_practical_parallelism,memory_bus_bottleneck
-argon2id,"memory_kib=65536,time_cost=3",67108864,196608,201326592,25.0,380.0,375.0,375,VRAM Spatial Allocation Capacity Limit
-scrypt,"n=16384,r=8,p=1",16777216,32768,33554432,45.0,680.0,1500.0,1500,VRAM Allocation & Memory Bus Bandwidth
-bcrypt,cost=10,4096,1048576,4194304,12.0,180.0,45000.0,524288,Pure Compute ALUs / Register File (L1 Cache fit)
-pbkdf2-sha256,iterations=100000,64,100000,6400000,250.0,3800.0,1200000.0,2000000,None — Zero Memory Pressure (Pure SHA256 ALUs)
-CONTROL — EXPECTED TO FAIL H1,"memory_kib=1024,churn=false",1048576,1000,1048576,1500.0,22000.0,24000.0,24000,FAIL — Low RAM without bandwidth churn allows massive GPU parallelism
+algorithm,parameters,ram_per_guess_bytes,compute_per_guess_ops,bandwidth_per_guess_bytes,single_cpu_guesses_per_sec,multicore_16c_guesses_per_sec,gpu_simulated_parallel_guesses_per_sec,max_practical_parallelism,memory_bus_bottleneck,cpu_throughput_classification,gpu_throughput_classification
+argon2id,"memory_kib=65536,time_cost=3",67108864,196608,201326592,25.0,380.0,375.0,375,VRAM Spatial Allocation Capacity Limit,Measured,Modeled
+scrypt,"n=16384,r=8,p=1",16777216,32768,33554432,45.0,680.0,1500.0,1500,VRAM Allocation & Memory Bus Bandwidth,Measured,Modeled
+bcrypt,cost=10,4096,1048576,4194304,12.0,180.0,45000.0,524288,Pure Compute ALUs / Register File (L1 Cache fit),Measured,Modeled
+pbkdf2-sha256,iterations=100000,64,100000,6400000,250.0,3800.0,1200000.0,2000000,None — Zero Memory Pressure (Pure SHA256 ALUs),Measured,Modeled
+CONTROL — EXPECTED TO FAIL H1,"memory_kib=1024,churn=false",1048576,1000,1048576,1500.0,22000.0,24000.0,24000,FAIL — Low RAM without bandwidth churn allows massive GPU parallelism,Measured,Modeled

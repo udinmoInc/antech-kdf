@@ -157,6 +157,20 @@ impl From<&BenchmarkResult> for CsvBenchmarkRecord {
     }
 }
 
+/// Bandwidth record for CSV export.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BandwidthRecord {
+    pub algorithm: String,
+    pub parameters: String,
+    pub memory_bytes_read: u64,
+    pub memory_bytes_written: u64,
+    pub total_bandwidth_bytes: u64,
+    pub estimated_bandwidth_gb_per_sec: f64,
+    pub median_latency_ms: f64,
+    pub cache_locality_tier: String,
+    pub bandwidth_classification: String,
+}
+
 /// Concurrency scaling measurement entry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConcurrencyResult {
