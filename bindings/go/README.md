@@ -1,14 +1,9 @@
-# Antech KDF Go Binding
+# Antech KDF — Go Language Bindings
 
-Uses cgo calling `antech-kdf-ffi`.
+Go bindings for Antech KDF via C FFI.
 
 ```go
 package main
 
-import "github.com/antech-kdf/antech-kdf-go"
-
-func main() {
-    hash, _ := antech.HashPassword("hello")
-    valid, _ := antech.VerifyPassword("hello", hash)
-}
+import "github.com/udinmoInc/antech-kdf-go"
 ```

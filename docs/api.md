@@ -1,22 +1,24 @@
 # Antech KDF — Developer API Specification & Integration Guide
 
-The `antech-kdf` Rust crate provides a simple, self-describing password hashing API. Low-level primitives, secure random salt generation, domain separation, parameter parsing, and constant-time string verification are managed automatically.
+The `antech-kdf` Rust crate provides a simple, self-describing password hashing API alongside advanced configurable builder APIs for custom deployment environments.
 
 ---
 
-## 🎨 Public API Signature Overview
+## 🎨 Public API Overview
 
 ```mermaid
 graph LR
-    subgraph Input ["User Input Credentials"]
+    subgraph Input ["Credential Inputs"]
         P["Password String / Bytes"]
         H["Stored Hash String"]
+        CFG["AntechConfig / RehashPolicy"]
     end
 
     subgraph API ["Public API (crates/antech-kdf)"]
         HASH["hash(password)"]
+        HASHC["hash_with_config(password, &config)"]
         VERIFY["verify(password, hash)"]
-        REHASH["needs_rehash(hash)"]
+        REHASH["needs_rehash_with_policy(hash, &policy)"]
     end
 
     subgraph Result ["Output Results"]
@@ -25,19 +27,23 @@ graph LR
     end
 
     P --> HASH
+    CFG --> HASHC
+    P --> HASHC
     HASH --> S
+    HASHC --> S
     P --> VERIFY
     H --> VERIFY
     VERIFY --> B
     H --> REHASH
+    CFG --> REHASH
     REHASH --> B
 ```
 
 ---
 
-## 🚀 Rust Code Snippets & Usage Examples
+## 🚀 Usage Examples
 
-### 1. Basic Password Hashing & Verification
+### 1. Default Password Hashing & Verification
 
 ```rust
 use antech_kdf::{hash, verify, needs_rehash, Error};
@@ -45,20 +51,15 @@ use antech_kdf::{hash, verify, needs_rehash, Error};
 fn main() -> Result<(), Error> {
     let password = "correct_horse_battery_staple";
 
-    // 1. Hash a password using recommended default parameters
+    // Hash using default parameters (16 MB RAM, 16-byte salt)
     let stored_hash = hash(password)?;
-    println!("Encoded Hash: {}", stored_hash);
-    // Output: $antech$v1$m=16384,t=120,p=1$4242...$a1f9...
+    println!("Hash: {}", stored_hash);
 
-    // 2. Verify password against stored hash in constant time
+    // Verify password against stored hash in constant time
     let is_valid = verify(password, &stored_hash)?;
-    assert!(is_valid, "Password verification failed");
+    assert!(is_valid);
 
-    // 3. Reject invalid passwords cleanly
-    let is_wrong_valid = verify("wrong_password", &stored_hash)?;
-    assert!(!is_wrong_valid, "Invalid password incorrectly accepted");
-
-    // 4. Check if re-hashing is required due to parameter upgrades
+    // Check if rehash is required
     let rehash_needed = needs_rehash(&stored_hash)?;
     assert!(!rehash_needed);
 
@@ -68,50 +69,60 @@ fn main() -> Result<(), Error> {
 
 ---
 
-### 2. Error Handling & Edge Cases
+### 2. Advanced Parameter Configuration (`AntechConfig`)
 
-The API returns structured, non-panicking `Result<T, Error>` enums:
+Developers can configure algorithm parameters cleanly using `AntechConfig::builder()`:
 
 ```rust
-use antech_kdf::{verify, Error};
+use antech_kdf::{hash_with_config, verify, Algorithm, AntechConfig, Error};
 
-fn authenticate_user(input_pwd: &str, stored_hash: &str) {
-    match verify(input_pwd, stored_hash) {
-        Ok(true) => println!("AUTHENTICATED: Access granted."),
-        Ok(false) => println!("DENIED: Password incorrect."),
-        Err(Error::InvalidHash) => eprintln!("SECURITY ALERT: Stored hash format is malformed."),
-        Err(Error::UnsupportedVersion) => eprintln!("UPGRADE REQUIRED: Hash version not supported."),
-        Err(e) => eprintln!("ERROR: Authentication failure: {}", e),
-    }
+fn main() -> Result<(), Error> {
+    let password = "custom_deployment_password";
+
+    // Build custom configuration
+    let config = AntechConfig::builder()
+        .algorithm(Algorithm::Antech)
+        .salt_length(32)           // 8 to 256 bytes validated
+        .memory_mib(24)            // 16 to 256 MiB supported
+        .passes(3)                 // Execution passes
+        .dependency_depth(700_000) // Sequential steps
+        .output_length(32)         // 8 to 128 bytes digest
+        .build()?;
+
+    // Hash with custom config
+    let encoded_hash = hash_with_config(password, &config)?;
+    println!("Custom Hash: {}", encoded_hash);
+
+    // Verify using standard verify API (recovers parameters automatically from stored string)
+    let is_valid = verify(password, &encoded_hash)?;
+    assert!(is_valid);
+
+    Ok(())
 }
 ```
 
 ---
 
-### 3. C ABI / FFI Foreign Function Interface Bindings
+### 3. Application Rehash Policies (`RehashPolicy`)
 
-For integration into C, C++, Python, or Go, `antech-kdf-ffi` exposes C-compatible foreign function bindings:
+```rust
+use antech_kdf::{hash, needs_rehash_with_policy, RehashPolicy};
 
-```c
-#include <stdio.h>
-#include <stdbool.h>
-#include "antech_kdf.h"
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let stored_hash = hash("user_password")?;
 
-int main() {
-    const char* password = "user_secret_password";
-    char hash_buffer[256];
+    // Create application policy enforcing higher memory standards
+    let policy = RehashPolicy::builder()
+        .minimum_memory_mib(16)
+        .preferred_memory_mib(32)
+        .preferred_passes(3)
+        .build();
 
-    // Hash password via C ABI
-    int status = antech_hash(password, hash_buffer, sizeof(hash_buffer));
-    if (status == 0) {
-        printf("C ABI Hashed: %s\n", hash_buffer);
-
-        // Verify password via C ABI
-        bool is_valid = false;
-        if (antech_verify(password, hash_buffer, &is_valid) == 0 && is_valid) {
-            printf("C ABI Verified: Success!\n");
-        }
+    // Check if stored hash needs re-hashing against application policy
+    if needs_rehash_with_policy(&stored_hash, &policy)? {
+        println!("Hash is outdated; re-hashing required upon login.");
     }
-    return 0;
+
+    Ok(())
 }
 ```

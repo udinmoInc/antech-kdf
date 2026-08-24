@@ -1,102 +1,70 @@
-//! Self-describing hash string parser.
+//! Parser for self-describing password hash strings.
 
-use crate::error::FormatError;
-use antech_kdf_types::{AlgorithmVersion, RawHashComponents};
-use base64::engine::general_purpose::STANDARD_NO_PAD;
-use base64::Engine;
+use antech_kdf_types::{Algorithm, AlgorithmVersion, KdfError, RawHashComponents};
 
-/// Parses a formatted password hash string into raw components.
-///
-/// Format: `$antech$<version>$m=<mem>,t=<time>,p=<par>,bw=<bw>$<salt_b64>$<digest_b64>`
-pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, FormatError> {
-    if !encoded.starts_with("$antech$") {
-        return Err(FormatError::InvalidPrefix);
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if !s.len().is_multiple_of(2) {
+        return Err("Odd length hex string".to_string());
     }
+    (0..s.len())
+        .step_by(2)
+        .map(|i| {
+            u8::from_str_radix(&s[i..i + 2], 16)
+                .map_err(|e| format!("Invalid hex byte at {}: {}", i, e))
+        })
+        .collect()
+}
 
+/// Parse self-describing hash string into `RawHashComponents`.
+pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, KdfError> {
     let parts: Vec<&str> = encoded.split('$').collect();
-    // Expect: ["", "antech", version, params, salt, digest]
-    if parts.len() != 6 || parts[1] != "antech" {
-        return Err(FormatError::InvalidEncoding);
+    if parts.len() != 6 {
+        return Err(KdfError::Encoding("Invalid hash field count".to_string()));
     }
 
-    let version_str = parts[2];
-    let version = AlgorithmVersion::parse(version_str)
-        .ok_or_else(|| FormatError::UnsupportedVersion(version_str.to_string()))?;
+    let algo = Algorithm::parse(parts[1])
+        .ok_or_else(|| KdfError::Encoding(format!("Unknown algorithm identifier: {}", parts[1])))?;
 
-    let params_str = parts[3];
-    let mut memory_kib = 0;
-    let mut time_cost = 0;
-    let mut parallelism = 0;
-    let mut bandwidth_target = 0;
+    let version = AlgorithmVersion::parse(parts[2])
+        .ok_or_else(|| KdfError::Encoding(format!("Unknown version identifier: {}", parts[2])))?;
 
-    for kv in params_str.split(',') {
-        let mut sub_parts = kv.split('=');
-        let key = sub_parts.next().ok_or(FormatError::InvalidEncoding)?;
-        let val_str = sub_parts.next().ok_or(FormatError::InvalidEncoding)?;
+    let mut memory_kib = 16384;
+    let mut salt_len = 16;
+    let mut dependency_depth = 650000;
+    let mut passes = 1;
+    let mut block_size = 32;
+    let mut output_len = 32;
 
-        match key {
-            "m" => {
-                memory_kib = val_str
-                    .parse()
-                    .map_err(|_| FormatError::InvalidParameter("m".to_string()))?
+    for param_kv in parts[3].split(',') {
+        let kv: Vec<&str> = param_kv.split('=').collect();
+        if kv.len() == 2 {
+            match kv[0] {
+                "m" => memory_kib = kv[1].parse().unwrap_or(16384),
+                "s" => salt_len = kv[1].parse().unwrap_or(16),
+                "t" => dependency_depth = kv[1].parse().unwrap_or(650000),
+                "p" => passes = kv[1].parse().unwrap_or(1),
+                "b" => block_size = kv[1].parse().unwrap_or(32),
+                "l" => output_len = kv[1].parse().unwrap_or(32),
+                _ => {}
             }
-            "t" => {
-                time_cost = val_str
-                    .parse()
-                    .map_err(|_| FormatError::InvalidParameter("t".to_string()))?
-            }
-            "p" => {
-                parallelism = val_str
-                    .parse()
-                    .map_err(|_| FormatError::InvalidParameter("p".to_string()))?
-            }
-            "bw" => {
-                bandwidth_target = val_str
-                    .parse()
-                    .map_err(|_| FormatError::InvalidParameter("bw".to_string()))?
-            }
-            _ => return Err(FormatError::InvalidParameter(key.to_string())),
         }
     }
 
-    let salt = STANDARD_NO_PAD
-        .decode(parts[4])
-        .map_err(|_| FormatError::InvalidBase64)?;
-    let digest = STANDARD_NO_PAD
-        .decode(parts[5])
-        .map_err(|_| FormatError::InvalidBase64)?;
+    let salt = hex_decode(parts[4])
+        .map_err(|e| KdfError::Encoding(format!("Invalid salt hex: {}", e)))?;
+    let digest = hex_decode(parts[5])
+        .map_err(|e| KdfError::Encoding(format!("Invalid digest hex: {}", e)))?;
 
     Ok(RawHashComponents {
         version,
+        algorithm: algo,
         memory_kib,
-        time_cost,
-        parallelism,
-        bandwidth_target,
+        salt_len,
+        dependency_depth,
+        passes,
+        block_size,
+        output_len,
         salt,
         digest,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_roundtrip_parse_encode() {
-        let raw = RawHashComponents {
-            version: AlgorithmVersion::V1,
-            memory_kib: 65536,
-            time_cost: 3,
-            parallelism: 1,
-            bandwidth_target: 100,
-            salt: vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-            digest: vec![42; 32],
-        };
-
-        let encoded = crate::encoder::encode_hash(&raw).unwrap();
-        assert!(encoded.starts_with("$antech$v1$m=65536,t=3,p=1,bw=100$"));
-
-        let parsed = parse_hash(&encoded).unwrap();
-        assert_eq!(parsed, raw);
-    }
 }

@@ -1,6 +1,17 @@
-//! Shared data types for Antech KDF.
-//!
-//! Internal types shared between format, core, and engine crates.
+//! Shared data types, configuration types, and error definitions for Antech KDF.
+
+pub mod algorithm;
+pub mod config;
+pub mod errors;
+pub mod rehash;
+
+pub use algorithm::Algorithm;
+pub use config::{
+    AntechConfig, AntechConfigBuilder, BlockSize, DependencyDepth, MemorySize, OutputLength,
+    Parallelism, PassCount, SaltLength,
+};
+pub use errors::{ConfigError, KdfError};
+pub use rehash::{RehashPolicy, RehashPolicyBuilder};
 
 use std::fmt;
 
@@ -8,20 +19,18 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[repr(u32)]
 pub enum AlgorithmVersion {
-    /// Initial experimental version V1.
+    /// Initial version V1.
     #[default]
     V1 = 1,
 }
 
 impl AlgorithmVersion {
-    /// Return standard identifier string.
     pub fn as_str(&self) -> &'static str {
         match self {
             AlgorithmVersion::V1 => "v1",
         }
     }
 
-    /// Parse version from string identifier.
     pub fn parse(s: &str) -> Option<Self> {
         match s {
             "v1" | "1" => Some(AlgorithmVersion::V1),
@@ -36,21 +45,17 @@ impl fmt::Display for AlgorithmVersion {
     }
 }
 
-/// Extracted components from a serialized password hash.
+/// Extracted components from a self-describing password hash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawHashComponents {
-    /// Algorithm version.
     pub version: AlgorithmVersion,
-    /// Memory allocation parameter in KiB.
+    pub algorithm: Algorithm,
     pub memory_kib: u32,
-    /// Time cost parameter (iterations/rounds).
-    pub time_cost: u32,
-    /// Parallelism factor (lanes).
-    pub parallelism: u32,
-    /// Target bandwidth in MB/s.
-    pub bandwidth_target: u64,
-    /// Salt raw bytes.
+    pub salt_len: usize,
+    pub dependency_depth: u32,
+    pub passes: u32,
+    pub block_size: usize,
+    pub output_len: usize,
     pub salt: Vec<u8>,
-    /// Derived key digest raw bytes.
     pub digest: Vec<u8>,
 }

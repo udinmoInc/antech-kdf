@@ -1,71 +1,88 @@
-//! Internal core engine implementation for Antech KDF.
-//!
-//! Handles salt generation, internal parameter selection, KDF engine dispatch,
-//! self-describing formatting, constant-time verification, and rehash checks.
+//! Core execution engines, resource scheduler, and traits for Antech KDF.
 
-pub mod bandwidth;
-pub mod compare;
-pub mod dependency;
 pub mod engine;
-pub mod error;
-pub mod memory;
-pub mod params;
-pub mod salt;
-pub mod version;
+pub mod resource;
+pub mod traits;
 
-use crate::compare::constant_time_compare;
-use crate::engine::{KdfEngine, PlaceholderKdfEngine};
-pub use crate::error::CoreError;
-use crate::params::InternalParams;
-use crate::salt::generate_salt;
-use crate::version::check_needs_rehash;
+pub use engine::{Candidate004Engine, KdfProvider};
+pub use resource::{BoundedResourceScheduler, ResourcePolicy};
+pub use traits::{KdfEngine, ResourcePermit, ResourceScheduler};
 
 use antech_kdf_format::{encode_hash, parse_hash};
-use antech_kdf_types::{AlgorithmVersion, RawHashComponents};
+use antech_kdf_types::{AntechConfig, KdfError, RehashPolicy};
+use rand::RngCore;
 
-/// Hashes a password using default recommended parameters and secure salt.
-pub fn core_hash(password: &[u8]) -> Result<String, CoreError> {
-    let salt = generate_salt()?;
-    let params = InternalParams::current_parameters();
-    let version = AlgorithmVersion::V1;
+/// Execute password hashing with an explicit `AntechConfig`.
+pub fn core_hash_with_config(password: &[u8], config: &AntechConfig) -> Result<String, KdfError> {
+    config.validate()?;
 
-    let digest = PlaceholderKdfEngine::derive(password, &salt, &params)?;
+    // 1. Generate cryptographically secure random salt of configured length
+    let mut salt = vec![0u8; config.salt_length.as_bytes()];
+    rand::thread_rng().fill_bytes(&mut salt);
 
-    let components = RawHashComponents {
-        version,
-        memory_kib: params.memory_kib,
-        time_cost: params.time_cost,
-        parallelism: params.parallelism,
-        bandwidth_target: params.bandwidth_target,
-        salt,
-        digest,
-    };
+    // 2. Select algorithm provider engine
+    let engine = KdfProvider::get_engine(config.algorithm)?;
 
-    encode_hash(&components).map_err(Into::into)
+    // 3. Acquire resource permit from default scheduler
+    let scheduler = BoundedResourceScheduler::default_scheduler();
+    let permit = scheduler.acquire(config.memory.as_kib())?;
+
+    // 4. Execute derivation
+    let digest = engine.derive(password, &salt, config)?;
+
+    // 5. Release permit
+    scheduler.release(permit);
+
+    // 6. Encode into self-describing hash string
+    encode_hash(config, &salt, &digest).map_err(KdfError::Config)
 }
 
-/// Verifies a password against an encoded hash string.
-///
-/// Returns `Ok(true)` on match, `Ok(false)` on mismatch, or `Err(CoreError)` on malformed input.
-pub fn core_verify(password: &[u8], encoded_hash: &str) -> Result<bool, CoreError> {
+/// Verify a password against a stored self-describing hash string in constant time.
+pub fn core_verify(password: &[u8], encoded_hash: &str) -> Result<bool, KdfError> {
+    // 1. Parse stored hash string into components
     let components = parse_hash(encoded_hash)?;
 
-    let params = InternalParams {
-        memory_kib: components.memory_kib,
-        time_cost: components.time_cost,
-        parallelism: components.parallelism,
-        bandwidth_target: components.bandwidth_target,
-    };
+    // 2. Reconstruct configuration from parsed hash string
+    let config = AntechConfig::builder()
+        .algorithm(components.algorithm)
+        .memory_kib(components.memory_kib as usize)
+        .salt_length(components.salt_len)
+        .dependency_depth(components.dependency_depth)
+        .passes(components.passes)
+        .block_size(components.block_size)
+        .output_length(components.output_len)
+        .build()?;
 
-    let expected_digest = match components.version {
-        AlgorithmVersion::V1 => PlaceholderKdfEngine::derive(password, &components.salt, &params)?,
-    };
+    // 3. Select algorithm provider engine
+    let engine = KdfProvider::get_engine(config.algorithm)?;
 
-    Ok(constant_time_compare(&expected_digest, &components.digest))
+    // 4. Derive candidate digest
+    let candidate_digest = engine.derive(password, &components.salt, &config)?;
+
+    // 5. Constant-time digest comparison
+    if candidate_digest.len() != components.digest.len() {
+        return Ok(false);
+    }
+
+    let is_valid = subtle::ConstantTimeEq::ct_eq(&candidate_digest[..], &components.digest[..]);
+    Ok(is_valid.into())
 }
 
-/// Checks whether a stored hash requires rehashing due to version or parameter changes.
-pub fn core_needs_rehash(encoded_hash: &str) -> Result<bool, CoreError> {
+/// Check if a stored hash needs re-hashing against a target `RehashPolicy`.
+pub fn core_needs_rehash_with_policy(
+    encoded_hash: &str,
+    policy: &RehashPolicy,
+) -> Result<bool, KdfError> {
     let components = parse_hash(encoded_hash)?;
-    Ok(check_needs_rehash(&components))
+    let config = AntechConfig::builder()
+        .algorithm(components.algorithm)
+        .memory_kib(components.memory_kib as usize)
+        .salt_length(components.salt_len)
+        .dependency_depth(components.dependency_depth)
+        .passes(components.passes)
+        .block_size(components.block_size)
+        .output_length(components.output_len)
+        .build()?;
+
+    Ok(policy.needs_rehash(&config))
 }

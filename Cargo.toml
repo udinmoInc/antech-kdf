@@ -13,14 +13,15 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["Antech KDF Research Team"]
+authors = ["Udinmo, Inc. <antech-kdf@udinmo.com>"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/antech-kdf/antech-kdf"
-homepage = "https://github.com/antech-kdf/antech-kdf"
+repository = "https://github.com/udinmoInc/antech-kdf"
+homepage = "https://github.com/udinmoInc/antech-kdf"
 rust-version = "1.70.0"
 
 [workspace.dependencies]
 getrandom = "0.2"
+rand = "0.8"
 base64 = "0.22"
 subtle = "2.5"
 zeroize = { version = "1.8", features = ["zeroize_derive"] }

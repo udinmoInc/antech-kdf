@@ -15,7 +15,9 @@ The experimental candidate constructions (Variant K1 and Variant K2) are activel
 
 We welcome security reports, vulnerability disclosures, and cryptanalysis feedback from engineers and cryptographic researchers.
 
-If you identify a security issue, implementation bug, or cryptanalytic weakness in Antech KDF, please submit your findings to the repository maintainers.
+If you identify a security issue, implementation bug, or cryptanalytic weakness in Antech KDF, please submit your findings directly to **Udinmo, Inc.** security team at:
+
+📧 **`antech-kdf@udinmo.com`**
 
 ### Implementation Bugs vs. Cryptographic Concerns
 

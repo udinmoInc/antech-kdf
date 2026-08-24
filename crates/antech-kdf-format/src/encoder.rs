@@ -1,25 +1,29 @@
-//! Hash string serialization engine.
+//! Encoder for self-describing password hash strings.
 
-use crate::error::FormatError;
-use antech_kdf_types::RawHashComponents;
-use base64::engine::general_purpose::STANDARD_NO_PAD;
-use base64::Engine;
+use antech_kdf_types::{AntechConfig, ConfigError};
 
-/// Encodes raw hash components into self-describing hash string.
-///
-/// Format: `$antech$v1$m=65536,t=3,p=1,bw=100$<salt_b64>$<digest_b64>`
-pub fn encode_hash(components: &RawHashComponents) -> Result<String, FormatError> {
-    let salt_b64 = STANDARD_NO_PAD.encode(&components.salt);
-    let digest_b64 = STANDARD_NO_PAD.encode(&components.digest);
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+}
 
+/// Encode password salt and output digest into self-describing format string:
+/// `$antech$v1$m=16384,s=32,t=650000,p=1,b=32,l=32$<salt_hex>$<digest_hex>`
+pub fn encode_hash(
+    config: &AntechConfig,
+    salt: &[u8],
+    digest: &[u8],
+) -> Result<String, ConfigError> {
+    config.validate()?;
     Ok(format!(
-        "$antech${}$m={},t={},p={},bw={}${}${}",
-        components.version.as_str(),
-        components.memory_kib,
-        components.time_cost,
-        components.parallelism,
-        components.bandwidth_target,
-        salt_b64,
-        digest_b64
+        "${}$v1$m={},s={},t={},p={},b={},l={}${}${}",
+        config.algorithm.as_str(),
+        config.memory.as_kib(),
+        salt.len(),
+        config.dependency_depth.get(),
+        config.passes.get(),
+        config.block_size.as_bytes(),
+        digest.len(),
+        hex_encode(salt),
+        hex_encode(digest)
     ))
 }
