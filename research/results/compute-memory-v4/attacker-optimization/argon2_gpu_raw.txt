@@ -1,0 +1,10 @@
+guesses_per_sec=436.089
+kernel_p50_ms=220.117
+kernel_p95_ms=222.044
+kernel_p99_ms=222.044
+vram_used_mib=7278
+host_device_transfer_ms=4.5522
+batch=96
+m_cost_kib=65536
+t_cost=2
+lanes=1

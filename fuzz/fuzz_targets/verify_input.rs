@@ -3,7 +3,7 @@
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
-    if data.len() < 2 {
+    if data.is_empty() {
         return;
     }
     let mid = data.len() / 2;

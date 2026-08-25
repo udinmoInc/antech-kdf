@@ -13,7 +13,9 @@ name = "antech-kdf"
 version = "0.1.0"
 dependencies = [
  "antech-kdf-core",
+ "antech-kdf-format",
  "antech-kdf-types",
+ "rand",
 ]
 
 [[package]]
@@ -48,6 +50,7 @@ name = "antech-kdf-format"
 version = "0.1.0"
 dependencies = [
  "antech-kdf-types",
+ "rand",
 ]
 
 [[package]]

@@ -8,3 +8,6 @@ repository.workspace = true
 
 [dependencies]
 antech-kdf-types = { workspace = true }
+
+[dev-dependencies]
+rand = { workspace = true }

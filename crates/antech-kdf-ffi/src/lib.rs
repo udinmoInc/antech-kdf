@@ -3,15 +3,19 @@
 //! Exposes a minimal, thread-safe C ABI interface for FFI binding layers.
 //!
 //! # Safety & Ownership Guarantees
-//! - All pointer inputs must be non-null and point to valid null-terminated UTF-8 / byte strings.
+//! - All pointer inputs must be non-null and point to valid null-terminated strings.
+//! - Password bytes may be arbitrary (including non-UTF-8); embedded NUL terminates the password.
+//! - Encoded hash strings must be valid UTF-8.
 //! - Strings returned by `antech_hash` are heap-allocated by Rust and MUST be freed by calling `antech_free`.
 //! - Thread safety: All functions are thread-safe and stateless.
+//! - Panics are caught at the FFI boundary and reported as `InternalError`.
 
 use libc::{c_char, c_int};
 use std::ffi::{CStr, CString};
 
 /// Status codes returned by C ABI functions.
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AntechStatus {
     /// Operation completed successfully
     Ok = 0,
@@ -36,14 +40,20 @@ pub unsafe extern "C" fn antech_hash(
     password: *const c_char,
     out_hash: *mut *mut c_char,
 ) -> AntechStatus {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        hash_impl(password, out_hash)
+    })) {
+        Ok(status) => status,
+        Err(_) => AntechStatus::InternalError,
+    }
+}
+
+unsafe fn hash_impl(password: *const c_char, out_hash: *mut *mut c_char) -> AntechStatus {
     if password.is_null() || out_hash.is_null() {
         return AntechStatus::InvalidInput;
     }
 
-    let c_pass = match CStr::from_ptr(password).to_str() {
-        Ok(s) => s,
-        Err(_) => return AntechStatus::InvalidInput,
-    };
+    let c_pass = CStr::from_ptr(password).to_bytes();
 
     match antech_kdf::hash(c_pass) {
         Ok(hash_str) => match CString::new(hash_str) {
@@ -68,14 +78,20 @@ pub unsafe extern "C" fn antech_verify(
     password: *const c_char,
     encoded_hash: *const c_char,
 ) -> AntechStatus {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        verify_impl(password, encoded_hash)
+    })) {
+        Ok(status) => status,
+        Err(_) => AntechStatus::InternalError,
+    }
+}
+
+unsafe fn verify_impl(password: *const c_char, encoded_hash: *const c_char) -> AntechStatus {
     if password.is_null() || encoded_hash.is_null() {
         return AntechStatus::InvalidInput;
     }
 
-    let c_pass = match CStr::from_ptr(password).to_str() {
-        Ok(s) => s,
-        Err(_) => return AntechStatus::InvalidInput,
-    };
+    let c_pass = CStr::from_ptr(password).to_bytes();
 
     let c_hash = match CStr::from_ptr(encoded_hash).to_str() {
         Ok(s) => s,
@@ -97,6 +113,18 @@ pub unsafe extern "C" fn antech_verify(
 /// `encoded_hash` must be a valid null-terminated C string. `out_needs_rehash` must be non-null.
 #[no_mangle]
 pub unsafe extern "C" fn antech_needs_rehash(
+    encoded_hash: *const c_char,
+    out_needs_rehash: *mut c_int,
+) -> AntechStatus {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        needs_rehash_impl(encoded_hash, out_needs_rehash)
+    })) {
+        Ok(status) => status,
+        Err(_) => AntechStatus::InternalError,
+    }
+}
+
+unsafe fn needs_rehash_impl(
     encoded_hash: *const c_char,
     out_needs_rehash: *mut c_int,
 ) -> AntechStatus {
@@ -126,5 +154,78 @@ pub unsafe extern "C" fn antech_needs_rehash(
 pub unsafe extern "C" fn antech_free(ptr: *mut c_char) {
     if !ptr.is_null() {
         drop(CString::from_raw(ptr));
+    }
+}
+
+#[cfg(test)]
+mod ffi_tests {
+    use super::*;
+    use std::ffi::CString;
+
+    #[test]
+    fn null_pointers_rejected() {
+        unsafe {
+            assert_eq!(
+                antech_hash(std::ptr::null(), std::ptr::null_mut()),
+                AntechStatus::InvalidInput
+            );
+            assert_eq!(
+                antech_verify(std::ptr::null(), std::ptr::null()),
+                AntechStatus::InvalidInput
+            );
+        }
+    }
+
+    #[test]
+    fn binary_password_roundtrip() {
+        // C strings cannot contain interior NUL; password is bytes before first NUL.
+        let c_pw = CString::new([0xFFu8, 0x42, 0xAB]).unwrap();
+        let mut out: *mut c_char = std::ptr::null_mut();
+        unsafe {
+            assert_eq!(antech_hash(c_pw.as_ptr(), &mut out), AntechStatus::Ok);
+            assert!(!out.is_null());
+            let hash_cstr = CStr::from_ptr(out);
+            assert_eq!(
+                antech_verify(c_pw.as_ptr(), hash_cstr.as_ptr()),
+                AntechStatus::Ok
+            );
+            antech_free(out);
+        }
+    }
+
+    #[test]
+    fn embedded_nul_truncates_password() {
+        // CString cannot hold interior NUL; construct a C string manually.
+        let pw = vec![0xFFu8, 0x00, 0x42, 0];
+        let truncated = CString::new([0xFFu8]).unwrap();
+        let mut out: *mut c_char = std::ptr::null_mut();
+        unsafe {
+            let c_pw = pw.as_ptr() as *const c_char;
+            assert_eq!(antech_hash(c_pw, &mut out), AntechStatus::Ok);
+            assert_eq!(
+                antech_verify(truncated.as_ptr(), CStr::from_ptr(out).as_ptr()),
+                AntechStatus::Ok
+            );
+            antech_free(out);
+        }
+    }
+
+    #[test]
+    fn malformed_hash_returns_invalid_hash() {
+        let pw = CString::new("pw").unwrap();
+        let bad = CString::new("not_a_hash").unwrap();
+        unsafe {
+            assert_eq!(
+                antech_verify(pw.as_ptr(), bad.as_ptr()),
+                AntechStatus::InvalidHash
+            );
+        }
+    }
+
+    #[test]
+    fn free_null_is_noop() {
+        unsafe {
+            antech_free(std::ptr::null_mut());
+        }
     }
 }

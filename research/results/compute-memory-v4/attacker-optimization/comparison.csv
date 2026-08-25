@@ -1,0 +1,7 @@
+attacker,baseline_gps,optimized_gps,improvement_ratio,argon2id_gps,antech_over_argon2,notes
+CPU_16T,40.600000,73.978897,1.8221,21.314858,3.4708,prior_v4_campaign_baseline_vs_packed_prefetch
+CPU_32T,38.300000,70.518648,1.8412,23.800586,2.9629,prior_v4_campaign_baseline_vs_packed_prefetch
+RTX3050_GPU,33.000000,100.530100,3.0464,436.089000,0.2305,prior_optimized_33g/s_vs_packed_t32_b256
+CPU_16T_same_run,45.444518,73.978897,1.6280,21.314858,3.4708,production_engine_same_session
+CPU_32T_same_run,39.522166,70.518648,1.7843,23.800586,2.9629,production_engine_same_session
+RTX3050_GPU_same_run,32.855600,100.530100,3.0590,436.089000,0.2305,byte_kernel_optimized_vs_packed_t32_b256

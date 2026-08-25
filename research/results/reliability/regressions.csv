@@ -1,0 +1,12 @@
+issue_id,description,root_cause,reproducer,fix,regression_test,status
+R1,Resource permit leak on derive failure,release only on success path in core_hash_with_config,hash after forced derive error,RAII PermitGuard,integration_tests::hash_verify_roundtrip_releases_resources,fixed
+R2,Scheduler not global,local scheduler per hash(),concurrent hash bypasses limits,OnceLock singleton,reliability_concurrency::concurrent_hash_verify_scheduler_idle,fixed
+R3,verify bypassed admission,no acquire in core_verify,concurrent verify without limits,PermitGuard on verify,reliability_concurrency::concurrent_mixed_workload,fixed
+R4,Parser DoS oversized hex,decode before length check,megabyte salt hex,bounded hex_decode,parser_property::rejects_huge_encoded_string,fixed
+R5,FFI rejected binary passwords,to_str on password bytes,FFI with 0xFF bytes,CStr::to_bytes,ffi_tests::binary_password_roundtrip,fixed
+R6,queue_limit unenforced,field unused in acquire,queue overflow not rejected,Mutex+Condvar queue with limit,resource::tests::queue_at_limit_rejects_additional_waiters,fixed
+R7,Duplicate hash params accepted,single-pass parser,no duplicate detection,seen_* flags,parser_property::rejects_duplicate_parameters,fixed
+R8,FFI panic could cross ABI,no catch_unwind,panic in hash path,catch_unwind wrapper,ffi_tests null/malformed tests,fixed
+R9,Serde all-features build fail,Algorithm/GraphKind missing Serialize,clippy --all-features,serde derives on enums,cargo clippy --all-features,fixed
+R10,Flaky scheduler idle test,parallel tests share global scheduler,concurrent_mixed_workload intermittent,SCHEDULER_TEST_LOCK + wait_scheduler_idle,reliability_concurrency,fixed
+R11,Wrong memory boundary test,memory_mib(1023) is valid,reliability_matrix failure,use memory_kib boundaries,reliability_matrix::config_boundary_validation,fixed

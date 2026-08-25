@@ -1,0 +1,16 @@
+guesses_per_sec=49.1559
+kernel_p50_ms=2610.36
+kernel_p95_ms=2610.9
+kernel_p99_ms=2610.9
+vram_used_mib=3089
+occupancy=0.666667
+registers_per_thread=58
+shared_mem_bytes=0
+threads_per_block=64
+global_mem_traffic_est=10737418240
+host_device_transfer_ms=53.8268
+kernel_exec_ms_total=13019.8
+batch=128
+impl_mode=packed_t64_b128
+gpu_name=NVIDIA GeForce RTX 3050
+vram_total_mib=8191

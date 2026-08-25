@@ -472,6 +472,216 @@ __global__ void v4c_guess_kernel_fused_zero(
     memcpy(lasts_out + (size_t)idx * 32, last, 32);
 }
 
+// ---- Packed u64 attacker (same graph; word loads; optional ring; no memset) ----
+__device__ __forceinline__ void d_mix_words(uint64_t s[4], const uint64_t a[4], const uint64_t b[4]) {
+#pragma unroll
+    for (uint32_t r = 0; r < MIX_ROUNDS; r++) {
+        uint64_t rr = r;
+        s[0] = d_rotl(s[0] + (a[0] ^ (b[0] + rr)), 13) ^ s[3];
+        s[1] = d_rotl(s[1] + ((a[1] * C1) ^ b[1]), 17) ^ s[0];
+        s[2] = d_rotl(s[2] + (a[2] ^ (b[2] * C2)), 19) ^ s[1];
+        s[3] = d_rotl(s[3] + ((a[3] + b[3]) ^ (GOLDEN * (rr + 1))), 23) ^ s[2];
+    }
+}
+
+__device__ __forceinline__ void d_push_u(uint32_t* idx, uint32_t* len, uint32_t addr, uint32_t i) {
+    if (addr >= i || *len >= 8) return;
+#pragma unroll
+    for (uint32_t j = 0; j < 8; j++) {
+        if (j < *len && idx[j] == addr) return;
+    }
+    idx[(*len)++] = addr;
+}
+
+__device__ DParents d_parents_combined_fast(const uint64_t state[4], uint32_t i) {
+    DParents out;
+    out.len = 0; out.scatter1 = -1; out.scatter2 = -1;
+    if (i == 0) return out;
+    uint32_t tile = TILE_LEN;
+    uint32_t tile_start = (i / tile) * tile;
+    int critical = ((i % CRITICAL_PERIOD) == 0) || ((i % FRONTIER_WIDTH) == 0);
+
+    d_push_u(out.indices, &out.len, i - 1, i);
+    uint32_t fw = FRONTIER_WIDTH < i ? FRONTIER_WIDTH : i;
+    d_push_u(out.indices, &out.len, i - 1 - (uint32_t)(state[0] % fw), i);
+    uint32_t guard = 0;
+    while (out.len < 2 && guard < 6) {
+        guard++;
+        uint64_t mix = state[out.len % 4] ^ ((uint64_t)i * GOLDEN);
+        uint32_t before = out.len;
+        d_push_u(out.indices, &out.len, i - 1 - (uint32_t)(mix % fw), i);
+        if (out.len == before) {
+            d_push_u(out.indices, &out.len, i - 1 - (uint32_t)((state[2] + guard) % fw), i);
+            if (out.len == before) break;
+        }
+    }
+    if (i > tile_start + 1) {
+        uint32_t span = i - tile_start;
+        d_push_u(out.indices, &out.len, tile_start + (uint32_t)(state[1] % span), i);
+    }
+    if (i > fw + 1) {
+        uint32_t remote_span = i - fw;
+        if (critical || ((i & 1u) == 0u)) {
+            d_push_u(out.indices, &out.len,
+                     (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span), i);
+        }
+        if (critical) {
+            d_push_u(out.indices, &out.len, (uint32_t)((state[0] ^ GOLDEN) % remote_span), i);
+        }
+    }
+    guard = 0;
+    while (out.len < FAN_IN && guard < 4) {
+        guard++;
+        uint64_t mix = state[out.len % 4] ^ ((uint64_t)i * GOLDEN);
+        uint32_t before = out.len;
+        uint32_t addr = (i > tile_start)
+            ? tile_start + (uint32_t)(mix % ((i - tile_start) ? (i - tile_start) : 1))
+            : (uint32_t)(mix % i);
+        d_push_u(out.indices, &out.len, addr, i);
+        if (out.len == before) break;
+    }
+    if (i > fw) {
+        uint32_t span = i - fw;
+        out.scatter1 = (int)((state[2] ^ GOLDEN) % span);
+        out.scatter2 = (int)((state[3] ^ d_rotl(state[0], 7)) % span);
+    }
+    return out;
+}
+
+__device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[2][4],
+                                uint64_t* buf, uint64_t state_out[4], uint64_t last_out[4],
+                                int use_ring) {
+    uint64_t state[4];
+#pragma unroll
+    for (int i = 0; i < 4; i++) state[i] = d_load_u64(seed + i * 8);
+
+    uint64_t ring[FRONTIER_WIDTH][4];
+    int newest = -1;
+    uint32_t count = 0;
+
+    for (uint32_t i = 0; i < NUM_BLOCKS; i++) {
+        DParents parents = d_parents_combined_fast(state, i);
+        uint64_t views[8][4];
+        uint32_t n_views = 0;
+        if (i == 0) {
+#pragma unroll
+            for (int w = 0; w < 4; w++) {
+                views[0][w] = phantoms[0][w];
+                views[1][w] = phantoms[1][w];
+            }
+            n_views = FAN_IN;
+        } else {
+            for (uint32_t k = 0; k < parents.len; k++) {
+                uint32_t p = parents.indices[k];
+                int from_ring = 0;
+                if (use_ring && newest >= 0 && (int)p <= newest) {
+                    uint32_t age = (uint32_t)newest - p;
+                    uint32_t window = count < FRONTIER_WIDTH ? count : FRONTIER_WIDTH;
+                    if (age < window) {
+#pragma unroll
+                        for (int w = 0; w < 4; w++) views[n_views][w] = ring[p % FRONTIER_WIDTH][w];
+                        from_ring = 1;
+                    }
+                }
+                if (!from_ring) {
+                    uint64_t* src = buf + (size_t)p * 4;
+#pragma unroll
+                    for (int w = 0; w < 4; w++) views[n_views][w] = src[w];
+                }
+                n_views++;
+            }
+        }
+        if (n_views == 1) {
+            d_mix_words(state, views[0], views[0]);
+        } else {
+            uint32_t vi = 0;
+            while (vi + 1 < n_views) {
+                d_mix_words(state, views[vi], views[vi + 1]);
+                vi += 2;
+            }
+            if (vi < n_views) d_mix_words(state, views[vi], views[vi]);
+        }
+        uint64_t* out = buf + (size_t)i * 4;
+#pragma unroll
+        for (int w = 0; w < 4; w++) out[w] = state[w];
+        if (use_ring) {
+#pragma unroll
+            for (int w = 0; w < 4; w++) ring[i % FRONTIER_WIDTH][w] = state[w];
+            newest = (int)i;
+            count = count + 1 < FRONTIER_WIDTH ? count + 1 : FRONTIER_WIDTH;
+        }
+        if (parents.scatter1 >= 0) {
+            uint32_t dest = (uint32_t)parents.scatter1;
+            if (dest < NUM_BLOCKS && dest != i) {
+                uint64_t* d = buf + (size_t)dest * 4;
+#pragma unroll
+                for (int w = 0; w < 4; w++) d[w] ^= state[w];
+            }
+        }
+        if (parents.scatter2 >= 0) {
+            uint32_t dest = (uint32_t)parents.scatter2;
+            if (dest < NUM_BLOCKS && dest != i) {
+                uint64_t* d = buf + (size_t)dest * 4;
+#pragma unroll
+                for (int w = 0; w < 4; w++) d[w] ^= state[w];
+            }
+        }
+    }
+#pragma unroll
+    for (int i = 0; i < 4; i++) {
+        state_out[i] = state[i];
+        last_out[i] = buf[(size_t)(NUM_BLOCKS - 1) * 4 + i];
+    }
+}
+
+enum KernelKind { K_BASELINE = 0, K_FUSED = 1, K_PACKED = 2, K_PACKED_NORING = 3, K_PACKED_PERSIST = 4 };
+
+__global__ void v4c_guess_kernel_packed(
+    const uint8_t* seeds, const uint8_t* phantoms, uint64_t* buffers,
+    uint64_t* states_out, uint8_t* lasts_out, int n, int use_ring
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= n) return;
+    const uint8_t* seed = seeds + (size_t)idx * 32;
+    const uint8_t* ph = phantoms + (size_t)idx * 64;
+    uint64_t phw[2][4];
+#pragma unroll
+    for (int s = 0; s < 2; s++)
+#pragma unroll
+        for (int w = 0; w < 4; w++) phw[s][w] = d_load_u64(ph + s * 32 + w * 8);
+    uint64_t* buffer = buffers + (size_t)idx * (size_t)NUM_BLOCKS * 4;
+    uint64_t st[4], last[4];
+    v4c_walk_packed(seed, phw, buffer, st, last, use_ring);
+#pragma unroll
+    for (int i = 0; i < 4; i++) states_out[(size_t)idx * 4 + i] = st[i];
+#pragma unroll
+    for (int i = 0; i < 4; i++) d_store_u64(lasts_out + (size_t)idx * 32 + i * 8, last[i]);
+}
+
+__global__ void v4c_guess_kernel_packed_persist(
+    const uint8_t* seeds, const uint8_t* phantoms, uint64_t* buffers,
+    uint64_t* states_out, uint8_t* lasts_out, int n, int n_slots
+) {
+    int slot = blockIdx.x * blockDim.x + threadIdx.x;
+    if (slot >= n_slots) return;
+    uint64_t* buffer = buffers + (size_t)slot * (size_t)NUM_BLOCKS * 4;
+    for (int idx = slot; idx < n; idx += n_slots) {
+        const uint8_t* seed = seeds + (size_t)idx * 32;
+        const uint8_t* ph = phantoms + (size_t)idx * 64;
+        uint64_t phw[2][4];
+#pragma unroll
+        for (int s = 0; s < 2; s++)
+#pragma unroll
+            for (int w = 0; w < 4; w++) phw[s][w] = d_load_u64(ph + s * 32 + w * 8);
+        uint64_t st[4], last[4];
+        v4c_walk_packed(seed, phw, buffer, st, last, 0);
+#pragma unroll
+        for (int i = 0; i < 4; i++) states_out[(size_t)idx * 4 + i] = st[i];
+#pragma unroll
+        for (int i = 0; i < 4; i++) d_store_u64(lasts_out + (size_t)idx * 32 + i * 8, last[i]);
+    }
+}
+
 static std::string hex32(const uint8_t* d) {
     static const char* hexd = "0123456789abcdef";
     std::string s(64, '0');
@@ -518,6 +728,9 @@ struct LaunchConfig {
     bool fused_zero = false;
     bool pinned_host = false;
     bool async_copy = false;
+    KernelKind kind = K_BASELINE;
+    int force_batch = 0;
+    int persist_slots = 0;
 };
 
 static double percentile(std::vector<double>& v, double p) {
@@ -548,16 +761,27 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
     int n = (int)(seeds.size() / 32);
     digests.assign((size_t)n * 32, 0);
 
-    size_t buf_bytes = (size_t)n * (size_t)NUM_BLOCKS * BLOCK_SIZE;
-    uint8_t *d_seeds=nullptr, *d_ph=nullptr, *d_buf=nullptr, *d_last=nullptr;
+    bool packed = cfg.kind == K_PACKED || cfg.kind == K_PACKED_NORING || cfg.kind == K_PACKED_PERSIST;
+    size_t words_per = (size_t)NUM_BLOCKS * 4;
+    size_t buf_bytes = packed ? ((size_t)n * words_per * sizeof(uint64_t))
+                              : ((size_t)n * (size_t)NUM_BLOCKS * BLOCK_SIZE);
+    int persist_slots = cfg.persist_slots > 0 ? cfg.persist_slots : n;
+    if (cfg.kind == K_PACKED_PERSIST) {
+        buf_bytes = (size_t)persist_slots * words_per * sizeof(uint64_t);
+    }
+
+    uint8_t *d_seeds=nullptr, *d_ph=nullptr, *d_last=nullptr;
     uint64_t *d_state=nullptr;
+    uint8_t *d_buf8=nullptr;
+    uint64_t *d_buf64=nullptr;
 
     auto t_h0 = std::chrono::steady_clock::now();
     cudaStream_t stream = nullptr;
     if (cfg.async_copy) CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     CUDA_CHECK(cudaMalloc(&d_seeds, seeds.size()));
     CUDA_CHECK(cudaMalloc(&d_ph, phantoms.size()));
-    CUDA_CHECK(cudaMalloc(&d_buf, buf_bytes));
+    if (packed) CUDA_CHECK(cudaMalloc(&d_buf64, buf_bytes));
+    else CUDA_CHECK(cudaMalloc(&d_buf8, buf_bytes));
     CUDA_CHECK(cudaMalloc(&d_state, (size_t)n * 4 * sizeof(uint64_t)));
     CUDA_CHECK(cudaMalloc(&d_last, (size_t)n * 32));
     const uint8_t* h_seeds = seeds.data();
@@ -579,26 +803,34 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
         CUDA_CHECK(cudaMemcpy(d_seeds, h_seeds, seeds.size(), cudaMemcpyHostToDevice));
         CUDA_CHECK(cudaMemcpy(d_ph, h_ph, phantoms.size(), cudaMemcpyHostToDevice));
     }
-    if (!cfg.fused_zero) {
-        if (cfg.async_copy) CUDA_CHECK(cudaMemsetAsync(d_buf, 0, buf_bytes, stream));
-        else CUDA_CHECK(cudaMemset(d_buf, 0, buf_bytes));
+    // Packed walks overwrite every block before read; no memset required.
+    if (!packed && !cfg.fused_zero) {
+        if (cfg.async_copy) CUDA_CHECK(cudaMemsetAsync(d_buf8, 0, buf_bytes, stream));
+        else CUDA_CHECK(cudaMemset(d_buf8, 0, buf_bytes));
     }
     if (cfg.async_copy) CUDA_CHECK(cudaStreamSynchronize(stream));
     auto t_h1 = std::chrono::steady_clock::now();
     double h2d = std::chrono::duration<double, std::milli>(t_h1 - t_h0).count();
 
     int threads = cfg.threads;
-    int blocks = (n + threads - 1) / threads;
+    int launch_n = (cfg.kind == K_PACKED_PERSIST) ? persist_slots : n;
+    int blocks = (launch_n + threads - 1) / threads;
 
-    // Occupancy / resource query
     int regs = 0; size_t smem = 0;
     cudaFuncAttributes attr;
-    if (cudaFuncGetAttributes(&attr, v4c_guess_kernel) == cudaSuccess) {
-        regs = attr.numRegs;
-        smem = attr.sharedSizeBytes;
+    if (packed) {
+        if (cudaFuncGetAttributes(&attr, v4c_guess_kernel_packed) == cudaSuccess) {
+            regs = attr.numRegs; smem = attr.sharedSizeBytes;
+        }
+    } else if (cudaFuncGetAttributes(&attr, v4c_guess_kernel) == cudaSuccess) {
+        regs = attr.numRegs; smem = attr.sharedSizeBytes;
     }
     int maxBlocks = 0;
-    if (cfg.fused_zero) {
+    if (cfg.kind == K_PACKED || cfg.kind == K_PACKED_NORING) {
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_packed, threads, 0);
+    } else if (cfg.kind == K_PACKED_PERSIST) {
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_packed_persist, threads, 0);
+    } else if (cfg.fused_zero) {
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_fused_zero, threads, 0);
     } else {
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel, threads, 0);
@@ -608,32 +840,39 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
     if (prop.multiProcessorCount > 0 && prop.maxThreadsPerMultiProcessor > 0) {
         occ = (float)(maxBlocks * threads) / (float)prop.maxThreadsPerMultiProcessor;
     }
+    cudaFuncSetCacheConfig(v4c_guess_kernel_packed, cudaFuncCachePreferL1);
 
     std::vector<double> kms;
     cudaEvent_t ev0, ev1;
     CUDA_CHECK(cudaEventCreate(&ev0));
     CUDA_CHECK(cudaEventCreate(&ev1));
 
-    // Warmup
-    if (cfg.fused_zero) {
-        v4c_guess_kernel_fused_zero<<<blocks, threads>>>(d_seeds, d_ph, d_buf, d_state, d_last, n);
-    } else {
-        v4c_guess_kernel<<<blocks, threads>>>(d_seeds, d_ph, d_buf, d_state, d_last, n);
-    }
+    auto launch = [&]() {
+        if (cfg.kind == K_PACKED) {
+            v4c_guess_kernel_packed<<<blocks, threads>>>(d_seeds, d_ph, d_buf64, d_state, d_last, n, 1);
+        } else if (cfg.kind == K_PACKED_NORING) {
+            v4c_guess_kernel_packed<<<blocks, threads>>>(d_seeds, d_ph, d_buf64, d_state, d_last, n, 0);
+        } else if (cfg.kind == K_PACKED_PERSIST) {
+            v4c_guess_kernel_packed_persist<<<blocks, threads>>>(
+                d_seeds, d_ph, d_buf64, d_state, d_last, n, persist_slots);
+        } else if (cfg.fused_zero) {
+            v4c_guess_kernel_fused_zero<<<blocks, threads>>>(d_seeds, d_ph, d_buf8, d_state, d_last, n);
+        } else {
+            v4c_guess_kernel<<<blocks, threads>>>(d_seeds, d_ph, d_buf8, d_state, d_last, n);
+        }
+    };
+
+    launch();
     CUDA_CHECK(cudaDeviceSynchronize());
-    if (!cfg.fused_zero) CUDA_CHECK(cudaMemset(d_buf, 0, buf_bytes));
+    if (!packed && !cfg.fused_zero) CUDA_CHECK(cudaMemset(d_buf8, 0, buf_bytes));
 
     auto wall0 = std::chrono::steady_clock::now();
     const int iters = profile_kernels ? 5 : 1;
     float ksum = 0;
     for (int it = 0; it < iters; it++) {
-        if (!cfg.fused_zero) CUDA_CHECK(cudaMemset(d_buf, 0, buf_bytes));
+        if (!packed && !cfg.fused_zero) CUDA_CHECK(cudaMemset(d_buf8, 0, buf_bytes));
         CUDA_CHECK(cudaEventRecord(ev0));
-        if (cfg.fused_zero) {
-            v4c_guess_kernel_fused_zero<<<blocks, threads>>>(d_seeds, d_ph, d_buf, d_state, d_last, n);
-        } else {
-            v4c_guess_kernel<<<blocks, threads>>>(d_seeds, d_ph, d_buf, d_state, d_last, n);
-        }
+        launch();
         CUDA_CHECK(cudaEventRecord(ev1));
         CUDA_CHECK(cudaEventSynchronize(ev1));
         float ms = 0;
@@ -664,7 +903,6 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
     cudaMemGetInfo(&free_b, &total_b);
 
     if (prof) {
-        // Each timed iter completes n guesses; gps from kernel time (device work).
         double avg_k = ksum / iters;
         prof->guesses_per_sec = (avg_k > 0) ? (n * 1000.0 / avg_k) : 0;
         prof->kernel_p50_ms = percentile(kms, 0.50);
@@ -678,7 +916,6 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
         prof->shared_mem = smem;
         prof->occupancy = occ;
         prof->threads_per_block = threads;
-        // Traffic estimate: ~fan reads + write + 2 scatters per node * batch
         prof->global_traffic_est = (size_t)n * (size_t)NUM_BLOCKS * (size_t)(3 + 2) * BLOCK_SIZE;
         (void)wall_ms;
     }
@@ -688,7 +925,9 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
     if (pinned_seeds) CUDA_CHECK(cudaFreeHost(pinned_seeds));
     if (pinned_ph) CUDA_CHECK(cudaFreeHost(pinned_ph));
     if (stream) CUDA_CHECK(cudaStreamDestroy(stream));
-    cudaFree(d_seeds); cudaFree(d_ph); cudaFree(d_buf); cudaFree(d_state); cudaFree(d_last);
+    cudaFree(d_seeds); cudaFree(d_ph); cudaFree(d_state); cudaFree(d_last);
+    if (d_buf8) cudaFree(d_buf8);
+    if (d_buf64) cudaFree(d_buf64);
 }
 
 static std::vector<std::string> attacker_corpus() {
@@ -706,17 +945,55 @@ static LaunchConfig cfg_for_mode(const std::string& mode) {
     LaunchConfig cfg;
     if (mode == "baseline") {
         cfg.threads = 1;
+        cfg.kind = K_BASELINE;
     } else if (mode == "optimized") {
         cfg.threads = 32;
         cfg.pinned_host = true;
         cfg.async_copy = true;
+        cfg.kind = K_BASELINE;
     } else if (mode == "fully_optimized") {
         cfg.threads = 128;
         cfg.pinned_host = true;
         cfg.async_copy = true;
         cfg.fused_zero = true;
+        cfg.kind = K_FUSED;
+    } else if (mode == "packed") {
+        cfg.threads = 32;
+        cfg.pinned_host = true;
+        cfg.async_copy = true;
+        cfg.kind = K_PACKED;
+        cfg.force_batch = 192;
+    } else if (mode == "packed_noring") {
+        cfg.threads = 32;
+        cfg.pinned_host = true;
+        cfg.async_copy = true;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 192;
+    } else if (mode == "packed_persistent") {
+        cfg.threads = 32;
+        cfg.pinned_host = true;
+        cfg.async_copy = true;
+        cfg.kind = K_PACKED_PERSIST;
+        cfg.force_batch = 256;
+        cfg.persist_slots = 96;
+    } else if (mode == "packed_t8_b128") {
+        cfg.threads = 8; cfg.pinned_host = true; cfg.async_copy = true;
+        cfg.kind = K_PACKED_NORING; cfg.force_batch = 128;
+    } else if (mode == "packed_t16_b192") {
+        cfg.threads = 16; cfg.pinned_host = true; cfg.async_copy = true;
+        cfg.kind = K_PACKED_NORING; cfg.force_batch = 192;
+    } else if (mode == "packed_t32_b192") {
+        cfg.threads = 32; cfg.pinned_host = true; cfg.async_copy = true;
+        cfg.kind = K_PACKED_NORING; cfg.force_batch = 192;
+    } else if (mode == "packed_t32_b256") {
+        cfg.threads = 32; cfg.pinned_host = true; cfg.async_copy = true;
+        cfg.kind = K_PACKED_NORING; cfg.force_batch = 256;
+    } else if (mode == "packed_t64_b128") {
+        cfg.threads = 64; cfg.pinned_host = true; cfg.async_copy = true;
+        cfg.kind = K_PACKED_NORING; cfg.force_batch = 128;
     } else {
         cfg.threads = 1;
+        cfg.kind = K_BASELINE;
     }
     return cfg;
 }
@@ -800,7 +1077,10 @@ int main(int argc, char** argv) {
     if (max_batch < 1) max_batch = 1;
     if (max_batch > 256) max_batch = 256; // VRAM-limited concurrency of full 16 MiB walks
     int batch = max_batch;
-    if (impl_mode == "baseline") {
+    if (launch.force_batch > 0) {
+        batch = launch.force_batch;
+        if (batch > max_batch) batch = max_batch;
+    } else if (impl_mode == "baseline") {
         if (batch > 64) batch = 64;
     } else if (impl_mode == "optimized") {
         if (batch >= 192) batch = 192;

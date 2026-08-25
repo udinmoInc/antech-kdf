@@ -1,16 +1,32 @@
 //! Parser for self-describing password hash strings.
 
-use antech_kdf_types::{Algorithm, AlgorithmVersion, GraphKind, KdfError, RawHashComponents};
+use antech_kdf_types::{
+    Algorithm, AlgorithmVersion, BlockSize, FanIn, GraphKind, KdfError, MemorySize, OutputLength,
+    RawHashComponents, SaltLength,
+};
 
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
-        return Err("odd-length hex string".to_string());
+/// Reject pathological inputs before allocating.
+const MAX_ENCODED_HASH_LEN: usize = 8192;
+const MAX_PARAM_SECTION_LEN: usize = 256;
+
+fn hex_decode(s: &str, expected_len: usize, field: &str) -> Result<Vec<u8>, KdfError> {
+    let expected_hex = expected_len
+        .checked_mul(2)
+        .ok_or_else(|| KdfError::Encoding(format!("{field} length overflow")))?;
+    if s.len() != expected_hex {
+        return Err(KdfError::Encoding(format!(
+            "{field} hex length mismatch: expected {expected_hex} chars, got {}",
+            s.len()
+        )));
+    }
+    if !s.len().is_multiple_of(2) {
+        return Err(KdfError::Encoding(format!("odd-length {field} hex string")));
     }
     (0..s.len())
         .step_by(2)
         .map(|i| {
             u8::from_str_radix(&s[i..i + 2], 16)
-                .map_err(|e| format!("invalid hex byte at {i}: {e}"))
+                .map_err(|e| KdfError::Encoding(format!("invalid {field} hex byte at {i}: {e}")))
         })
         .collect()
 }
@@ -29,6 +45,12 @@ fn parse_usize(field: &str, value: &str) -> Result<usize, KdfError> {
 
 /// Parse a stored hash. Legacy `v1` strings are rejected, not reinterpreted.
 pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, KdfError> {
+    if encoded.len() > MAX_ENCODED_HASH_LEN {
+        return Err(KdfError::Encoding(format!(
+            "encoded hash exceeds maximum length ({MAX_ENCODED_HASH_LEN} bytes)"
+        )));
+    }
+
     let parts: Vec<&str> = encoded.split('$').collect();
     if parts.len() != 6 || !parts[0].is_empty() {
         return Err(KdfError::Encoding("invalid hash field count".to_string()));
@@ -53,6 +75,17 @@ pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, KdfError> {
     let mut graph_tag = None;
     let mut output_len = None;
 
+    if parts[3].len() > MAX_PARAM_SECTION_LEN {
+        return Err(KdfError::Encoding("parameter section too long".into()));
+    }
+
+    let mut seen_m = false;
+    let mut seen_s = false;
+    let mut seen_b = false;
+    let mut seen_f = false;
+    let mut seen_g = false;
+    let mut seen_l = false;
+
     for param_kv in parts[3].split(',') {
         let Some((k, v)) = param_kv.split_once('=') else {
             return Err(KdfError::Encoding(format!(
@@ -60,12 +93,48 @@ pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, KdfError> {
             )));
         };
         match k {
-            "m" => memory_kib = Some(parse_u32("m", v)?),
-            "s" => salt_len = Some(parse_usize("s", v)?),
-            "b" => block_size = Some(parse_usize("b", v)?),
-            "f" => fan_in = Some(parse_u32("f", v)?),
-            "g" => graph_tag = Some(parse_u32("g", v)?),
-            "l" => output_len = Some(parse_usize("l", v)?),
+            "m" => {
+                if seen_m {
+                    return Err(KdfError::Encoding("duplicate m= parameter".into()));
+                }
+                seen_m = true;
+                memory_kib = Some(parse_u32("m", v)?);
+            }
+            "s" => {
+                if seen_s {
+                    return Err(KdfError::Encoding("duplicate s= parameter".into()));
+                }
+                seen_s = true;
+                salt_len = Some(parse_usize("s", v)?);
+            }
+            "b" => {
+                if seen_b {
+                    return Err(KdfError::Encoding("duplicate b= parameter".into()));
+                }
+                seen_b = true;
+                block_size = Some(parse_usize("b", v)?);
+            }
+            "f" => {
+                if seen_f {
+                    return Err(KdfError::Encoding("duplicate f= parameter".into()));
+                }
+                seen_f = true;
+                fan_in = Some(parse_u32("f", v)?);
+            }
+            "g" => {
+                if seen_g {
+                    return Err(KdfError::Encoding("duplicate g= parameter".into()));
+                }
+                seen_g = true;
+                graph_tag = Some(parse_u32("g", v)?);
+            }
+            "l" => {
+                if seen_l {
+                    return Err(KdfError::Encoding("duplicate l= parameter".into()));
+                }
+                seen_l = true;
+                output_len = Some(parse_usize("l", v)?);
+            }
             other => {
                 return Err(KdfError::Encoding(format!(
                     "unknown parameter field: {other}"
@@ -89,10 +158,22 @@ pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, KdfError> {
     let graph = GraphKind::from_tag(graph_tag)
         .ok_or_else(|| KdfError::Encoding(format!("unknown graph tag: {graph_tag}")))?;
 
-    let salt =
-        hex_decode(parts[4]).map_err(|e| KdfError::Encoding(format!("invalid salt hex: {e}")))?;
-    let digest =
-        hex_decode(parts[5]).map_err(|e| KdfError::Encoding(format!("invalid digest hex: {e}")))?;
+    MemorySize::kib(memory_kib as usize)
+        .validate()
+        .map_err(KdfError::Config)?;
+    BlockSize::bytes(block_size)
+        .validate()
+        .map_err(KdfError::Config)?;
+    FanIn::new(fan_in).validate().map_err(KdfError::Config)?;
+    SaltLength::bytes(salt_len)
+        .validate()
+        .map_err(KdfError::Config)?;
+    OutputLength::bytes(output_len)
+        .validate()
+        .map_err(KdfError::Config)?;
+
+    let salt = hex_decode(parts[4], salt_len, "salt")?;
+    let digest = hex_decode(parts[5], output_len, "digest")?;
 
     if salt.len() != salt_len {
         return Err(KdfError::Encoding(format!(

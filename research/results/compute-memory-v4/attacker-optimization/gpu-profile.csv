@@ -1,0 +1,12 @@
+impl,threads_per_block,batch,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,local_spill_store,local_spill_load,shared_mem,global_traffic_est,l2_hit_rate,sm_util,vram_mib
+baseline,1,64,13.641000,4692.135,4693.067,4693.067,0.010000,48,0 bytes spill stores,0 bytes spill loads,0,5368709120,UNAVAILABLE,UNAVAILABLE,2061
+optimized,32,192,32.855600,5860.441,5865.781,5865.781,0.333333,48,0 bytes spill stores,0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4109
+fully_optimized,128,256,21.362800,11982.938,11987.507,11987.507,0.833333,48,0 bytes spill stores,0 bytes spill loads,0,21474836480,UNAVAILABLE,UNAVAILABLE,5133
+packed,32,192,67.979800,2821.576,2834.055,2834.055,0.333333,58,0 bytes spill stores,0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_noring,32,192,76.832000,2494.137,2510.520,2510.520,0.333333,58,0 bytes spill stores,0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_persistent,32,256,36.653400,6984.504,6984.724,6984.724,0.333333,58,0 bytes spill stores,0 bytes spill loads,0,21474836480,UNAVAILABLE,UNAVAILABLE,2535
+packed_t8_b128,8,128,65.498200,1953.766,1955.653,1955.653,0.083333,58,0 bytes spill stores,0 bytes spill loads,0,10737418240,UNAVAILABLE,UNAVAILABLE,3089
+packed_t16_b192,16,192,88.981700,2157.226,2160.677,2160.677,0.166667,58,0 bytes spill stores,0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_t32_b192,32,192,76.853700,2493.377,2509.438,2509.438,0.333333,58,0 bytes spill stores,0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_t32_b256,32,256,100.530100,2541.273,2559.358,2559.358,0.333333,58,0 bytes spill stores,0 bytes spill loads,0,21474836480,UNAVAILABLE,UNAVAILABLE,5137
+packed_t64_b128,64,128,49.155900,2610.357,2610.902,2610.902,0.666667,58,0 bytes spill stores,0 bytes spill loads,0,10737418240,UNAVAILABLE,UNAVAILABLE,3089

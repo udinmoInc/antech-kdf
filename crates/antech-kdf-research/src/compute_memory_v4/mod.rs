@@ -6,6 +6,7 @@
 //! pulsed far gathers for the latency / attacker tradeoff.
 
 pub mod attacker;
+pub mod attacker_opt;
 pub mod benchmarks;
 pub mod config;
 pub mod engine;

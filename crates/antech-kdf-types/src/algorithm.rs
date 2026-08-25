@@ -4,6 +4,7 @@ use std::fmt;
 
 /// Supported production algorithm identifier.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Algorithm {
     /// Canonical Antech compute-memory construction.
     #[default]
@@ -65,6 +66,7 @@ impl fmt::Display for AlgorithmVersion {
 ///
 /// Production hashing defaults to [`GraphKind::CombinedFrontier`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum GraphKind {
     ReducedCriticalPath,
     CacheLocality,

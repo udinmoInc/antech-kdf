@@ -1,0 +1,4 @@
+threads,duration_secs,hashes,verifies,errors,scheduler_idle
+1,3.208,15,15,0,true
+10,3.531,64,64,0,true
+32,4.551,83,83,0,true

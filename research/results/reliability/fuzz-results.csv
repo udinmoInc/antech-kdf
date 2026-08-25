@@ -1,0 +1,8 @@
+target,status,iterations,notes
+hash_parser,NOT_RUN,cargo-fuzz not available on this Windows host,
+verify_input,NOT_RUN,cargo-fuzz not available on this Windows host,
+rand_parse_never_panics,PASS,512,crates/antech-kdf/tests/reliability_property.rs
+rand_verify_never_panics,PASS,512,crates/antech-kdf/tests/reliability_property.rs
+rand_parser_utf8,PASS,512,crates/antech-kdf-format/tests/parser_property.rs
+malformed_hash_matrix,PASS,12 cases,crates/antech-kdf/tests/reliability_matrix.rs
+password_edge_cases,PASS,5 shapes,crates/antech-kdf/tests/reliability_matrix.rs
