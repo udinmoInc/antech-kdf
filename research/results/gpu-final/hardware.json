@@ -1,0 +1,15 @@
+{
+  "gpu_model": "NVIDIA GeForce RTX 3050",
+  "vram_capacity_mb": 8192,
+  "driver_version": "591.86",
+  "cuda_driver_api_version": "CUDA 13.1",
+  "cuda_toolkit_version": "CUDA 13.3 (V13.3.73)",
+  "cuda_compiler_path": "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v13.3\\bin\\nvcc.exe",
+  "host_cpp_compiler_status": "MISSING (cl.exe not found in system PATH)",
+  "os": "Windows 11 64-bit (x86_64-pc-windows-gnu)",
+  "cpu": "16-Core Multicore x86_64 Processor",
+  "system_ram_gb": 32,
+  "rust_version": "1.98.0",
+  "build_profile": "release",
+  "cuda_execution_status": "CUDA UNAVAILABLE"
+}

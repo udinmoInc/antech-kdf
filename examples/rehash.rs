@@ -1,3 +1,5 @@
+//! Password rehash policy evaluation example.
+
 use antech_kdf::{hash, needs_rehash, verify};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -8,7 +10,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if needs_rehash(&stored_hash)? {
             println!("Hash is outdated. Upgrading stored hash...");
             let _upgraded = hash(password)?;
-            // Save _upgraded to database...
         } else {
             println!("Hash is up to date.");
         }

@@ -18,21 +18,24 @@ pub fn run_gpu_attacker_benchmark() -> Vec<GpuAttackerRecord> {
             gpu_hardware: "NVIDIA GeForce RTX 3050 (8GB VRAM)".to_string(),
             per_instance_vram_mb: 64,
             max_parallel_cuda_threads: 125,
-            status_classification: "CUDA UNAVAILABLE (NO NVCC COMPILER)".to_string(),
+            status_classification: "CUDA UNAVAILABLE (MISSING MSVC CL.EXE HOST COMPILER)"
+                .to_string(),
         },
         GpuAttackerRecord {
             algorithm_name: "Antech Variant K1 (16MB)".to_string(),
             gpu_hardware: "NVIDIA GeForce RTX 3050 (8GB VRAM)".to_string(),
             per_instance_vram_mb: 16,
             max_parallel_cuda_threads: 500,
-            status_classification: "CUDA UNAVAILABLE (NO NVCC COMPILER)".to_string(),
+            status_classification: "CUDA UNAVAILABLE (MISSING MSVC CL.EXE HOST COMPILER)"
+                .to_string(),
         },
         GpuAttackerRecord {
             algorithm_name: "Antech Variant K2 (16MB)".to_string(),
             gpu_hardware: "NVIDIA GeForce RTX 3050 (8GB VRAM)".to_string(),
             per_instance_vram_mb: 16,
             max_parallel_cuda_threads: 500,
-            status_classification: "CUDA UNAVAILABLE (NO NVCC COMPILER)".to_string(),
+            status_classification: "CUDA UNAVAILABLE (MISSING MSVC CL.EXE HOST COMPILER)"
+                .to_string(),
         },
     ]
 }

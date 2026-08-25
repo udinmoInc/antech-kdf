@@ -1,3 +1,5 @@
+//! Basic password hashing example using Antech KDF.
+
 use antech_kdf::hash;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

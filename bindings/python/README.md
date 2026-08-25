@@ -1,11 +1,13 @@
-# Antech KDF Python Binding
+# Antech KDF — Python Language Bindings
 
-Uses `ctypes` or `cffi` to call `antech-kdf-ffi` C ABI.
+Python bindings for Antech KDF via `ctypes` / C FFI.
 
 ```python
 from antech_kdf import hash_password, verify_password, needs_rehash
 
-stored = hash_password("hello")
-assert verify_password("hello", stored)
+stored = hash_password("secret_password")
+assert verify_password("secret_password", stored)
 assert not needs_rehash(stored)
 ```
+
+For official repository updates, visit [Antech KDF on GitHub](https://github.com/udinmoInc/antech-kdf).

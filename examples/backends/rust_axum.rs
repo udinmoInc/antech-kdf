@@ -1,5 +1,4 @@
-// Backend Integration Example: Rust + Axum
-// Demonstrates strictly where hash() and verify() are invoked.
+//! Axum web framework backend integration example for Antech KDF.
 
 use antech_kdf::{hash, verify};
 

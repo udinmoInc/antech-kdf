@@ -1,10 +1,12 @@
-# Antech KDF Java Binding
+# Antech KDF — Java Language Bindings
 
-Uses JNI / Project Panama Foreign Function API calling `antech-kdf-ffi`.
+Java bindings for Antech KDF via JNI / Project Panama Foreign Function API.
 
 ```java
 import org.antech.AntechKdf;
 
-String hash = AntechKdf.hash("hello");
-boolean valid = AntechKdf.verify("hello", hash);
+String hash = AntechKdf.hash("secret_password");
+boolean valid = AntechKdf.verify("secret_password", hash);
 ```
+
+For official repository updates, visit [Antech KDF on GitHub](https://github.com/udinmoInc/antech-kdf).

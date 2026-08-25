@@ -1,0 +1,2 @@
+Algorithm,Memory Footprint,Batch Size,Actual Guesses/sec,p50 Kernel Latency (ms),p95 Kernel Latency (ms),VRAM Used (MB),GPU Utilization,Status
+Argon2id Baseline,64 MB,1,CUDA UNAVAILABLE,N/A,N/A,N/A,N/A,CUDA UNAVAILABLE

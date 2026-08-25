@@ -1,3 +1,5 @@
+//! Password verification example using Antech KDF.
+
 use antech_kdf::{hash, verify};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

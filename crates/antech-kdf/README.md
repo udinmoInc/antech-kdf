@@ -1,6 +1,6 @@
 # antech-kdf
 
-Public developer API for Antech KDF.
+Public Rust developer API facade crate for Antech KDF.
 
 ## Usage
 
@@ -14,3 +14,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+For custom configuration profiles and rehash policies, see the main [Antech KDF repository](https://github.com/udinmoInc/antech-kdf).

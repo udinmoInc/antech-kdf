@@ -1,7 +1,7 @@
-//! Public developer API crate for Antech KDF.
+//! Antech KDF developer API.
 //!
-//! Exposes clean, simple functions for default hashing and verification, as well
-//! as advanced APIs for custom parameter configurations and rehash policies.
+//! Provides password hashing and verification functions with support for custom
+//! configurations and rehash policies.
 
 pub use antech_kdf_types::{
     Algorithm, AntechConfig, AntechConfigBuilder, BlockSize, ConfigError, DependencyDepth,
@@ -11,13 +11,34 @@ pub use antech_kdf_types::{
 
 use antech_kdf_core::{core_hash_with_config, core_needs_rehash_with_policy, core_verify};
 
-/// Hash a password using recommended default configuration parameters.
+/// Hashes a password using default parameters.
+///
+/// # Examples
+///
+/// ```
+/// let hash_string = antech_kdf::hash("correct_horse_battery_staple")?;
+/// # Ok::<(), antech_kdf::Error>(())
+/// ```
 pub fn hash(password: impl AsRef<[u8]>) -> Result<String, Error> {
     let config = AntechConfig::default();
     hash_with_config(password, &config)
 }
 
-/// Hash a password using an explicit custom `AntechConfig`.
+/// Hashes a password using an explicit configuration profile.
+///
+/// # Examples
+///
+/// ```
+/// use antech_kdf::AntechConfig;
+///
+/// let config = AntechConfig::builder()
+///     .salt_length(32)
+///     .memory_mib(24)
+///     .build()?;
+///
+/// let hash_string = antech_kdf::hash_with_config("password", &config)?;
+/// # Ok::<(), antech_kdf::Error>(())
+/// ```
 pub fn hash_with_config(
     password: impl AsRef<[u8]>,
     config: &AntechConfig,
@@ -25,18 +46,27 @@ pub fn hash_with_config(
     core_hash_with_config(password.as_ref(), config)
 }
 
-/// Verify a password against a stored self-describing hash string in constant time.
+/// Verifies a password against a stored self-describing hash string in constant time.
+///
+/// # Examples
+///
+/// ```
+/// let stored = antech_kdf::hash("my_password")?;
+/// let valid = antech_kdf::verify("my_password", &stored)?;
+/// assert!(valid);
+/// # Ok::<(), antech_kdf::Error>(())
+/// ```
 pub fn verify(password: impl AsRef<[u8]>, encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     core_verify(password.as_ref(), encoded_hash.as_ref())
 }
 
-/// Check if a stored hash string is obsolete against default application rehash policy.
+/// Evaluates whether a stored hash string satisfies default rehash policies.
 pub fn needs_rehash(encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     let policy = RehashPolicy::default();
     needs_rehash_with_policy(encoded_hash, &policy)
 }
 
-/// Check if a stored hash string is obsolete against a custom `RehashPolicy`.
+/// Evaluates whether a stored hash string satisfies a target rehash policy.
 pub fn needs_rehash_with_policy(
     encoded_hash: impl AsRef<str>,
     policy: &RehashPolicy,

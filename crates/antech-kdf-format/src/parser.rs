@@ -50,8 +50,8 @@ pub fn parse_hash(encoded: &str) -> Result<RawHashComponents, KdfError> {
         }
     }
 
-    let salt = hex_decode(parts[4])
-        .map_err(|e| KdfError::Encoding(format!("Invalid salt hex: {}", e)))?;
+    let salt =
+        hex_decode(parts[4]).map_err(|e| KdfError::Encoding(format!("Invalid salt hex: {}", e)))?;
     let digest = hex_decode(parts[5])
         .map_err(|e| KdfError::Encoding(format!("Invalid digest hex: {}", e)))?;
 

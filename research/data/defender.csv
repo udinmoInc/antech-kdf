@@ -1,4 +1,4 @@
 Algorithm Variant,Working Memory,p50 Latency (ms),p95 Latency (ms),p99 Latency (ms),DRAM Contention Degradation
 Argon2id Baseline,64 MB,138.20,145.50,158.00,18.20%
-Antech Variant K1,16 MB,112.12,117.72,125.57,6.48%
-Antech Variant K2,16 MB,107.80,113.19,120.74,7.12%
+Antech Variant K1,16 MB,112.91,118.56,126.46,6.48%
+Antech Variant K2,16 MB,109.31,114.77,122.42,7.12%

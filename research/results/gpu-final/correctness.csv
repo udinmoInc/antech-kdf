@@ -1,0 +1,10 @@
+Algorithm,Vector Count,Status,Digest Mismatch Count,Notes
+Argon2id Baseline,10,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Argon2id Baseline,50,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Argon2id Baseline,100,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Antech Variant K1,10,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Antech Variant K1,50,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Antech Variant K1,100,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Antech Variant K2,10,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Antech Variant K2,50,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc
+Antech Variant K2,100,CUDA UNAVAILABLE,N/A,Requires MSVC cl.exe host compiler for nvcc

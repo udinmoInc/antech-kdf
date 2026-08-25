@@ -1,0 +1,4 @@
+Algorithm,Host-to-Device Transfer (ms),Kernel Execution Time (ms),Device-to-Host Transfer (ms),Total Latency (ms),Status
+Argon2id Baseline,N/A,N/A,N/A,N/A,CUDA UNAVAILABLE
+Antech Variant K1,N/A,N/A,N/A,N/A,CUDA UNAVAILABLE
+Antech Variant K2,N/A,N/A,N/A,N/A,CUDA UNAVAILABLE

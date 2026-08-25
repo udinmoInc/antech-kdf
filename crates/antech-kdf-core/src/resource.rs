@@ -1,4 +1,4 @@
-//! Resource policy and scheduler implementations.
+//! Server resource policy and memory admission scheduler.
 
 use crate::traits::{ResourcePermit, ResourceScheduler};
 use antech_kdf_types::KdfError;
@@ -16,14 +16,14 @@ pub struct ResourcePolicy {
 impl Default for ResourcePolicy {
     fn default() -> Self {
         Self {
-            max_memory_kib: 131072, // 128 MB default global ceiling
+            max_memory_kib: 131072, // 128 MB default global memory ceiling
             max_active_jobs: 64,
             queue_limit: 256,
         }
     }
 }
 
-/// Thread-safe bounded memory resource scheduler.
+/// Thread-safe memory admission controller.
 #[derive(Debug)]
 pub struct BoundedResourceScheduler {
     policy: ResourcePolicy,
@@ -46,6 +46,8 @@ impl BoundedResourceScheduler {
 }
 
 impl ResourceScheduler for BoundedResourceScheduler {
+    // A permit reserves the target KDF working set before execution begins,
+    // preventing concurrent requests from exceeding host memory bounds under load.
     fn acquire(&self, memory_kib: usize) -> Result<ResourcePermit, KdfError> {
         let current_jobs = self.active_jobs.fetch_add(1, Ordering::SeqCst);
         if current_jobs >= self.policy.max_active_jobs {

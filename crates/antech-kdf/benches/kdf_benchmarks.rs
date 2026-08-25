@@ -1,4 +1,4 @@
-//! Criterion Benchmarks for Antech KDF.
+//! Criterion benchmark suite for Antech KDF crate entry points.
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::thread;

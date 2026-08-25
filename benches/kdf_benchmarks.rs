@@ -1,4 +1,4 @@
-//! Criterion Benchmarks for Antech KDF.
+//! Criterion benchmark suite for Antech KDF derivation and verification throughput.
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::thread;

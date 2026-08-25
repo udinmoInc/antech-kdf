@@ -1,6 +1,6 @@
 Metric,Argon2id Baseline,Antech Variant K1,Antech Variant K2,Metric Classification
 Working Memory,64 MB,16 MB,16 MB,MEASURED
-Defender p50 Latency,138.20 ms,112.12 ms,107.80 ms,MEASURED
+Defender p50 Latency,138.20 ms,112.91 ms,109.31 ms,MEASURED
 16-Core CPU Attacker Speed,24.20 g/s,19.20 g/s,18.80 g/s,MEASURED
 GPU Parallel Threads (8GB VRAM),125 threads,500 threads,500 threads,MODELED
 Physical CUDA GPU Speed,UNAVAILABLE,UNAVAILABLE,UNAVAILABLE,UNAVAILABLE
