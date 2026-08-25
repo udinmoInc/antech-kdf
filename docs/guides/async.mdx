@@ -5,7 +5,7 @@ description: "Run Antech derives off the event loop; hashing is CPU- and memory-
 order: 25
 ---
 
-Antech APIs are synchronous. A default 16 MiB derive does not belong on a Node event-loop tick or a Tokio worker that also serves HTTP.
+Antech APIs are synchronous. A default **16 MiB** derive does not belong on a Node event-loop tick or a Tokio worker that also serves HTTP. Offload hashing so request handlers stay responsive.
 
 | Runtime | Pattern |
 |---|---|
@@ -14,6 +14,19 @@ Antech APIs are synchronous. A default 16 MiB derive does not belong on a Node e
 | .NET | `Task.Run` |
 | Python asyncio | `asyncio.to_thread` |
 
+## Capacity sketch
+
+```text
+peak_concurrent_verifies × memory_per_hash  ≤  host_scheduler_ceiling
+```
+
+Keep interactive login verifies short and bounded by the scheduler. Push bulk migrations and password-file audits to offline workers.
+
 <Tip>
-Keep interactive login verifies short and bounded by the scheduler. Push bulk migrations to offline workers.
+If your framework offers a built-in “CPU-bound work” executor, use it. Antech is closer to compression than to a network I/O await.
 </Tip>
+
+<Related links={[
+  { href: './thread-safety', title: 'Thread safety' },
+  { href: '../architecture/scheduler', title: 'Host memory ceiling' }
+]} />

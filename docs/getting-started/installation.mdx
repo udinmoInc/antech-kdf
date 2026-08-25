@@ -5,23 +5,24 @@ description: "Install the Rust crate, build the native FFI library, and wire lan
 order: 2
 ---
 
-Pick the path that matches how you ship: Rust-only applications link `antech-kdf` directly. Other languages load `antech-kdf-ffi` as a shared library, then use a thin wrapper.
+Choose the path that matches how you ship. Rust services link `antech-kdf` directly. Every other language loads `antech-kdf-ffi` as a shared library, then uses a thin wrapper that never reimplements the crypto.
 
 <Prerequisites items={[
-  'Rust 1.70 or newer',
-  'Git checkout of udinmoInc/antech-kdf for SDK native builds'
+  'Rust 1.70 or newer (edition 2021 toolchain)',
+  'Git checkout of udinmoInc/antech-kdf for native SDK builds',
+  'Optional: Python 3.10+, Node 18+, Go 1.21+, JDK 17+, or .NET 8 for language packages'
 ]} />
 
 ## Rust crate
 
-Add the public API crate to your project:
+Add the public API crate:
 
 ```toml
 [dependencies]
 antech-kdf = "0.1"
 ```
 
-From a local checkout:
+From a local monorepo checkout:
 
 ```bash
 cargo add antech-kdf --path crates/antech-kdf
@@ -29,9 +30,13 @@ cargo add antech-kdf --path crates/antech-kdf
 
 That is enough for servers written in Rust. You do not need the FFI library unless another language will call Antech.
 
+<Tip>
+Prefer a release profile for timing measurements. Debug builds inflate wall time and can mislead capacity planning.
+</Tip>
+
 ## Native library for SDKs
 
-Wrappers under `bindings/` expect a release build of the C ABI:
+Wrappers under `bindings/` expect a **release** build of the C ABI:
 
 <FrameworkTabs frameworks={['Unix', 'Windows']}>
   <FrameworkContent framework="Unix">
@@ -50,6 +55,23 @@ Wrappers under `bindings/` expect a release build of the C ABI:
 
 You should see the platform library (`antech_kdf_ffi.dll` / `.so` / `.dylib`) and `antech_kdf.h`.
 
+<FileTree>
+  <Folder name="sdk">
+    <Folder name="native">
+      <File name="antech_kdf_ffi.dll / .so / .dylib" />
+      <File name="antech_kdf.h" />
+    </Folder>
+    <Folder name="scripts">
+      <File name="build-native.sh" />
+      <File name="build-native.ps1" />
+      <File name="sync-versions.py" />
+    </Folder>
+    <Folder name="conformance">
+      <File name="vectors.json" />
+    </Folder>
+  </Folder>
+</FileTree>
+
 <Tip>
 If a language package cannot find the library, set `ANTECH_KDF_LIB` to the file path or to the `sdk/native` directory.
 </Tip>
@@ -62,7 +84,9 @@ If a language package cannot find the library, set `ANTECH_KDF_LIB` to the file 
 | Node / TypeScript | `cd bindings/node && npm install && npm run build` |
 | Go | cgo module in `bindings/go` |
 | .NET | `dotnet build bindings/dotnet/Antech.Kdf` |
-| Java | Maven project in `bindings/java` + native on the library path |
+| Java / Kotlin | Maven / façade over JNA with native on the library path |
+| Swift | SwiftPM package under `bindings/swift` |
+| C / C++ | Include `antech_kdf.h` and link the shared library |
 
 Keep versions aligned with the root `VERSION` file:
 
@@ -78,21 +102,13 @@ cargo test -p antech-kdf-ffi
 python sdk/conformance/run_python.py
 ```
 
-<FileTree>
-  <Folder name="sdk">
-    <Folder name="native">
-      <File name="antech_kdf_ffi.*" />
-      <File name="antech_kdf.h" />
-    </Folder>
-    <Folder name="scripts">
-      <File name="build-native.sh" />
-      <File name="build-native.ps1" />
-      <File name="sync-versions.py" />
-    </Folder>
-  </Folder>
-</FileTree>
+Expect the conformance suite to report **12/12** digests matching the shared vectors when the native library is present.
+
+<Warning>
+Do not ship debug `antech-kdf-ffi` builds to production hosts. Always run `build-native` in release mode before packaging SDKs.
+</Warning>
 
 <NextSteps links={[
   { href: './quickstart', title: 'Quickstart: hash and verify' },
-  { href: '../sdk/overview', title: 'SDK overview by language' }
+  { href: './sdk/overview', title: 'SDK overview by language' }
 ]} />

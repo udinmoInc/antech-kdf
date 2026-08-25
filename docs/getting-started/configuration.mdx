@@ -5,7 +5,9 @@ description: "Set memory, block size, fan-in, graph, salt length, and output len
 order: 4
 ---
 
-Structural parameters live on `AntechConfig`. Builders in Rust and POD structs in FFI validate the same bounds, so a rejected config in Python is a rejected config in Go.
+Structural parameters live on `AntechConfig`. Builders in Rust and POD structs in FFI validate the **same** bounds, so a rejected config in Python is a rejected config in Go.
+
+There is no separate iteration-count knob. Work equals `memory_bytes / block_size` and must yield **at least 64** blocks.
 
 ## Builder
 
@@ -35,10 +37,8 @@ let stored = hash_with_config("password", &config)?;
 | Graph | CombinedFrontier | tags `1`, `2`, `3` |
 | Output length | 32 B | 8…128 |
 
-Work equals `memory_bytes / block_size` and must yield **at least 64** blocks.
-
 <Note>
-There is no iteration-count or “depth” security knob. Changing memory or block size is how you change work.
+Changing memory or block size is how you change work. Do not invent an extra loop around `hash` and treat that as a security parameter — you would only amplify latency for legitimate logins.
 </Note>
 
 ## Graph tags
@@ -49,7 +49,16 @@ There is no iteration-count or “depth” security knob. Changing memory or blo
 | `1` | ReducedCriticalPath | Research contrast |
 | `2` | CacheLocality | Research contrast |
 
-Keep `CombinedFrontier` unless you are deliberately studying alternatives. Digests change when the graph changes.
+Keep `CombinedFrontier` unless you are deliberately studying alternatives. Digests change when the graph changes because the kind is mixed into the seed.
+
+## How knobs interact
+
+```text
+num_blocks = memory_bytes / block_size
+work       ≈ O(num_blocks × mix_cost × fan_in edges)
+```
+
+Raising memory increases both RAM and CPU time. Shrinking block size increases the number of nodes for the same memory budget — useful for experiments, rarely needed for default auth profiles.
 
 ## FFI field names
 
@@ -62,9 +71,13 @@ cfg.memory_kib = 16384;
 cfg.graph = ANTECH_GRAPH_COMBINED_FRONTIER; /* 3 */
 ```
 
+<Warning>
+Invalid combinations fail closed (`ANTECH_INVALID_CONFIG` / Rust `Error::InvalidConfig`). Do not catch and silently fall back to weaker parameters.
+</Warning>
+
 <Related links={[
-  { href: '../reference/configuration-reference', title: 'Full configuration reference' },
-  { href: '../reference/hash-format', title: 'How parameters appear in $antech$v2$' }
+  { href: './reference/configuration-reference', title: 'Full configuration reference' },
+  { href: './reference/hash-format', title: 'How parameters appear in $antech$v2$' }
 ]} />
 
 <NextSteps links={[

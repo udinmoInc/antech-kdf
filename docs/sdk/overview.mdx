@@ -5,13 +5,7 @@ description: "Language packages share one FFI, one version file, and one conform
 order: 30
 ---
 
-Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation, and encoding come from the Rust core — not from a second implementation in the binding.
-
-<img
-  src="https://appcontent.udinmo.com/os/img/antech-kdf.webp"
-  alt="Antech KDF logo"
-  width="120"
-/>
+Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation, and encoding come from the Rust core — not from a second implementation in the binding. That is the whole point of the multi-language surface: one construction, many call sites.
 
 ## Shared operations
 
@@ -26,14 +20,14 @@ Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation,
 ## Choose a language
 
 <FeatureGrid>
-  <FeatureCard icon="rust" title="Rust" description="Canonical API crate." href="./rust" />
-  <FeatureCard icon="code" title="C / C++" description="Header + optional C++ wrapper." href="./c-cpp" />
-  <FeatureCard icon="python" title="Python" description="ctypes package over the cdylib." href="./python" />
-  <FeatureCard icon="typescript" title="Node / TS" description="koffi bindings with TypeScript types." href="./node" />
-  <FeatureCard icon="box" title="Go" description="cgo module." href="./go" />
-  <FeatureCard icon="coffee" title="Java / Kotlin" description="JNA plus Kotlin façade." href="./java-kotlin" />
-  <FeatureCard icon="hash" title=".NET" description="P/Invoke Antech.Kdf." href="./dotnet" />
-  <FeatureCard icon="apple" title="Swift" description="SwiftPM over the C ABI." href="./swift" />
+  <FeatureCard icon="🦀" title="Rust" description="Canonical API crate." href="./rust" />
+  <FeatureCard icon="🔧" title="C / C++" description="Header + optional C++ wrapper." href="./c-cpp" />
+  <FeatureCard icon="🐍" title="Python" description="ctypes package over the cdylib." href="./python" />
+  <FeatureCard icon="🟦" title="Node / TS" description="koffi bindings with TypeScript types." href="./node" />
+  <FeatureCard icon="🐹" title="Go" description="cgo module." href="./go" />
+  <FeatureCard icon="☕" title="Java / Kotlin" description="JNA plus Kotlin façade." href="./java-kotlin" />
+  <FeatureCard icon="🔷" title=".NET" description="P/Invoke Antech.Kdf." href="./dotnet" />
+  <FeatureCard icon="🍎" title="Swift" description="SwiftPM over the C ABI." href="./swift" />
 </FeatureGrid>
 
 ## Version and native artifacts
@@ -45,13 +39,30 @@ python sdk/scripts/sync-versions.py
 ./sdk/scripts/build-native.sh   # or build-native.ps1
 ```
 
-CI uploads per-OS natives on `v*` tags. Platform notes: `sdk/PLATFORMS.md`.
+CI uploads per-OS natives on `v*` tags. Platform notes live in `sdk/PLATFORMS.md` in the repository.
 
 <StatsRow>
-  <Stat number="1" label="Crypto implementation" />
-  <Stat number="12" label="Conformance KAT cases" />
-  <Stat number="Experimental" label="Package status" />
+  <Stat value="1" label="Crypto implementation" />
+  <Stat value="12" label="Conformance KAT cases" />
+  <Stat value="Experimental" label="Package status" />
 </StatsRow>
+
+## Layout
+
+<FileTree>
+  <Folder name="bindings">
+    <File name="c" />
+    <File name="cpp" />
+    <File name="python" />
+    <File name="node" />
+    <File name="go" />
+  </Folder>
+  <Folder name="sdk">
+    <File name="native" />
+    <File name="conformance" />
+    <File name="scripts" />
+  </Folder>
+</FileTree>
 
 <NextSteps links={[
   { href: './conformance', title: 'Run the conformance suite' },

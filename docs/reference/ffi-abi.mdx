@@ -5,7 +5,7 @@ description: "C status codes, config POD layout, and exported symbols for antech
 order: 51
 ---
 
-Header: `bindings/c/antech_kdf.h`.
+Header: `bindings/c/antech_kdf.h`. Shared library: `antech_kdf_ffi` (platform extension).
 
 ## Status codes
 
@@ -40,4 +40,15 @@ typedef struct AntechRehashPolicy {
 
 ## Ownership
 
-Strings from hash helpers: free with `antech_free`. Null `antech_free` is a no-op.
+- Strings from hash helpers: free with `antech_free`
+- Null `antech_free` is a no-op
+- Empty passwords: null pointer allowed only when length is `0`
+
+## Threading
+
+Entry points are thread-safe. Concurrent calls share the host resource scheduler.
+
+<Related links={[
+  { href: '../architecture/ffi', title: 'FFI architecture' },
+  { href: './errors', title: 'Error mapping' }
+]} />

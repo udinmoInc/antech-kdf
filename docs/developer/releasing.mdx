@@ -11,8 +11,21 @@ order: 62
 4. Tag `vX.Y.Z` — `release-sdk.yml` uploads per-OS native artifacts
 5. Publish crates / npm / PyPI / NuGet with the same version
 
-Package status remains <InlineBadge type="experimental" /> until review concludes — do not advertise Beta in release notes unless product leadership changes `docs/package.json`.
+Package status remains <InlineBadge type="experimental" /> until review concludes. Do not advertise Beta in release notes unless product leadership explicitly changes the status metadata.
 
 <Tip>
 Treat `VERSION` as the only hand-edited version source. Avoid scattering literals across manifests.
 </Tip>
+
+## Pre-publish gate
+
+```bash
+cargo test --workspace
+python sdk/conformance/run_python.py
+./sdk/scripts/build-native.sh   # or .ps1
+```
+
+<Related links={[
+  { href: './testing', title: 'Testing' },
+  { href: '../sdk/overview', title: 'SDK packaging overview' }
+]} />

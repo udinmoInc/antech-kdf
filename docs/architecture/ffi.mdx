@@ -5,7 +5,7 @@ description: "antech-kdf-ffi exposes a thread-safe C ABI consumed by every langu
 order: 15
 ---
 
-Non-Rust packages load `libantech_kdf_ffi` and call symbols declared in `bindings/c/antech_kdf.h`. Wrappers stay thin: map types, free strings, surface errors.
+Non-Rust packages load `libantech_kdf_ffi` and call symbols declared in `bindings/c/antech_kdf.h`. Wrappers stay thin: map types, free strings, and surface errors. Cryptography stays in Rust.
 
 ## Guarantees
 
@@ -13,6 +13,7 @@ Non-Rust packages load `libantech_kdf_ffi` and call symbols declared in `binding
 - Panics at the boundary become `ANTECH_INTERNAL_ERROR`
 - Hash strings are Rust-allocated; free with `antech_free`
 - Prefer `*_bytes` APIs when passwords are arbitrary binary
+- Empty passwords are valid when length is `0` (null pointer allowed only with zero length)
 
 ## Operation map
 
@@ -23,6 +24,17 @@ Non-Rust packages load `libantech_kdf_ffi` and call symbols declared in `binding
 | `antech_hash_with_config_and_salt` | KAT / interop helper |
 | `antech_verify*` | `verify` |
 | `antech_needs_rehash*` | rehash checks |
+| `antech_config_default` | default `AntechConfig` POD |
+| `antech_free` | free returned C strings |
+
+## Status codes (summary)
+
+| Code | Meaning |
+|---|---|
+| `0` | Success |
+| negative | Mapped library errors (`INVALID_CONFIG`, format, resource, …) |
+
+Exact enumerations are in the ABI reference. Language wrappers should preserve the mapping so conformance runners can assert identical behavior.
 
 <Related links={[
   { href: '../reference/ffi-abi', title: 'FFI ABI reference' },

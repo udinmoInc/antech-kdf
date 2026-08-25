@@ -24,10 +24,26 @@ $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<
 
 Encoding and parsing live in `antech-kdf-format`. Legacy **`v1` is rejected** — old research encodings are not reinterpreted as v2.
 
+## Example (shape only)
+
+```text
+$antech$v2$m=16384,s=16,b=32,f=2,g=3,l=32$a1b2…$c3d4…
+```
+
+Hex lengths must match `s` and `l`. Truncation, padding, or reordering fields fails closed.
+
+## Parser rules that matter
+
+- Duplicate parameter keys are rejected
+- Unknown keys are rejected
+- Out-of-range numeric fields fail as config errors after parse
+- Wrong version (`v1`, missing version, future unknown versions) fails as format errors
+
 <Note>
-Duplicate parameter keys, oversized hex, and out-of-range values fail closed as encoding / config errors.
+Do not hand-edit encoded hashes in production databases. If you need stronger parameters, rehash after a successful verify.
 </Note>
 
 <Related links={[
-  { href: '../reference/hash-format', title: 'Hash format reference' }
+  { href: '../reference/hash-format', title: 'Hash format reference' },
+  { href: '../reference/errors', title: 'Error taxonomy' }
 ]} />

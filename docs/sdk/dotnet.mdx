@@ -12,8 +12,20 @@ dotnet build bindings/dotnet/Antech.Kdf
 ```
 
 ```csharp
+using Antech.Kdf;
+using System.Text;
+
 var stored = AntechKdf.Hash("password");
 var ok = AntechKdf.Verify("password", stored);
+
+var cfg = AntechKdf.DefaultConfig();
+cfg.MemoryKib = 16384;
+var custom = AntechKdf.HashWithConfig(Encoding.UTF8.GetBytes("password"), cfg);
 ```
 
-Package id: `Antech.Kdf`.
+Package id: `Antech.Kdf`. Keep hashing off the ASP.NET request thread under load — use `Task.Run` or a dedicated queue.
+
+<NextSteps links={[
+  { href: './overview', title: 'SDK overview' },
+  { href: '../guides/async', title: 'Async guidance' }
+]} />

@@ -33,9 +33,14 @@ policy.preferred_memory_kib = 32768;
 needsRehashWithPolicy(custom, policy);
 ```
 
-Naming is camelCase in TypeScript; semantics match Rust and Python.
+Naming is camelCase in TypeScript; semantics match Rust and Python. Keep hashing off the event loop — see the async guide.
+
+<Warning>
+Do not call `hash` / `verify` on the main Node event-loop tick under load. Offload to a worker thread.
+</Warning>
 
 <NextSteps links={[
   { href: './overview', title: 'SDK overview' },
-  { href: './conformance', title: 'Conformance' }
+  { href: './conformance', title: 'Conformance' },
+  { href: '../guides/async', title: 'Async guidance' }
 ]} />

@@ -12,6 +12,20 @@ let stored = try AntechKdf.hash("password")
 let ok = try AntechKdf.verify("password", encodedHash: stored)
 ```
 
+## Platform notes
+
+| Target | Guidance |
+|---|---|
+| macOS | Dynamic library from `build-native` is usually enough |
+| iOS | Prefer an XCFramework built from the Rust staticlib/cdylib |
+
+See `sdk/PLATFORMS.md` in the repository for packaging details.
+
 <Note>
-iOS distribution typically uses an XCFramework built from the Rust staticlib/cdylib. See `sdk/PLATFORMS.md`.
+iOS App Store distribution needs a signed XCFramework workflow. Do not ship unsigned debug natives.
 </Note>
+
+<Related links={[
+  { href: './overview', title: 'SDK overview' },
+  { href: './c-cpp', title: 'C ABI overview' }
+]} />

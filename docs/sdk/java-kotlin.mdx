@@ -5,19 +5,35 @@ description: "Use the JNA AntechKdf class or the Kotlin Antech façade over the 
 order: 36
 ---
 
+Both Java and Kotlin call the same native library. There is no second cryptographic implementation in the JVM layer.
+
 ## Java
+
+Maven project: `bindings/java`. Place `antech_kdf_ffi` on the native library path (`java.library.path` or OS defaults).
 
 ```java
 String stored = AntechKdf.hash("password");
 boolean ok = AntechKdf.verify("password", stored);
-```
 
-Maven project: `bindings/java`. Place `antech_kdf_ffi` on the native library path.
+AntechConfig cfg = AntechKdf.defaultConfig();
+cfg.memoryKib = 16384;
+String custom = AntechKdf.hashWithConfig("password", cfg);
+```
 
 ## Kotlin
 
 ```kotlin
 val stored = Antech.hash("password")
+val ok = Antech.verify("password", stored)
 ```
 
-Façade in `bindings/kotlin` reuses the Java JNA binding — no second crypto path.
+Façade in `bindings/kotlin` reuses the Java JNA binding.
+
+<Tip>
+Prefer byte-array overloads when passwords are not UTF-8 text.
+</Tip>
+
+<Related links={[
+  { href: './overview', title: 'SDK overview' },
+  { href: '../reference/ffi-abi', title: 'FFI ABI' }
+]} />

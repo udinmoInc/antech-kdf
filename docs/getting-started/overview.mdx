@@ -1,134 +1,57 @@
 ---
-title: "Antech KDF"
-sidebarTitle: "Overview"
-description: "Compute-memory password hashing with a combined-frontier graph, self-describing v2 hashes, and SDKs that share one Rust core."
-order: 0
-sectionOrder: 0
+title: "What Antech KDF is"
+sidebarTitle: "Introduction"
+description: "Orientation for engineers evaluating Antech as a compute-memory password KDF."
+order: 1
 ---
 
-Antech is a password KDF aimed at servers that cannot spare a large Argon2 working set, but still want attacker cost that does not collapse when memory is scarce. The production profile walks a **combined-frontier** dependency graph in about **16 MiB**. Work is `memory / block_size` — there is no separate iteration knob.
+Antech exists because many small services want password hashing that remains expensive for offline attackers even when the defender only has tens of mebibytes free. Traditional memory-hard designs often push toward larger footprints; Antech studies a **compute-memory** trade where the working set stays near **16 MiB** while the dependency graph tries to keep reduced-memory shortcuts incorrect or costly.
 
-<InlineBadge type="experimental" /> <InlineBadge type="rust" />
+## Design choices you will feel
 
-<HeroFeatureCard
-  title="Antech KDF"
-  description="One canonical engine in Rust. Thin SDKs for C, Go, Python, Node, Java, Kotlin, Swift, and .NET. Same digests everywhere — verified by a shared conformance suite."
-  buttonText="Get started"
-  href="./quickstart"
-  image="https://appcontent.udinmo.com/os/img/antech-kdf.webp"
-/>
+### Work model
 
-<ButtonGroup>
-  <Button href="./installation" variant="primary">Install</Button>
-  <Button href="./quickstart" variant="secondary">Quickstart</Button>
-  <Button href="https://github.com/udinmoInc/antech-kdf" variant="secondary">GitHub</Button>
-</ButtonGroup>
+There is no `t_cost`-style iteration knob. The number of nodes is `memory_bytes / block_size`. Changing memory or block size changes work directly.
 
-## Where things stand
+### Graph
 
-Antech is **experimental**. It is useful for research, comparative benchmarks, and early integration work. It is **not** a drop-in replacement for Argon2id in production until independent cryptanalysis is complete and you have explicitly accepted the risk.
+Production hashing defaults to **CombinedFrontier**. The graph kind is mixed into the seed and stored as `g=` in the encoded hash, so swapping graphs changes digests.
 
-<Note>
-Status in package metadata is <InlineBadge type="experimental" /> — not Beta. Review materials live under `research/security-review/` in the repository.
-</Note>
+### Encoding
 
-## At a glance
+Stored values are self-describing `$antech$v2$…` strings. `verify` rebuilds configuration from the string. Legacy `v1` encodings are rejected.
 
-<StatsRow>
-  <Stat number="16 MiB" label="Default working set" />
-  <Stat number="v2" label="Self-describing hash encoding" />
-  <Stat number="1 core" label="Cryptographic implementation" />
-  <Stat number="9+" label="Language surfaces via FFI" />
-</StatsRow>
+### Single crypto core
 
-## How a hash is built
+Language SDKs call `antech-kdf-ffi`. They do not reimplement mixing, parenting, or finalization.
 
-Password and salt bind into a seed, the engine walks the DAG, then the digest is packed into a portable string:
+## Mental model
 
 <Mermaid chart={`
-graph LR
-  A["Password + salt"] --> B["Bind seed"]
-  B --> C["Combined-frontier DAG"]
-  C --> D["Finalize digest"]
-  D --> E["Encode antech v2"]
+graph TB
+  App["Your app"] --> API["antech-kdf API"]
+  API --> Core["antech-kdf-core engine"]
+  SDK["Python / Node / Go / …"] --> FFI["antech-kdf-ffi"]
+  FFI --> API
+  Core --> Fmt["antech-kdf-format v2"]
 `} />
 
-## What you can do with it
+## When to use it today
 
-<FeatureGrid>
-  <FeatureCard
-    icon="lock"
-    title="Hash and verify"
-    description="Stable hash / verify / needs_rehash API with constant-time comparison on verify."
-    href="./quickstart"
-  />
-  <FeatureCard
-    icon="sliders"
-    title="Tune structural knobs"
-    description="Memory, block size, fan-in, graph kind, salt and output length — validated the same way in every SDK."
-    href="./configuration"
-  />
-  <FeatureCard
-    icon="layers"
-    title="Ship across languages"
-    description="C ABI plus thin wrappers. No second crypto implementation in Python, Go, or Node."
-    href="../sdk/overview"
-  />
-  <FeatureCard
-    icon="check"
-    title="Conformance vectors"
-    description="Shared KATs so FFI and language packages must match digests and error mapping."
-    href="../sdk/conformance"
-  />
-</FeatureGrid>
-
-## Repository layout
-
-<FileTree>
-  <Folder name="crates">
-    <File name="antech-kdf" />
-    <File name="antech-kdf-core" />
-    <File name="antech-kdf-ffi" />
-  </Folder>
-  <Folder name="bindings">
-    <File name="python" />
-    <File name="node" />
-    <File name="go" />
-  </Folder>
-  <Folder name="sdk">
-    <File name="conformance" />
-    <File name="scripts" />
-  </Folder>
-  <Folder name="research">
-    <File name="security-review" />
-    <File name="code" />
-  </Folder>
-</FileTree>
-
-## Defaults worth memorizing
-
-| Knob | Default |
+| Situation | Guidance |
 |---|---|
-| Memory | 16 MiB |
-| Block size | 32 bytes |
-| Fan-in | 2 |
-| Graph | CombinedFrontier (`g=3`) |
-| Salt length | 16 bytes |
-| Output length | 32 bytes |
+| Research / benchmarks | Fine — compare against Argon2-class baselines carefully |
+| Internal experiments | Fine with risk acceptance |
+| Public production auth | Prefer Argon2id until review concludes |
 
-Stored form:
-
-```text
-$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
-```
-
-<Prerequisites items={[
-  'Rust 1.70+ for the core crate',
-  'Optional: release build of antech-kdf-ffi for language SDKs'
-]} />
+<StatsRow>
+  <Stat value="16 MiB" label="Default memory" />
+  <Stat value="g=3" label="Default graph tag" />
+  <Stat value="Experimental" label="Release status" />
+</StatsRow>
 
 <NextSteps links={[
-  { href: './installation', title: 'Install the crate and native library' },
-  { href: './quickstart', title: 'Hash and verify in five minutes' },
-  { href: '../guides/security', title: 'Read the security posture' }
+  { href: './installation', title: 'Installation' },
+  { href: './quickstart', title: 'Quickstart' },
+  { href: './architecture/overview', title: 'Architecture' }
 ]} />

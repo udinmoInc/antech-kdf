@@ -5,6 +5,5 @@
   "framework": "rust",
   "description": "Compute-memory password KDF with a combined-frontier graph, v2 encoding, and multi-language SDKs over one Rust core.",
   "logo": "https://appcontent.udinmo.com/os/img/antech-kdf.webp",
-  "repository": "https://github.com/udinmoInc/antech-kdf",
-  "docsSite": "https://developers.udinmo.com"
+  "repository": "https://github.com/udinmoInc/antech-kdf"
 }

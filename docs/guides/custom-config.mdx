@@ -16,8 +16,25 @@ let cfg = antech_kdf::AntechConfig::builder()
     .build()?;
 ```
 
+## Choosing a memory step
+
+| Profile | When it fits |
+|---|---|
+| 16 MiB | Default interactive login on small hosts |
+| 32 MiB | Stronger offline cost when verify latency is still acceptable |
+| Higher | Batch / offline rehash workers, not typically hot login paths |
+
+Measure verify latency on your hardware before rolling a new preferred memory into `RehashPolicy`.
+
+## Validation
+
 Invalid combinations fail at `build()` (Rust) or with `ANTECH_INVALID_CONFIG` (FFI). Bounds are listed in the [configuration reference](../reference/configuration-reference).
 
+<Warning>
+Do not change graph tag or construction constants to “tune performance.” That creates a different KDF, not a faster Antech.
+</Warning>
+
 <NextSteps links={[
-  { href: '../reference/configuration-reference', title: 'Configuration reference' }
+  { href: '../reference/configuration-reference', title: 'Configuration reference' },
+  { href: './rehash-policy', title: 'Roll stronger profiles via rehash' }
 ]} />

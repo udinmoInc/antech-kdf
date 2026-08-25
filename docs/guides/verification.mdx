@@ -9,7 +9,7 @@ order: 21
 let ok = antech_kdf::verify(password, &stored)?;
 ```
 
-`verify` parses the string, rebuilds config, re-derives with the embedded salt, and compares digests in constant time.
+`verify` parses the string, rebuilds config, re-derives with the embedded salt, and compares digests in constant time. Callers never need to extract salt or parameters manually.
 
 ## Outcomes
 
@@ -19,12 +19,27 @@ let ok = antech_kdf::verify(password, &stored)?;
 | `Ok(false)` | Password does not match |
 | `Err(_)` | Malformed string or invalid embedded parameters |
 
-On the FFI, a mismatch is `ANTECH_VERIFICATION_FAILED` (status `1`), while parse failures are `ANTECH_INVALID_HASH`.
+On the FFI, a mismatch is typically surfaced as a dedicated verification-failed status, while parse failures are invalid-hash / format errors. Language wrappers should keep those cases distinct.
+
+## Application handling
+
+<Mermaid chart={`
+flowchart TD
+  V["verify(password, stored)"]
+  V -->|Ok true| Auth["Authenticate"]
+  V -->|Ok false| Deny["Reject credentials"]
+  V -->|Err| Ops["Alert operators / fail closed"]
+`} />
 
 <Note>
 Surface `Err` / invalid-hash as an infrastructure problem to operators. Do not tell end users “wrong password” when the stored string itself is corrupt.
 </Note>
 
+## Timing
+
+Verification cost matches hashing cost for the stored profile. Budget login latency and concurrent capacity with the host scheduler in mind — a burst of verifies is a burst of 16 MiB (or larger) working sets.
+
 <NextSteps links={[
-  { href: './rehash-policy', title: 'Upgrade outdated parameters' }
+  { href: './rehash-policy', title: 'Upgrade outdated parameters' },
+  { href: './thread-safety', title: 'Concurrent verify behavior' }
 ]} />

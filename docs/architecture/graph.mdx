@@ -5,7 +5,7 @@ description: "CombinedFrontier parents, frontier width, and tiles that define co
 order: 12
 ---
 
-Antech’s cost comes from a password-dependent DAG over memory blocks. Production hashing defaults to **CombinedFrontier**.
+Antech’s cost comes from a password-dependent DAG over memory blocks. Production hashing defaults to **CombinedFrontier** (`g=3`). The graph kind is mixed into the seed, so swapping graphs changes digests even when memory and block size stay fixed.
 
 ## CombinedFrontier
 
@@ -17,13 +17,28 @@ Parents mix a local frontier with far / scatter edges so a reduced-memory attack
 | Tile blocks | 512 |
 | Mix rounds | 4 |
 
-The graph kind is mixed into the seed and stored as `g=` in the encoded hash. Changing graph changes digests.
+Intuition: each node depends on recent frontier state **and** on distant tiles. That coupling is what makes naive TMTO shortcuts incorrect for the shipping profile.
 
 ## Other kinds
 
-`ReducedCriticalPath` (`g=1`) and `CacheLocality` (`g=2`) remain available for research contrast. They are not the default review target.
+| Tag | Name | Role |
+|---|---|---|
+| `3` | CombinedFrontier | Default review target |
+| `1` | ReducedCriticalPath | Research contrast |
+| `2` | CacheLocality | Research contrast |
 
-Attack measurements and limitations are documented in `research/security-review/` and `research/docs/`.
+Keep `CombinedFrontier` for any application path that stores passwords. Use the other tags only when you intentionally compare attack surfaces in `research/`.
+
+## Where the graph shows up
+
+```text
+seed  ← mix(password, salt, graph_tag, …)
+DAG   ← parents(i, fan_in, graph)
+digest ← finalize(seed, state, last_block, graph)
+string ← …,g=<tag>,…
+```
+
+Attack measurements and known limitations live in `research/security-review/` and `research/docs/`.
 
 <NextSteps links={[
   { href: './format', title: 'How g= appears in the hash string' },

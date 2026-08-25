@@ -5,9 +5,27 @@ description: "Hash and verify passwords from the antech-kdf-cli binary."
 order: 40
 ---
 
+The CLI wraps the same production API as the Rust crate. Use it for smoke tests, operator tooling, and quick KAT checks — not as a second crypto path.
+
 ```bash
 cargo run -p antech-kdf-cli -- hash "password"
 cargo run -p antech-kdf-cli -- verify "password" "$HASH"
 ```
 
-Uses the same production defaults as the library API.
+## Expected behavior
+
+| Command | Result |
+|---|---|
+| `hash` | Prints a `$antech$v2$…` string on success |
+| `verify` | Exit `0` on match, non-zero on mismatch or parse failure |
+
+Defaults match the library: **16 MiB**, CombinedFrontier, random salt.
+
+<Tip>
+Prefer piping passwords from a secret store rather than leaving them in shell history. Quote carefully on Windows PowerShell.
+</Tip>
+
+<Related links={[
+  { href: '../quickstart', title: 'Library quickstart' },
+  { href: '../reference/api', title: 'Rust API reference' }
+]} />

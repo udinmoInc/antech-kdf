@@ -5,6 +5,8 @@ description: "Complete field bounds and defaults for AntechConfig and RehashPoli
 order: 52
 ---
 
+Shared validation applies in Rust builders and FFI POD structs. Invalid values fail closed before derive.
+
 ## AntechConfig
 
 | Field | Default | Bounds |
@@ -18,6 +20,14 @@ order: 52
 
 Also requires `memory_bytes / block_size >= 64`.
 
+## Graph tags
+
+| Value | Kind |
+|---|---|
+| `1` | ReducedCriticalPath |
+| `2` | CacheLocality |
+| `3` | CombinedFrontier (default) |
+
 ## RehashPolicy
 
 | Field | Default |
@@ -28,3 +38,8 @@ Also requires `memory_bytes / block_size >= 64`.
 | `preferred_output_length` | 32 |
 
 Shared schema JSON: `sdk/schema.json`.
+
+<Related links={[
+  { href: '../configuration', title: 'Configuration guide' },
+  { href: './hash-format', title: 'Encoded parameter fields' }
+]} />

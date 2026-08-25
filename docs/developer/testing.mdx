@@ -5,6 +5,8 @@ description: "Run unit, integration, fuzz, and cross-language conformance tests.
 order: 61
 ---
 
+## Core and FFI
+
 ```bash
 cargo test --workspace
 cargo test -p antech-kdf conformance -- --nocapture
@@ -12,10 +14,27 @@ cargo test -p antech-kdf-ffi
 python sdk/conformance/run_python.py
 ```
 
-Fuzz (nightly + cargo-fuzz):
+## Fuzz
+
+Requires nightly + `cargo-fuzz`:
 
 ```bash
 cargo fuzz run hash_parser -- -runs=10000
 ```
 
-CI: `.github/workflows/ci.yml`, `fuzz.yml`, `sdk.yml`.
+Additional targets live under `fuzz/fuzz_targets/` (including config builders and malformed v2 inputs).
+
+## CI
+
+| Workflow | Focus |
+|---|---|
+| `.github/workflows/ci.yml` | Format, clippy, unit tests |
+| `.github/workflows/fuzz.yml` | Fuzz smoke |
+| `.github/workflows/sdk.yml` | Native build + conformance |
+
+Treat a failing conformance run as a release blocker for language packages.
+
+<NextSteps links={[
+  { href: '../sdk/conformance', title: 'Conformance details' },
+  { href: './releasing', title: 'Release checklist' }
+]} />

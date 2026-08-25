@@ -7,9 +7,19 @@ order: 24
 
 Public hash/verify entry points and FFI functions are **thread-safe**. Callers do not need a process-wide mutex around Antech.
 
-Concurrent derives share `BoundedResourceScheduler`. Under pressure, requests fail with a resource error rather than over-allocating past the host ceiling.
+Concurrent derives share `BoundedResourceScheduler`. Under pressure, requests fail with a resource error rather than over-allocating past the host ceiling (default **128 MiB** in-flight).
 
-Language SDKs that load the same `cdylib` inherit these properties. Keep wrappers free of global mutable crypto state.
+## Implications for wrappers
+
+Language SDKs that load the same `cdylib` inherit these properties. Keep wrappers free of global mutable crypto state:
+
+- No process-global salt cache
+- No lazy “config singleton” that races across threads
+- Free returned C strings exactly once
+
+## Load testing tip
+
+When you hammer login endpoints, watch for resource errors. They usually mean the host ceiling is too low for peak concurrency × per-hash memory — raise the ceiling carefully, or shed load, rather than disabling the scheduler.
 
 <Related links={[
   { href: '../architecture/scheduler', title: 'Resource scheduler' },

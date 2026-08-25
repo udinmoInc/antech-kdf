@@ -5,11 +5,31 @@ description: "Call Antech through cgo bindings in bindings/go."
 order: 35
 ---
 
-Requires CGO and a built `libantech_kdf_ffi` visible to the linker (`sdk/native` / `target/release`).
+Requires CGO and a built `libantech_kdf_ffi` visible to the linker (`sdk/native` or `target/release`).
 
 ```go
-h, err := antech.Hash([]byte("password"))
-ok, err := antech.Verify([]byte("password"), h)
+package main
+
+import (
+    "fmt"
+    antech "github.com/udinmoInc/antech-kdf/bindings/go"
+)
+
+func main() {
+    h, err := antech.Hash([]byte("password"))
+    if err != nil {
+        panic(err)
+    }
+    ok, err := antech.Verify([]byte("password"), h)
+    fmt.Println(ok, err)
+}
 ```
 
-See `bindings/go/README.md` and `go test` in that module after native build.
+Passwords are `[]byte`. Prefer that over assuming UTF-8 strings when integrating with binary secrets.
+
+See `bindings/go/README.md` and run `go test` in that module after a native build.
+
+<Related links={[
+  { href: './overview', title: 'SDK overview' },
+  { href: './conformance', title: 'Conformance' }
+]} />

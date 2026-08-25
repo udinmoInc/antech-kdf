@@ -5,6 +5,8 @@ description: "Reference for hash, verify, needs_rehash, configuration types, and
 order: 50
 ---
 
+Canonical crate: `antech-kdf`. Language SDKs mirror this surface through FFI.
+
 ## Functions
 
 | Function | Signature (conceptual) |
@@ -30,3 +32,15 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 ```
+
+## Notes
+
+- Passwords are `AsRef<[u8]>`
+- `verify` returns `Ok(false)` on mismatch; malformed strings return `Err`
+- `hash_with_config_and_salt` is for tests and KATs only
+
+<Related links={[
+  { href: './configuration-reference', title: 'Configuration bounds' },
+  { href: './errors', title: 'Error taxonomy' },
+  { href: './ffi-abi', title: 'FFI ABI' }
+]} />

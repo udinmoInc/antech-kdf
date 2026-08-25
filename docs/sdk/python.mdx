@@ -29,9 +29,13 @@ needs = antech_kdf.needs_rehash_with_policy(custom, policy)
 
 The loader walks upward for a repo `VERSION` plus `sdk/native`, or honors `ANTECH_KDF_LIB`.
 
+## Conformance
+
 ```bash
 python sdk/conformance/run_python.py
 ```
+
+Expect **12/12** when the release native library is present.
 
 <Prerequisites items={[
   'Python 3.9+',
@@ -40,5 +44,5 @@ python sdk/conformance/run_python.py
 
 <NextSteps links={[
   { href: './conformance', title: 'Conformance suite' },
-  { href: '../getting-started/quickstart', title: 'API quickstart' }
+  { href: '../quickstart', title: 'API quickstart' }
 ]} />

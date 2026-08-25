@@ -5,17 +5,26 @@ description: "AntechEngine pipeline: validate config, schedule memory, derive, e
 order: 11
 ---
 
-`AntechEngine` in `antech-kdf-core` is the only production derivation. Language packages call into it through FFI; they must not reimplement mixing or graph selection.
+`AntechEngine` in `antech-kdf-core` is the only production derivation path. Language packages call into it through FFI; they must not reimplement mixing, parenting, or finalization.
 
 ## Call path
 
 <Mermaid chart={`
 graph LR
   A["Validate config"] --> B["Acquire scheduler permit"]
-  B --> C["derive password salt config"]
-  C --> D["encode_hash"]
+  B --> C["Derive password + salt + config"]
+  C --> D["Encode antech v2"]
   D --> E["Release permit"]
 `} />
+
+## Stages inside derive
+
+1. **Bind** — password and salt expand into a domain-separated seed.
+2. **Fill** — walk the dependency graph over `memory / block_size` nodes.
+3. **Finalize** — compress the terminal state into the requested output length.
+4. **Encode** — pack parameters, salt, and digest into `$antech$v2$…`.
+
+Construction version and domain-separation tags are fixed in core. Changing them silently breaks published vectors and review evidence.
 
 ## Public helpers on top of the engine
 
@@ -26,11 +35,17 @@ graph LR
 | `verify` | Parse → derive with stored salt → constant-time compare |
 | `needs_rehash*` | Compare stored parameters to a policy |
 
-Construction version and domain-separation tags are fixed in core. Changing them silently breaks published vectors and review evidence.
-
 <Tip>
 Use `hash_with_config_and_salt` only in tests. Production authentication should keep random salts from `hash` / `hash_with_config`.
 </Tip>
+
+## Failure modes
+
+| Condition | Result |
+|---|---|
+| Config out of bounds | `InvalidConfig` before any heavy work |
+| Host scheduler exhausted | Resource error; no over-commit |
+| Malformed v2 string on verify | Format / config error, never a false positive match |
 
 <Related links={[
   { href: './graph', title: 'Dependency graph' },

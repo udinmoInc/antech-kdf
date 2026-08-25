@@ -5,7 +5,7 @@ description: "Hash a password, verify it, and check whether a stored hash should
 order: 3
 ---
 
-This page stays on the Rust API. Other SDKs expose the same operations with idiomatic names — see the SDK section once you need Python, Node, or Go.
+This page uses the Rust API. Other SDKs expose the same three operations — `hash`, `verify`, and `needs_rehash` — with idiomatic names. Digests are identical across languages when they load the same FFI library.
 
 ## Hash, verify, rehash check
 
@@ -30,7 +30,15 @@ What you just used:
 - **16 MiB** working memory
 - Block size **32**, fan-in **2**
 - Graph **CombinedFrontier** (`g=3` in the encoded string)
-- Random salt, **32**-byte digest
+- Random **16**-byte salt, **32**-byte digest
+
+A successful run prints a single portable string that looks like:
+
+```text
+$antech$v2$m=16384,s=16,b=32,f=2,g=3,l=32$<salt_hex>$<digest_hex>
+```
+
+Persist that string. Do not store salt or parameters in separate columns unless your schema already requires it — the string is self-describing.
 
 ## Same idea in other languages
 
@@ -57,6 +65,7 @@ What you just used:
     ```go
     h, err := antech.Hash([]byte("correct_horse_battery_staple"))
     ok, err := antech.Verify([]byte("correct_horse_battery_staple"), h)
+    need, err := antech.NeedsRehash(h)
     ```
   </FrameworkContent>
 </FrameworkTabs>
@@ -65,10 +74,19 @@ What you just used:
 Passwords are bytes in the Rust API (`AsRef<[u8]>`). Prefer byte-oriented FFI helpers when passwords may contain interior NUL bytes.
 </Tip>
 
+## Common mistakes
+
+| Mistake | What happens |
+|---|---|
+| Truncating the stored string | `verify` fails closed with a format error |
+| Re-encoding salt yourself | Digests diverge; use the library string as-is |
+| Calling `hash` twice and comparing strings | Salts differ — always `verify` |
+| Using a research graph in production | Digests and attack surface change; stay on CombinedFrontier |
+
 ## What to read next
 
 <NextSteps links={[
   { href: './configuration', title: 'Configuration knobs and bounds' },
   { href: './first-hash', title: 'Registration and login upgrade flow' },
-  { href: '../guides/security', title: 'Experimental status and operational notes' }
+  { href: './guides/security', title: 'Experimental status and operational notes' }
 ]} />

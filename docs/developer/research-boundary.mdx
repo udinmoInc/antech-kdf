@@ -11,6 +11,28 @@ order: 63
 | `bindings/` + `sdk/` | Thin SDKs + packaging |
 | `research/` | Attackers, CUDA, TMTO, results, security-review |
 
-Dependency rule: research → core, never core → research.
+## Dependency rule
 
-Historical narrative chapters: `research/docs/`. Review package: `research/security-review/`.
+```text
+research → antech-kdf-core   ✓
+antech-kdf-core → research   ✗
+antech-kdf → research        ✗
+bindings → research          ✗
+```
+
+Research may import core for correct digests. Production never imports research crates, CUDA runners, or attacker tooling.
+
+## Where narrative lives
+
+| Material | Path |
+|---|---|
+| Historical chapters | `research/docs/` |
+| Review package | `research/security-review/` |
+| Measurement results | `research/results/` |
+
+If a change belongs in an attacker model or GPU harness, it belongs under `research/code/`, not under `crates/`.
+
+<Related links={[
+  { href: '../architecture/overview', title: 'Architecture overview' },
+  { href: '../guides/security', title: 'Security guidance' }
+]} />

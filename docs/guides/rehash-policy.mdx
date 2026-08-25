@@ -5,7 +5,7 @@ description: "Detect when stored Antech parameters fall behind your preferred pr
 order: 22
 ---
 
-Applications evolve memory targets over time. A rehash policy compares the parameters embedded in a stored string to your current floor and preference.
+Applications evolve memory targets over time. A rehash policy compares the parameters embedded in a stored string to your current floor and preference — without requiring a separate migration table of “algorithm versions.”
 
 ```rust
 use antech_kdf::{needs_rehash, needs_rehash_with_policy, RehashPolicy};
@@ -26,13 +26,19 @@ if needs_rehash_with_policy(&stored, &policy)? {
 }
 ```
 
-A rehash is signaled when stored memory, fan-in, or output length is below the policy targets.
+A rehash is signaled when stored memory, fan-in, or output length falls below the policy targets. Graph and block size are part of the encoded string; treat changing them as a deliberate construction change, not a routine upgrade.
+
+## Recommended login order
+
+1. `verify` — reject on mismatch or hard error
+2. `needs_rehash_with_policy` — only if verify succeeded
+3. `hash_with_config` — write the new string atomically
 
 <Tip>
 Always verify successfully before spending another full derive on an upgrade.
 </Tip>
 
 <Related links={[
-  { href: '../getting-started/first-hash', title: 'Full login upgrade sequence' },
+  { href: '../first-hash', title: 'Full login upgrade sequence' },
   { href: '../reference/configuration-reference', title: 'Policy field defaults' }
 ]} />

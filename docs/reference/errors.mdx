@@ -5,6 +5,8 @@ description: "Map Rust KdfError / ConfigError and FFI status codes across SDKs."
 order: 53
 ---
 
+Keep error taxonomies aligned across languages so operators and conformance runners see the same failure classes.
+
 ## Rust
 
 `antech_kdf::Error` aliases `KdfError`:
@@ -13,6 +15,8 @@ order: 53
 - `Encoding(String)` — parse / encode
 - `Derivation(String)` — engine
 - `ResourceExhausted(String)` — scheduler
+
+`verify` returns `Ok(false)` on password mismatch. That is not an `Err`.
 
 ## FFI mapping
 
@@ -25,3 +29,8 @@ order: 53
 | Password mismatch | `VERIFICATION_FAILED` (not an Err in Rust `verify`) |
 
 Language SDKs should preserve this mapping so conformance and ops tooling stay aligned.
+
+<Related links={[
+  { href: './ffi-abi', title: 'FFI ABI status codes' },
+  { href: '../guides/verification', title: 'Verification outcomes' }
+]} />

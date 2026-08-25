@@ -5,7 +5,7 @@ description: "Store an Antech hash on signup, verify on login, and upgrade param
 order: 5
 ---
 
-A practical auth path has three library calls: hash on registration, verify on login, and an optional rehash when your policy says the stored parameters are behind.
+A practical auth path has three library calls: `hash` on registration, `verify` on login, and an optional rehash when your policy says the stored parameters are behind.
 
 ## Sequence
 
@@ -98,11 +98,15 @@ Rehash only after a successful verify. Wrong passwords should not force expensiv
   </FrameworkContent>
 </FrameworkTabs>
 
-<Note>
-Antech remains <InlineBadge type="experimental" />. For production password storage today, prefer Argon2id unless you have a written risk acceptance tied to the ongoing review.
-</Note>
+## Operational checklist
+
+1. Store only the encoded hash string for Antech parameters.
+2. Compare passwords with `verify`, never with string equality of two hashes.
+3. Apply rehash policy after a successful match.
+4. Cap concurrent hashing with the host resource scheduler (default **128 MiB** in-flight).
+5. Treat Antech as <InlineBadge type="experimental" /> until review concludes — prefer Argon2id for production unless you have written risk acceptance.
 
 <NextSteps links={[
-  { href: '../guides/rehash-policy', title: 'Rehash policy details' },
-  { href: '../architecture/overview', title: 'Architecture overview' }
+  { href: './guides/rehash-policy', title: 'Rehash policy details' },
+  { href: './architecture/overview', title: 'Architecture overview' }
 ]} />

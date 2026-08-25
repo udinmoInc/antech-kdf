@@ -12,8 +12,26 @@ AntechConfig.memory     →  bytes for a single derive
 BoundedResourceScheduler →  acquire / release permits for concurrency
 ```
 
-When permits are exhausted, calls fail with a resource error instead of allocating past the policy.
+## Why both exist
+
+| Layer | Question it answers |
+|---|---|
+| Config memory | How expensive is one password hash? |
+| Scheduler | How many hashes may run at once on this machine? |
+
+When permits are exhausted, calls fail with a resource error instead of allocating past the policy. That is preferable to OOM-killing the process under a login spike.
+
+## Operational guidance
+
+- Size the host ceiling for peak concurrent logins × per-hash memory
+- Prefer failing a login attempt with a retryable error over swapping to disk mid-derive
+- Do not raise per-hash memory blindly to “make it safer” without measuring verify latency on your hardware
 
 <Note>
 The scheduler does not choose a safe per-hash memory for you. Pick a profile that matches your threat model, then let the scheduler protect the machine under load.
 </Note>
+
+<Related links={[
+  { href: '../guides/thread-safety', title: 'Thread safety and concurrency' },
+  { href: '../configuration', title: 'Per-hash configuration' }
+]} />

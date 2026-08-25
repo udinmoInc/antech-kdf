@@ -5,9 +5,11 @@ description: "Link libantech_kdf_ffi with antech_kdf.h or the C++ header wrapper
 order: 32
 ---
 
+Build the release shared library first (`sdk/scripts/build-native.*`), then include the C header and link `antech_kdf_ffi`.
+
 ## C
 
-Include `bindings/c/antech_kdf.h` and link the release `cdylib`.
+Include `bindings/c/antech_kdf.h`.
 
 ```c
 char *out = NULL;
@@ -16,6 +18,8 @@ if (antech_hash("password", &out) == ANTECH_OK) {
   antech_free(out);
 }
 ```
+
+Prefer `antech_hash_bytes` / `antech_verify_bytes` when passwords are arbitrary binary. Empty passwords are allowed with length `0`.
 
 ## C++
 
@@ -30,3 +34,8 @@ Header-only wrapper: `bindings/cpp/antech_kdf.hpp`.
 <Tip>
 Free strings with `antech_free` in C. The C++ helpers free automatically.
 </Tip>
+
+<Related links={[
+  { href: '../reference/ffi-abi', title: 'FFI ABI reference' },
+  { href: './overview', title: 'SDK overview' }
+]} />

@@ -5,6 +5,10 @@ description: "Build, format, lint, and test production crates without breaking t
 order: 60
 ---
 
+Production work lands under `crates/`, `bindings/`, and `sdk/`. Experiments stay under `research/`. Keep that split intact when reviewing patches.
+
+## Production checks
+
 ```bash
 cargo check --workspace
 cargo fmt --all -- --check
@@ -12,21 +16,25 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
-Research workspace:
+## Research workspace
 
 ```bash
 cargo check --manifest-path research/code/Cargo.toml --workspace
 ```
 
-Production crates stay under `crates/`. SDKs under `bindings/` and `sdk/`. Experiments under `research/`.
+## Contribution habits
+
+- Prefer small, reviewable PRs with clear crypto/API impact notes
+- Update conformance vectors when digests intentionally change
+- Do not add production → research Cargo dependencies
+- Keep MDX docs free of repository-process boilerplate — document the product, not the docs toolchain
 
 <Note>
 Do not change digest behavior, v2 encoding, or public API semantics unless the change is intentional, versioned, and covered by updated vectors.
 </Note>
 
-Published docs: [developers.udinmo.com](https://developers.udinmo.com).
-
 <NextSteps links={[
   { href: './testing', title: 'Testing and conformance' },
-  { href: './releasing', title: 'Release checklist' }
+  { href: './releasing', title: 'Release checklist' },
+  { href: './research-boundary', title: 'Research boundary' }
 ]} />

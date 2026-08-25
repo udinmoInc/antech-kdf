@@ -5,7 +5,7 @@ description: "Shared KATs that every SDK must match for digests, verify, and err
 order: 39
 ---
 
-Canonical cases live in `sdk/conformance/vectors.json` (derived from the security-review test vectors).
+Canonical cases live in `sdk/conformance/vectors.json` (derived from the security-review test vectors). Every language package that claims Antech compatibility must match these digests bit-for-bit.
 
 ## What each package must prove
 
@@ -24,8 +24,8 @@ python sdk/conformance/run_python.py
 CI workflow `.github/workflows/sdk.yml` runs Rust and Python conformance across OSes after building natives.
 
 <StatsRow>
-  <Stat number="12" label="KAT cases in vectors.json" />
-  <Stat number="1" label="Digest source of truth" />
+  <Stat value="12" label="KAT cases in vectors.json" />
+  <Stat value="1" label="Digest source of truth" />
 </StatsRow>
 
 <FileTree>
@@ -37,3 +37,12 @@ CI workflow `.github/workflows/sdk.yml` runs Rust and Python conformance across 
     </Folder>
   </Folder>
 </FileTree>
+
+<Warning>
+If a binding reimplements mixing “for speed,” it will fail conformance. Thin wrappers only.
+</Warning>
+
+<NextSteps links={[
+  { href: './overview', title: 'SDK overview' },
+  { href: '../developer/testing', title: 'Full test matrix' }
+]} />

@@ -5,6 +5,8 @@ description: "Use antech-kdf as the canonical API — every other language mirro
 order: 31
 ---
 
+Rust owns the cryptographic implementation. Prefer this crate for Rust services; use FFI only when another language must call in.
+
 ```toml
 [dependencies]
 antech-kdf = "0.1"
@@ -21,9 +23,19 @@ let custom = hash_with_config("secret", &cfg)?;
 let _ = (needs_rehash(&stored)?, custom);
 ```
 
-Rust owns the cryptographic implementation. Prefer this crate for Rust services; use FFI only when another language must call in.
+## Surface to expect elsewhere
+
+| Rust | Typical binding name |
+|---|---|
+| `hash` | `hash` / `Hash` |
+| `verify` | `verify` / `Verify` |
+| `needs_rehash` | `needs_rehash` / `NeedsRehash` |
+| `AntechConfig` | `Config` / POD struct |
+| `RehashPolicy` | `RehashPolicy` |
+
+Passwords are `AsRef<[u8]>`. Prefer bytes over assuming UTF-8 when integrating with password managers or binary secrets.
 
 <NextSteps links={[
   { href: '../reference/api', title: 'API reference' },
-  { href: '../getting-started/quickstart', title: 'Quickstart' }
+  { href: '../quickstart', title: 'Quickstart' }
 ]} />
