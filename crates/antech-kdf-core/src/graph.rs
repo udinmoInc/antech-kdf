@@ -76,7 +76,7 @@ pub fn parents_for_node(
 
 #[inline(always)]
 fn is_critical(i: usize, period: usize) -> bool {
-    period > 0 && i % period == 0
+    period > 0 && i.is_multiple_of(period)
 }
 
 #[inline(always)]
@@ -154,8 +154,8 @@ fn cache_locality(state: &[u64; 4], i: usize, fan_in: u32, tile_len: usize) -> P
     let tile = tile_len.max(FRONTIER_WIDTH);
     let tile_start = (i / tile) * tile;
     let fw = FRONTIER_WIDTH.min(i);
-    let on_far = i > 0 && i % fw == 0;
-    let on_boundary = i > 0 && i % tile == 0;
+    let on_far = i > 0 && i.is_multiple_of(fw);
+    let on_boundary = i > 0 && i.is_multiple_of(tile);
 
     let mut out = ParentSet::empty(if on_far || on_boundary {
         NodeClass::Critical
@@ -204,7 +204,7 @@ fn cache_locality(state: &[u64; 4], i: usize, fan_in: u32, tile_len: usize) -> P
 fn combined(state: &[u64; 4], i: usize, fan_in: u32, period: usize, tile_len: usize) -> ParentSet {
     let tile = tile_len.max(TILE_BLOCKS.min(512));
     let tile_start = (i / tile) * tile;
-    let critical = is_critical(i, period.max(1)) || (i > 0 && i % FRONTIER_WIDTH == 0);
+    let critical = is_critical(i, period.max(1)) || (i > 0 && i.is_multiple_of(FRONTIER_WIDTH));
 
     let mut out = ParentSet::empty(if critical {
         NodeClass::Critical

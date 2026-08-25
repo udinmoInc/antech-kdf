@@ -1,0 +1,78 @@
+name: SDK
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  rust-conformance:
+    name: Rust + FFI conformance
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build FFI
+        run: cargo build -p antech-kdf-ffi --release
+      - name: Stage native artifacts (Unix)
+        if: runner.os != 'Windows'
+        run: bash sdk/scripts/build-native.sh
+      - name: Stage native artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./sdk/scripts/build-native.ps1
+      - name: Conformance (Rust API)
+        run: cargo test -p antech-kdf conformance -- --nocapture
+      - name: FFI unit tests
+        run: cargo test -p antech-kdf-ffi -- --nocapture
+      - name: Python conformance
+        shell: bash
+        run: |
+          python -m pip install -e bindings/python
+          python sdk/conformance/run_python.py
+
+  package-metadata:
+    name: Version sync check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync versions (idempotent)
+        run: python sdk/scripts/sync-versions.py
+      - name: Ensure VERSION matches schema
+        run: |
+          V=$(tr -d '[:space:]' < VERSION)
+          python -c "import json; assert json.load(open('sdk/schema.json'))['version']=='$V'"
+
+  node-build:
+    name: Node package build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: bash sdk/scripts/build-native.sh
+      - run: |
+          cd bindings/node
+          npm install
+          npm run build
+
+  dotnet-build:
+    name: .NET package build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: bash sdk/scripts/build-native.sh
+      - run: |
+          export LD_LIBRARY_PATH="$PWD/sdk/native:${LD_LIBRARY_PATH:-}"
+          dotnet build bindings/dotnet/Antech.Kdf/Antech.Kdf.csproj -c Release

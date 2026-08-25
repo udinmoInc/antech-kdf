@@ -88,6 +88,22 @@ Per-hash memory comes from `AntechConfig`. Server-wide admission control is sepa
 
 Research (attackers, CUDA, TMTO, cryptanalysis) lives under [`research/code/`](research/code/) in a **separate** Cargo workspace. Dependency rule: research imports core; production never imports research.
 
+## SDKs (cross-language)
+
+Thin wrappers over [`antech-kdf-ffi`](crates/antech-kdf-ffi) — same API everywhere: `hash`, `verify`, `needs_rehash`, `hash_with_config`, rehash policy, and config fields.
+
+| Language | Path |
+|---|---|
+| C / C++ | [`bindings/c`](bindings/c), [`bindings/cpp`](bindings/cpp) |
+| Go | [`bindings/go`](bindings/go) |
+| Python | [`bindings/python`](bindings/python) |
+| Node / TypeScript | [`bindings/node`](bindings/node) |
+| Java / Kotlin | [`bindings/java`](bindings/java), [`bindings/kotlin`](bindings/kotlin) |
+| Swift | [`bindings/swift`](bindings/swift) |
+| .NET / C# | [`bindings/dotnet`](bindings/dotnet) |
+
+Authoritative version: [`VERSION`](VERSION). Native build: `sdk/scripts/build-native.(sh|ps1)`. Conformance: [`sdk/conformance/`](sdk/conformance/). See [`sdk/README.md`](sdk/README.md).
+
 ## Research highlights
 
 Attacker-oriented measurements (CPU/GPU/TMTO) are summarized under [`research/security-review/evidence.md`](research/security-review/evidence.md). Runners:

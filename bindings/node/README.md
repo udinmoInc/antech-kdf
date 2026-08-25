@@ -1,10 +1,9 @@
-# Node.js bindings
+# Antech KDF — Node.js / TypeScript
 
-Node-API bindings over `antech-kdf-ffi`.
-
-```javascript
-const { hashPassword, verifyPassword, needsRehash } = require("antech-kdf");
-
-const stored = await hashPassword("secret_password");
-const ok = await verifyPassword("secret_password", stored);
+```bash
+./sdk/scripts/build-native.sh
+cd bindings/node && npm install && npm run build
+node -e "const a=require('./dist'); console.log(a.hash('x'))"
 ```
+
+Exports: `hash`, `verify`, `needsRehash`, `hashWithConfig`, `needsRehashWithPolicy`, `hashWithConfigAndSalt`.

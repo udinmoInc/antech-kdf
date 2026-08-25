@@ -6,9 +6,12 @@ The `antech-kdf` crate is the stable entry point.
 |---|---|
 | `hash(password)` | Hash with defaults (16 MiB, combined-frontier) |
 | `hash_with_config(password, &config)` | Hash with an explicit `AntechConfig` |
+| `hash_with_config_and_salt(password, salt, &config)` | Deterministic hash (KATs / interop) |
 | `verify(password, stored)` | Constant-time verify against a v2 string |
 | `needs_rehash(stored)` | Compare against the default rehash policy |
 | `needs_rehash_with_policy(stored, &policy)` | Compare against a custom policy |
+
+Cross-language SDKs wrap the same ABI (`antech-kdf-ffi`). See [`sdk/README.md`](../sdk/README.md) and [`sdk/conformance/`](../sdk/conformance/).
 
 ```rust
 use antech_kdf::{hash, verify, needs_rehash, Error};

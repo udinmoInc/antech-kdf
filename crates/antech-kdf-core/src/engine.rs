@@ -53,13 +53,8 @@ impl AntechEngine {
 
         let mut phantoms = [[0u8; MAX_BLOCK]; MAX_PARENTS];
         let fan = (cfg.fan_in.get() as usize).min(MAX_PARENTS);
-        for slot in 0..fan {
-            phantom_block(
-                &seed,
-                slot as u32,
-                block_size,
-                &mut phantoms[slot][..block_size],
-            );
+        for (slot, phantom) in phantoms.iter_mut().enumerate().take(fan) {
+            phantom_block(&seed, slot as u32, block_size, &mut phantom[..block_size]);
         }
 
         for i in 0..num_blocks {

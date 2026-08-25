@@ -35,11 +35,11 @@ fn unicode_password_verifies_successfully() {
 #[test]
 fn binary_password_verifies_successfully() {
     let password = [0x00, 0xFF, 0x42, 0x13, 0x37, 0xDE, 0xAD, 0xBE, 0xEF];
-    let encoded = hash(&password).unwrap();
-    assert!(verify(&password, &encoded).unwrap());
+    let encoded = hash(password).unwrap();
+    assert!(verify(password, &encoded).unwrap());
 
     let wrong_binary = [0x00, 0xFF, 0x42, 0x13, 0x37, 0xDE, 0xAD, 0xBE, 0xF0];
-    assert!(!verify(&wrong_binary, &encoded).unwrap());
+    assert!(!verify(wrong_binary, &encoded).unwrap());
 }
 
 #[test]

@@ -1,0 +1,22 @@
+Metadata-Version: 2.4
+Name: antech-kdf
+Version: 0.1.0
+Summary: Antech KDF — thin Python wrapper over the canonical Rust FFI
+Author: Udinmo, Inc.
+License: MIT OR Apache-2.0
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+Requires-Dist: pytest>=7; extra == "dev"
+
+# Antech KDF — Python
+
+Thin `ctypes` wrapper. Build the native library first:
+
+```powershell
+.\sdk\scripts\build-native.ps1
+pip install -e .\bindings\python
+python -c "import antech_kdf; print(antech_kdf.hash('x'))"
+```
+
+API: `hash`, `verify`, `needs_rehash`, `hash_with_config`, `needs_rehash_with_policy`, `hash_with_config_and_salt`.

@@ -24,7 +24,10 @@ pub use antech_kdf_types::{
     MemorySize, OutputLength, RehashPolicy, RehashPolicyBuilder, SaltLength,
 };
 
-use antech_kdf_core::{core_hash_with_config, core_needs_rehash_with_policy, core_verify};
+use antech_kdf_core::{
+    core_hash_with_config, core_hash_with_config_and_salt, core_needs_rehash_with_policy,
+    core_verify,
+};
 
 /// Hashes a password using default parameters (16 MiB, combined-frontier graph).
 pub fn hash(password: impl AsRef<[u8]>) -> Result<String, Error> {
@@ -37,6 +40,18 @@ pub fn hash_with_config(
     config: &AntechConfig,
 ) -> Result<String, Error> {
     core_hash_with_config(password.as_ref(), config)
+}
+
+/// Hashes a password with an explicit salt (must match `config.salt_length`).
+///
+/// Prefer [`hash_with_config`] for production use (random salt). This helper is for
+/// deterministic test vectors and interoperability checks.
+pub fn hash_with_config_and_salt(
+    password: impl AsRef<[u8]>,
+    salt: impl AsRef<[u8]>,
+    config: &AntechConfig,
+) -> Result<String, Error> {
+    core_hash_with_config_and_salt(password.as_ref(), salt.as_ref(), config)
 }
 
 /// Verifies a password against a stored self-describing hash string in constant time.

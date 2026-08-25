@@ -57,14 +57,37 @@ pub fn core_hash_with_config(password: &[u8], config: &AntechConfig) -> Result<S
     let mut salt = vec![0u8; config.salt_length.as_bytes()];
     rand::thread_rng().fill_bytes(&mut salt);
 
+    core_hash_with_config_and_salt(password, &salt, config)
+}
+
+/// Hash with an explicit salt (length must match `config.salt_length`).
+///
+/// Intended for deterministic KATs and interoperability tests. Production callers
+/// should prefer [`core_hash_with_config`], which generates a random salt.
+pub fn core_hash_with_config_and_salt(
+    password: &[u8],
+    salt: &[u8],
+    config: &AntechConfig,
+) -> Result<String, KdfError> {
+    config.validate()?;
+    if salt.len() != config.salt_length.as_bytes() {
+        return Err(KdfError::Config(
+            antech_kdf_types::ConfigError::InvalidSaltLength {
+                len: salt.len(),
+                min: config.salt_length.as_bytes(),
+                max: config.salt_length.as_bytes(),
+            },
+        ));
+    }
+
     let scheduler = global_scheduler();
     let _permit = PermitGuard {
         scheduler,
         permit: Some(scheduler.acquire(config.memory.as_kib())?),
     };
-    let digest = AntechEngine::new().derive(password, &salt, config)?;
+    let digest = AntechEngine::new().derive(password, salt, config)?;
 
-    encode_hash(config, &salt, &digest).map_err(KdfError::Config)
+    encode_hash(config, salt, &digest).map_err(KdfError::Config)
 }
 
 pub fn core_verify(password: &[u8], encoded_hash: &str) -> Result<bool, KdfError> {

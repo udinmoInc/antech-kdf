@@ -32,3 +32,9 @@ tmp/
 
 # External research-only vendor trees (not Antech source)
 /research/third_party/argon2-gpu/
+
+# Staged native SDK libraries (built locally / CI artifacts)
+/sdk/native/
+/bindings/**/native/
+/bindings/node/dist/
+/bindings/node/node_modules/

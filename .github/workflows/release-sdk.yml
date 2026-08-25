@@ -1,0 +1,35 @@
+name: Release SDK artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  native-artifacts:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Sync versions from VERSION
+        run: python sdk/scripts/sync-versions.py
+      - name: Build native
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            pwsh ./sdk/scripts/build-native.ps1
+          else
+            bash sdk/scripts/build-native.sh
+          fi
+      - name: Upload native
+        uses: actions/upload-artifact@v4
+        with:
+          name: antech-kdf-native-${{ matrix.os }}
+          path: sdk/native/

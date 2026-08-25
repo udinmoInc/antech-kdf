@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "api": {
+    "hash": "password -> encoded $antech$v2$\u2026",
+    "verify": "password + encoded -> bool",
+    "needs_rehash": "encoded -> bool (default policy)",
+    "hash_with_config": "password + config -> encoded",
+    "needs_rehash_with_policy": "encoded + policy -> bool",
+    "hash_with_config_and_salt": "password + salt + config -> encoded (KAT / interop)"
+  },
+  "config_fields": [
+    "memory_kib",
+    "salt_length",
+    "block_size",
+    "fan_in",
+    "graph",
+    "output_length"
+  ],
+  "graph_tags": {
+    "1": "reduced-critical-path",
+    "2": "cache-locality",
+    "3": "combined-frontier"
+  },
+  "errors": {
+    "0": "Ok",
+    "1": "VerificationFailed",
+    "-1": "InvalidInput",
+    "-2": "InvalidHash",
+    "-3": "InternalError",
+    "-4": "InvalidConfig"
+  },
+  "defaults": {
+    "memory_kib": 16384,
+    "salt_length": 16,
+    "block_size": 32,
+    "fan_in": 2,
+    "graph": 3,
+    "output_length": 32
+  }
+}

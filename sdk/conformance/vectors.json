@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "version": "0.1.0",
+  "source": "research/security-review/test-vectors.json",
+  "cases": [
+    {
+      "id": "boundary-1mib-fan2-salt8",
+      "section": "boundary_1mib",
+      "password_hex": "626f756e64617279",
+      "salt_hex": "73616c7473616c74",
+      "digest_hex": "2fde9d6e90260deb133d167d8bc411c27768bbcbb8eaf5a980853cbda8898d35",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 8,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "boundary-1mib-fan4-salt32",
+      "section": "boundary_1mib",
+      "password_hex": "626f756e64617279",
+      "salt_hex": "3031323334353637383961626364656630313233343536373839616263646566",
+      "digest_hex": "b4807491301968f77e19279ab5340666a509137c217158d5352a0069a93d9d15",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 32,
+        "block_size": 32,
+        "fan_in": 4,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "boundary-1mib-empty-password",
+      "section": "boundary_1mib",
+      "password_hex": "",
+      "salt_hex": "73616c745f31365f62797465735f2121",
+      "digest_hex": "b650eba7297f198b0d58210fca6539c85923ff2bb83a0cc55ef6112a93ddfb89",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "boundary-1mib-null-bytes-password",
+      "section": "boundary_1mib",
+      "password_hex": "707265006d696400706f7374",
+      "salt_hex": "73616c745f31365f62797465735f2121",
+      "digest_hex": "d4e6c67d1c74fdcd9c1ea4e6ad40dfa03c35a655c45d929572887e78f8e050d5",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "boundary-1mib-long-password",
+      "section": "boundary_1mib",
+      "password_hex": "4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152",
+      "salt_hex": "73616c745f31365f62797465735f2121",
+      "digest_hex": "f168ad12e3909c11db4a5bdc32f9cf4cdd9b03188167ab5690f34a92dd6fbc27",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "boundary-1mib-fan2-salt32",
+      "section": "boundary_1mib",
+      "password_hex": "626f756e64617279",
+      "salt_hex": "6665646362613938373635343332313066656463626139383736353433323130",
+      "digest_hex": "8a299cbe2eb8f1fb375bae99ac8f4c2404618e136f3bb9c08c41aa2c1d5154f9",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 32,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "boundary-1mib-fan4-salt8",
+      "section": "boundary_1mib",
+      "password_hex": "626f756e64617279",
+      "salt_hex": "6162636465666768",
+      "digest_hex": "fd9805a0de05640c7c7397c7acb5005941ffa86eec39db39d03a3c1045e9b750",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 8,
+        "block_size": 32,
+        "fan_in": 4,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "small-1mib-intermediates-a",
+      "section": "small_1mib_with_intermediates",
+      "password_hex": "766563746f722d696e7465722d61",
+      "salt_hex": "73616c745f31365f62797465735f2121",
+      "digest_hex": "c9ceed5f65a2ec7915e35228de5c7271b6ce8c6862ba73b1d08707c41ed65eb4",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "small-1mib-intermediates-b",
+      "section": "small_1mib_with_intermediates",
+      "password_hex": "766563746f722d696e7465722d62007461696c",
+      "salt_hex": "61626364656630313233343536373839",
+      "digest_hex": "29157982e5188dfaf3b19f43a6b6a8a3fae4482ad09610a6b580b6347e7e370d",
+      "config": {
+        "memory_kib": 1024,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "default-16mib-pwd1",
+      "section": "canonical_default_16mib",
+      "password_hex": "70617373776f7264",
+      "salt_hex": "73616c745f31365f62797465735f2121",
+      "digest_hex": "a29e8caff6c2854ea84e74f0794a27a2b92451624c7e8ec0786466c76465b87d",
+      "config": {
+        "memory_kib": 16384,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "default-16mib-pwd2",
+      "section": "canonical_default_16mib",
+      "password_hex": "636f727265637420686f727365206261747465727920737461706c65",
+      "salt_hex": "30313233343536373839616263646566",
+      "digest_hex": "aeffecb7b9f6cb8354799f20c7a99c96bcfa3e3f527b7f1f408858134c7b42e4",
+      "config": {
+        "memory_kib": 16384,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    },
+    {
+      "id": "default-16mib-pwd3",
+      "section": "canonical_default_16mib",
+      "password_hex": "416e746563685265766965772332303236",
+      "salt_hex": "000102030405060708090a0b0c0d0e0f",
+      "digest_hex": "0aa26dca8eadeff4a053cb93a7a2866cbbc346ef807469ea3069f5bb95815d97",
+      "config": {
+        "memory_kib": 16384,
+        "salt_length": 16,
+        "block_size": 32,
+        "fan_in": 2,
+        "graph": 3,
+        "output_length": 32
+      }
+    }
+  ]
+}

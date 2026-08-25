@@ -1,11 +1,11 @@
-# Python bindings
+# Antech KDF — Python
 
-Thin wrappers over `antech-kdf-ffi`.
+Thin `ctypes` wrapper. Build the native library first:
 
-```python
-from antech_kdf import hash_password, verify_password, needs_rehash
-
-stored = hash_password("secret_password")
-assert verify_password("secret_password", stored)
-assert not needs_rehash(stored)
+```powershell
+.\sdk\scripts\build-native.ps1
+pip install -e .\bindings\python
+python -c "import antech_kdf; print(antech_kdf.hash('x'))"
 ```
+
+API: `hash`, `verify`, `needs_rehash`, `hash_with_config`, `needs_rehash_with_policy`, `hash_with_config_and_salt`.

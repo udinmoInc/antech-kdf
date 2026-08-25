@@ -1,10 +1,9 @@
-# .NET bindings
+# Antech KDF — .NET / C#
 
-P/Invoke / `LibraryImport` against `antech-kdf-ffi`.
-
-```csharp
-using Antech;
-
-var hash = AntechKdf.Hash("secret_password");
-bool ok = AntechKdf.Verify("secret_password", hash);
+```powershell
+.\sdk\scripts\build-native.ps1
+$env:PATH = "$(Resolve-Path ..\..\sdk\native);$env:PATH"
+dotnet build .\Antech.Kdf
 ```
+
+Package id: `Antech.Kdf`.

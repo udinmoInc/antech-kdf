@@ -58,8 +58,8 @@ pub fn finalize(seed: &[u8; 32], state: &[u64; 4], last_block: &[u8], graph: Gra
 #[inline(always)]
 pub fn xor_state_into_block_fast(state: &[u64; 4], block: &mut [u8]) {
     if block.len() >= 32 {
-        for i in 0..4 {
-            let bytes = state[i].to_le_bytes();
+        for (i, word) in state.iter().enumerate().take(4) {
+            let bytes = word.to_le_bytes();
             let off = i * 8;
             block[off] ^= bytes[0];
             block[off + 1] ^= bytes[1];

@@ -1,0 +1,5 @@
+module CAntechKdf {
+  header "shim.h"
+  link "antech_kdf_ffi"
+  export *
+}
