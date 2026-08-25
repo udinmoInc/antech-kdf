@@ -1,11 +1,11 @@
-//! Server resource policy and memory admission scheduler.
+//! Host resource policy and memory admission scheduler.
 
 use crate::traits::{ResourcePermit, ResourceScheduler};
 use antech_kdf_types::KdfError;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
-/// Server resource policy configuration.
+/// Server-wide resource ceilings (independent of per-hash KDF config).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResourcePolicy {
     pub max_memory_kib: usize,
@@ -16,14 +16,14 @@ pub struct ResourcePolicy {
 impl Default for ResourcePolicy {
     fn default() -> Self {
         Self {
-            max_memory_kib: 131072, // 128 MB default global memory ceiling
+            max_memory_kib: 131_072, // 128 MiB global ceiling
             max_active_jobs: 64,
             queue_limit: 256,
         }
     }
 }
 
-/// Thread-safe memory admission controller.
+/// Thread-safe admission controller.
 #[derive(Debug)]
 pub struct BoundedResourceScheduler {
     policy: ResourcePolicy,
@@ -46,15 +46,13 @@ impl BoundedResourceScheduler {
 }
 
 impl ResourceScheduler for BoundedResourceScheduler {
-    // A permit reserves the target KDF working set before execution begins,
-    // preventing concurrent requests from exceeding host memory bounds under load.
     fn acquire(&self, memory_kib: usize) -> Result<ResourcePermit, KdfError> {
         let current_jobs = self.active_jobs.fetch_add(1, Ordering::SeqCst);
         if current_jobs >= self.policy.max_active_jobs {
             self.active_jobs.fetch_sub(1, Ordering::SeqCst);
             return Err(KdfError::ResourceExhausted(format!(
-                "Active job count {} exceeds limit {}",
-                current_jobs, self.policy.max_active_jobs
+                "active job count {current_jobs} exceeds limit {}",
+                self.policy.max_active_jobs
             )));
         }
 
@@ -63,8 +61,8 @@ impl ResourceScheduler for BoundedResourceScheduler {
             self.allocated_kib.fetch_sub(memory_kib, Ordering::SeqCst);
             self.active_jobs.fetch_sub(1, Ordering::SeqCst);
             return Err(KdfError::ResourceExhausted(format!(
-                "Requested memory {} KiB exceeds global ceiling {} KiB",
-                memory_kib, self.policy.max_memory_kib
+                "requested memory {memory_kib} KiB exceeds global ceiling {} KiB",
+                self.policy.max_memory_kib
             )));
         }
 

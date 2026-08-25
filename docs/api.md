@@ -1,128 +1,71 @@
-# Antech KDF — Developer API Specification & Integration Guide
+# Antech KDF — Developer API
 
-The `antech-kdf` Rust crate provides a simple, self-describing password hashing API alongside advanced configurable builder APIs for custom deployment environments.
+The `antech-kdf` crate exposes password hashing and verification with a self-describing v2 hash format.
 
----
+## Public API
 
-## 🎨 Public API Overview
+| Function | Purpose |
+|---|---|
+| `hash(password)` | Hash with default config (16 MiB, combined-frontier) |
+| `hash_with_config(password, &config)` | Hash with explicit structural parameters |
+| `verify(password, stored_hash)` | Constant-time verification |
+| `needs_rehash(stored_hash)` | Check against default rehash policy |
+| `needs_rehash_with_policy(stored_hash, &policy)` | Check against custom policy |
 
-```mermaid
-graph LR
-    subgraph Input ["Credential Inputs"]
-        P["Password String / Bytes"]
-        H["Stored Hash String"]
-        CFG["AntechConfig / RehashPolicy"]
-    end
-
-    subgraph API ["Public API (crates/antech-kdf)"]
-        HASH["hash(password)"]
-        HASHC["hash_with_config(password, &config)"]
-        VERIFY["verify(password, hash)"]
-        REHASH["needs_rehash_with_policy(hash, &policy)"]
-    end
-
-    subgraph Result ["Output Results"]
-        S["Ok(EncodedHashString)"]
-        B["Ok(true / false)"]
-    end
-
-    P --> HASH
-    CFG --> HASHC
-    P --> HASHC
-    HASH --> S
-    HASHC --> S
-    P --> VERIFY
-    H --> VERIFY
-    VERIFY --> B
-    H --> REHASH
-    CFG --> REHASH
-    REHASH --> B
-```
-
----
-
-## 🚀 Usage Examples
-
-### 1. Default Password Hashing & Verification
+## Default usage
 
 ```rust
 use antech_kdf::{hash, verify, needs_rehash, Error};
 
 fn main() -> Result<(), Error> {
     let password = "correct_horse_battery_staple";
-
-    // Hash using default parameters (16 MB RAM, 16-byte salt)
-    let stored_hash = hash(password)?;
-    println!("Hash: {}", stored_hash);
-
-    // Verify password against stored hash in constant time
-    let is_valid = verify(password, &stored_hash)?;
-    assert!(is_valid);
-
-    // Check if rehash is required
-    let rehash_needed = needs_rehash(&stored_hash)?;
-    assert!(!rehash_needed);
-
+    let stored = hash(password)?;
+    assert!(verify(password, &stored)?);
+    assert!(!needs_rehash(&stored)?);
     Ok(())
 }
 ```
 
----
+## Custom configuration
 
-### 2. Advanced Parameter Configuration (`AntechConfig`)
-
-Developers can configure algorithm parameters cleanly using `AntechConfig::builder()`:
+Work is structure-derived from `memory / block_size`. There are no dependency-depth or pass-count knobs.
 
 ```rust
-use antech_kdf::{hash_with_config, verify, Algorithm, AntechConfig, Error};
+use antech_kdf::{hash_with_config, verify, AntechConfig, GraphKind, Error};
 
 fn main() -> Result<(), Error> {
-    let password = "custom_deployment_password";
-
-    // Build custom configuration
     let config = AntechConfig::builder()
-        .algorithm(Algorithm::Antech)
-        .salt_length(32)           // 8 to 256 bytes validated
-        .memory_mib(24)            // 1 to 1024 MiB (1 GiB) supported
-        .passes(3)                 // Execution passes
-        .dependency_depth(700_000) // Sequential steps
-        .output_length(32)         // 8 to 128 bytes digest
+        .memory_mib(16)
+        .salt_length(32)
+        .block_size(32)
+        .fan_in(2)
+        .graph(GraphKind::CombinedFrontier)
+        .output_length(32)
         .build()?;
 
-    // Hash with custom config
-    let encoded_hash = hash_with_config(password, &config)?;
-    println!("Custom Hash: {}", encoded_hash);
-
-    // Verify using standard verify API (recovers parameters automatically from stored string)
-    let is_valid = verify(password, &encoded_hash)?;
-    assert!(is_valid);
-
+    let stored = hash_with_config("password", &config)?;
+    assert!(verify("password", &stored)?);
     Ok(())
 }
 ```
 
----
-
-### 3. Application Rehash Policies (`RehashPolicy`)
+## Rehash policy
 
 ```rust
 use antech_kdf::{hash, needs_rehash_with_policy, RehashPolicy};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let stored_hash = hash("user_password")?;
+let stored = hash("user_password")?;
+let policy = RehashPolicy::builder()
+    .minimum_memory_mib(16)
+    .preferred_memory_mib(32)
+    .preferred_fan_in(2)
+    .build();
 
-    // Create application policy enforcing higher memory standards
-    let policy = RehashPolicy::builder()
-        .minimum_memory_mib(16)
-        .preferred_memory_mib(32)
-        .preferred_passes(3)
-        .build();
-
-    // Check if stored hash needs re-hashing against application policy
-    if needs_rehash_with_policy(&stored_hash, &policy)? {
-        println!("Hash is outdated; re-hashing required upon login.");
-    }
-
-    Ok(())
+if needs_rehash_with_policy(&stored, &policy)? {
+    // re-hash on login
 }
 ```
+
+## Security notice
+
+This construction is experimental. Passing benchmarks does not establish cryptographic security. Independent review is required before production password storage.

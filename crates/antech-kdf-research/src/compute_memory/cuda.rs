@@ -59,9 +59,7 @@ fn kernel_source_path() -> PathBuf {
 /// Evaluate CUDA attacker. Returns measured g/s only when a device binary runs.
 pub fn evaluate_cuda_attacker(variant: &str, memory_mib: usize) -> CudaAttackerRecord {
     let gpu_model = detect_gpu_model();
-    let kernel = kernel_source_path()
-        .to_string_lossy()
-        .replace('\\', "/");
+    let kernel = kernel_source_path().to_string_lossy().replace('\\', "/");
 
     if !nvcc_available() {
         return CudaAttackerRecord {
@@ -153,10 +151,7 @@ fn try_run_cuda_probe(memory_mib: usize) -> Result<f64, String> {
     let stdout = String::from_utf8_lossy(&run.stdout);
     for line in stdout.lines() {
         if let Some(rest) = line.strip_prefix("guesses_per_sec=") {
-            return rest
-                .trim()
-                .parse::<f64>()
-                .map_err(|e| e.to_string());
+            return rest.trim().parse::<f64>().map_err(|e| e.to_string());
         }
     }
     Err(format!("probe output missing guesses_per_sec: {stdout}"))

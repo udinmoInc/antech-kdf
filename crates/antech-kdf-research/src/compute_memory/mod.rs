@@ -42,7 +42,7 @@ mod tests {
 
     fn small_params() -> ResearchParams {
         ResearchParams {
-            memory_kib: 1024, // 1 MiB → 32768 DAG nodes
+            memory_kib: 1024,    // 1 MiB → 32768 DAG nodes
             dependency_depth: 0, // ignored by v2
             passes: 0,           // ignored by v2
             block_size: 32,
@@ -124,12 +124,11 @@ mod tests {
     }
 
     #[test]
-    fn config_from_antech_ignores_depth() {
+    fn config_from_antech_uses_structural_fields() {
         let antech = AntechConfig::builder()
             .memory_mib(16)
-            .dependency_depth(650000)
-            .passes(7)
             .block_size(32)
+            .fan_in(2)
             .build()
             .unwrap();
         let cfg = ComputeMemoryConfig::from_antech_config(&antech);

@@ -1,44 +1,37 @@
-//! Antech KDF developer API.
+//! Antech KDF — password hashing and verification.
 //!
-//! Provides password hashing and verification functions with support for custom
-//! configurations and rehash policies.
+//! # Overview
+//!
+//! This crate exposes a stable API for hashing and verifying passwords using the
+//! current Antech compute-memory construction.
+//!
+//! # Security status
+//!
+//! The implementation reflects the project's latest validated construction and
+//! benchmark results. **It has not undergone independent cryptographic review**
+//! and must not be treated as production-proven merely because benchmarks pass.
+//!
+//! # Examples
+//!
+//! ```
+//! let stored = antech_kdf::hash("correct_horse_battery_staple")?;
+//! assert!(antech_kdf::verify("correct_horse_battery_staple", &stored)?);
+//! # Ok::<(), antech_kdf::Error>(())
+//! ```
 
 pub use antech_kdf_types::{
-    Algorithm, AntechConfig, AntechConfigBuilder, BlockSize, ConfigError, DependencyDepth,
-    KdfError as Error, MemorySize, OutputLength, Parallelism, PassCount, RehashPolicy,
-    RehashPolicyBuilder, SaltLength,
+    AntechConfig, AntechConfigBuilder, BlockSize, ConfigError, FanIn, GraphKind, KdfError as Error,
+    MemorySize, OutputLength, RehashPolicy, RehashPolicyBuilder, SaltLength,
 };
 
 use antech_kdf_core::{core_hash_with_config, core_needs_rehash_with_policy, core_verify};
 
-/// Hashes a password using default parameters.
-///
-/// # Examples
-///
-/// ```
-/// let hash_string = antech_kdf::hash("correct_horse_battery_staple")?;
-/// # Ok::<(), antech_kdf::Error>(())
-/// ```
+/// Hashes a password using default parameters (16 MiB, combined-frontier graph).
 pub fn hash(password: impl AsRef<[u8]>) -> Result<String, Error> {
-    let config = AntechConfig::default();
-    hash_with_config(password, &config)
+    hash_with_config(password, &AntechConfig::default())
 }
 
 /// Hashes a password using an explicit configuration profile.
-///
-/// # Examples
-///
-/// ```
-/// use antech_kdf::AntechConfig;
-///
-/// let config = AntechConfig::builder()
-///     .salt_length(32)
-///     .memory_mib(24)
-///     .build()?;
-///
-/// let hash_string = antech_kdf::hash_with_config("password", &config)?;
-/// # Ok::<(), antech_kdf::Error>(())
-/// ```
 pub fn hash_with_config(
     password: impl AsRef<[u8]>,
     config: &AntechConfig,
@@ -47,26 +40,16 @@ pub fn hash_with_config(
 }
 
 /// Verifies a password against a stored self-describing hash string in constant time.
-///
-/// # Examples
-///
-/// ```
-/// let stored = antech_kdf::hash("my_password")?;
-/// let valid = antech_kdf::verify("my_password", &stored)?;
-/// assert!(valid);
-/// # Ok::<(), antech_kdf::Error>(())
-/// ```
 pub fn verify(password: impl AsRef<[u8]>, encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     core_verify(password.as_ref(), encoded_hash.as_ref())
 }
 
-/// Evaluates whether a stored hash string satisfies default rehash policies.
+/// Evaluates whether a stored hash satisfies the default rehash policy.
 pub fn needs_rehash(encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
-    let policy = RehashPolicy::default();
-    needs_rehash_with_policy(encoded_hash, &policy)
+    needs_rehash_with_policy(encoded_hash, &RehashPolicy::default())
 }
 
-/// Evaluates whether a stored hash string satisfies a target rehash policy.
+/// Evaluates whether a stored hash satisfies a caller-defined rehash policy.
 pub fn needs_rehash_with_policy(
     encoded_hash: impl AsRef<str>,
     policy: &RehashPolicy,

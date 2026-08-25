@@ -1,9 +1,7 @@
 //! Benchmark suite for compute-memory v4 optimized narrow-frontier variants.
 
 use super::attacker::{self, AttackerRecord};
-use super::config::{
-    ComputeMemoryV4Config, GraphKind, CPU_WORKER_COUNTS, V4_DEFAULT_MEMORY_KIB,
-};
+use super::config::{ComputeMemoryV4Config, GraphKind, CPU_WORKER_COUNTS, V4_DEFAULT_MEMORY_KIB};
 use super::engine::V4Engine;
 use super::tmto::{TmtoEvaluator, TmtoRecord};
 use super::variants::{VariantA, VariantB, VariantC};
@@ -231,9 +229,9 @@ pub fn run_compute_memory_v4_suite(output_dir: &Path) -> Result<(), Box<dyn std:
     for &mem_mib in memory_grid {
         for (v, kind) in &variants {
             let cfg = ComputeMemoryV4Config::default()
-                .memory_mib(mem_mib as u32)
-                .graph(*kind);
-            let params = cfg.to_research_params();
+                .with_memory_mib(mem_mib)
+                .with_graph(*kind);
+            let params = super::config::to_research_params(&cfg);
             let period = cfg.critical_period();
             let tile = cfg.tile_len();
             eprintln!("v4 defender+attacker: {} @ {} MiB", v.name(), mem_mib);
@@ -247,7 +245,7 @@ pub fn run_compute_memory_v4_suite(output_dir: &Path) -> Result<(), Box<dyn std:
                     samples,
                     mem_mib,
                     cfg.num_blocks() as u64,
-                    cfg.fan_in,
+                    cfg.fan_in.get(),
                     *kind,
                     period,
                     tile,
@@ -537,7 +535,10 @@ fn write_report(
     gpu_note: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut f = File::create(path)?;
-    writeln!(f, "# Compute-Memory v4 — Latency-Optimized Narrow Frontier\n")?;
+    writeln!(
+        f,
+        "# Compute-Memory v4 — Latency-Optimized Narrow Frontier\n"
+    )?;
     writeln!(
         f,
         "Goal: bring existing v4 below **100 ms** defender p50 while preserving as much multi-thread attacker resistance as possible (prefer ~20–30 g/s at 16/32 threads). No depth/passes/delay knobs; work bound remains `num_blocks = memory/block_size`.\n"

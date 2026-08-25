@@ -52,13 +52,13 @@ fn large_password_verifies_successfully() {
 #[test]
 fn malformed_hash_returns_error() {
     assert!(verify("pass", "invalid_string").is_err());
-    assert!(verify("pass", "$antech$v1$m=invalid$salt$digest").is_err());
+    assert!(verify("pass", "$antech$v2$m=invalid$salt$digest").is_err());
 }
 
 #[test]
-fn unknown_algorithm_version_returns_error() {
-    let wrong_version_hash = "$antech$v999$m=65536,t=3,p=1,bw=100$AQIDBAUGBwgJCgsMDQ4PEA==$AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=";
-    assert!(verify("pass", wrong_version_hash).is_err());
+fn legacy_v1_hash_rejected() {
+    let legacy = "$antech$v1$m=16384,s=16,t=650000,p=1,b=32,l=32$0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff$0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff";
+    assert!(verify("pass", legacy).is_err());
 }
 
 #[test]
@@ -66,6 +66,6 @@ fn rehash_policy_detects_outdated_hashes() {
     let current_hash = hash("my_pass").unwrap();
     assert!(!needs_rehash(&current_hash).unwrap());
 
-    let outdated_params_hash = "$antech$v1$m=1024,t=1,p=1,bw=50$AQIDBAUGBwgJCgsMDQ4PEA==$AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=";
+    let outdated_params_hash = "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32$0011223344556677889900aabbccddee$0011223344556677889900aabbccddee0011223344556677889900aabbccddee";
     assert!(needs_rehash(outdated_params_hash).unwrap());
 }

@@ -21,4 +21,3 @@ pub fn run_research_suite(target_dir: &Path) -> Result<(), Box<dyn std::error::E
     compute_memory_v4::run_compute_memory_v4_suite(&target_dir.join("compute-memory-v4"))?;
     Ok(())
 }
-

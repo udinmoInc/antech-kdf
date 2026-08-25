@@ -1,0 +1,2 @@
+mode,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,shared_mem_bytes,global_mem_traffic_bytes,host_device_transfer_ms,kernel_exec_ms_total,threads_per_block,batch
+baseline,13.7397,4656.38,4663.35,4663.35,0.0104167,48,0,5368709120,27.9031,23290.2,1,64

@@ -33,7 +33,9 @@ fn find_bin() -> PathBuf {
     panic!("argon2id_gpu_attacker.exe not found — compile CUDA binary first");
 }
 
-fn read_digests(path: &Path) -> Result<std::collections::HashMap<String, String>, Box<dyn std::error::Error>> {
+fn read_digests(
+    path: &Path,
+) -> Result<std::collections::HashMap<String, String>, Box<dyn std::error::Error>> {
     let mut map = std::collections::HashMap::new();
     if let Ok(f) = File::open(path) {
         for line in BufReader::new(f).lines() {
@@ -116,7 +118,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn update_results(out: &Path, get: &dyn Fn(&str) -> String) -> Result<(), Box<dyn std::error::Error>> {
+fn update_results(
+    out: &Path,
+    get: &dyn Fn(&str) -> String,
+) -> Result<(), Box<dyn std::error::Error>> {
     let gps = get("guesses_per_sec");
     let p50 = get("kernel_p50_ms");
     let p95 = get("kernel_p95_ms");
@@ -154,7 +159,10 @@ fn update_results(out: &Path, get: &dyn Fn(&str) -> String) -> Result<(), Box<dy
 
     let mut c = File::create(out.join("comparison.csv"))?;
     writeln!(c, "metric,argon2id,antech_v4c_16mib,notes")?;
-    writeln!(c, "GPU model,NVIDIA GeForce RTX 3050,NVIDIA GeForce RTX 3050,")?;
+    writeln!(
+        c,
+        "GPU model,NVIDIA GeForce RTX 3050,NVIDIA GeForce RTX 3050,"
+    )?;
     writeln!(c, "VRAM,8191 MiB,8191 MiB,")?;
     writeln!(c, "Actual guesses/sec,{gps},{antech_gps},measured CUDA")?;
     writeln!(c, "Kernel p50,{p50} ms,{antech_p50} ms,")?;

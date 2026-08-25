@@ -1,19 +1,27 @@
-//! Decoupled configuration types and builder API for Antech KDF.
+//! Structural configuration for the canonical Antech construction.
+//!
+//! Work is derived from `memory / block_size`. There is no iteration-count or
+//! dependency-depth security knob.
 
-use crate::algorithm::Algorithm;
+use crate::algorithm::{Algorithm, GraphKind};
 use crate::errors::ConfigError;
 
-/// Working memory allocation size.
+/// Protocol constants for the compute-memory construction.
+pub const FRONTIER_WIDTH: usize = 64;
+pub const TILE_BLOCKS: usize = FRONTIER_WIDTH * 8;
+pub const MIX_ROUNDS: u32 = 4;
+
+/// Working memory allocation size in KiB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct MemorySize(pub usize); // Memory in KiB
+pub struct MemorySize(pub usize);
 
 impl MemorySize {
-    pub const MIN_KIB: usize = 1024; // 1 MiB minimum
-    pub const MAX_KIB: usize = 1048576; // 1 GiB maximum
+    pub const MIN_KIB: usize = 1024;
+    pub const MAX_KIB: usize = 1_048_576;
 
     pub fn mib(mib: usize) -> Self {
-        Self(mib * 1024)
+        Self(mib.saturating_mul(1024))
     }
 
     pub fn kib(kib: usize) -> Self {
@@ -29,7 +37,7 @@ impl MemorySize {
     }
 
     pub fn as_bytes(&self) -> usize {
-        self.0 * 1024
+        self.0.saturating_mul(1024)
     }
 
     pub fn validate(&self) -> Result<(), ConfigError> {
@@ -45,7 +53,7 @@ impl MemorySize {
     }
 }
 
-/// Salt length in bytes (supported range: 8 to 256 bytes).
+/// Salt length in bytes (8..=256).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SaltLength(pub usize);
@@ -75,53 +83,7 @@ impl SaltLength {
     }
 }
 
-/// Execution pass count.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct PassCount(pub u32);
-
-impl PassCount {
-    pub fn new(passes: u32) -> Self {
-        Self(passes)
-    }
-
-    pub fn get(&self) -> u32 {
-        self.0
-    }
-
-    pub fn validate(&self) -> Result<(), ConfigError> {
-        if self.0 < 1 {
-            Err(ConfigError::InvalidPassCount { passes: self.0 })
-        } else {
-            Ok(())
-        }
-    }
-}
-
-/// Sequential dependency depth.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct DependencyDepth(pub u32);
-
-impl DependencyDepth {
-    pub fn new(depth: u32) -> Self {
-        Self(depth)
-    }
-
-    pub fn get(&self) -> u32 {
-        self.0
-    }
-
-    pub fn validate(&self) -> Result<(), ConfigError> {
-        if self.0 < 10 {
-            Err(ConfigError::InvalidDependencyDepth { depth: self.0 })
-        } else {
-            Ok(())
-        }
-    }
-}
-
-/// Memory block size.
+/// Memory block size in bytes. Must be a power of two ≥ 16.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BlockSize(pub usize);
@@ -136,7 +98,7 @@ impl BlockSize {
     }
 
     pub fn validate(&self) -> Result<(), ConfigError> {
-        if self.0 < 16 || (self.0 & (self.0 - 1)) != 0 {
+        if self.0 < 16 || !self.0.is_power_of_two() {
             Err(ConfigError::InvalidBlockSize { size: self.0 })
         } else {
             Ok(())
@@ -144,14 +106,17 @@ impl BlockSize {
     }
 }
 
-/// Parallelism lanes factor.
+/// Parent fan-in mixed into each DAG node (2..=8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Parallelism(pub u32);
+pub struct FanIn(pub u32);
 
-impl Parallelism {
-    pub fn new(lanes: u32) -> Self {
-        Self(lanes)
+impl FanIn {
+    pub const MIN: u32 = 2;
+    pub const MAX: u32 = 8;
+
+    pub fn new(fan_in: u32) -> Self {
+        Self(fan_in)
     }
 
     pub fn get(&self) -> u32 {
@@ -159,15 +124,15 @@ impl Parallelism {
     }
 
     pub fn validate(&self) -> Result<(), ConfigError> {
-        if self.0 < 1 {
-            Err(ConfigError::InvalidParallelism { lanes: self.0 })
+        if self.0 < Self::MIN || self.0 > Self::MAX {
+            Err(ConfigError::InvalidFanIn { fan_in: self.0 })
         } else {
             Ok(())
         }
     }
 }
 
-/// Output hash digest length in bytes.
+/// Output digest length in bytes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OutputLength(pub usize);
@@ -197,17 +162,16 @@ impl OutputLength {
     }
 }
 
-/// Main public configuration type for Antech KDF.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Canonical hashing configuration.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AntechConfig {
     pub algorithm: Algorithm,
     pub memory: MemorySize,
     pub salt_length: SaltLength,
-    pub passes: PassCount,
-    pub dependency_depth: DependencyDepth,
     pub block_size: BlockSize,
-    pub parallelism: Parallelism,
+    pub fan_in: FanIn,
+    pub graph: GraphKind,
     pub output_length: OutputLength,
 }
 
@@ -217,10 +181,9 @@ impl Default for AntechConfig {
             algorithm: Algorithm::Antech,
             memory: MemorySize::mib(16),
             salt_length: SaltLength::bytes(16),
-            passes: PassCount::new(1),
-            dependency_depth: DependencyDepth::new(650000),
             block_size: BlockSize::bytes(32),
-            parallelism: Parallelism::new(1),
+            fan_in: FanIn::new(2),
+            graph: GraphKind::CombinedFrontier,
             output_length: OutputLength::bytes(32),
         }
     }
@@ -231,19 +194,61 @@ impl AntechConfig {
         AntechConfigBuilder::default()
     }
 
+    pub fn num_blocks(&self) -> usize {
+        self.memory.as_bytes() / self.block_size.as_bytes().max(1)
+    }
+
+    /// Critical-node period derived from frontier width (not a user work knob).
+    pub fn critical_period(&self) -> usize {
+        (FRONTIER_WIDTH / 16).max(2)
+    }
+
+    /// Tile length in blocks for locality variants.
+    pub fn tile_len(&self) -> usize {
+        TILE_BLOCKS.min(self.num_blocks().max(1))
+    }
+
+    pub fn with_memory_mib(mut self, mib: usize) -> Self {
+        self.memory = MemorySize::mib(mib);
+        self
+    }
+
+    pub fn with_memory_kib(mut self, kib: usize) -> Self {
+        self.memory = MemorySize::kib(kib);
+        self
+    }
+
+    pub fn with_block_size(mut self, bytes: usize) -> Self {
+        self.block_size = BlockSize::bytes(bytes);
+        self
+    }
+
+    pub fn with_fan_in(mut self, fan_in: u32) -> Self {
+        self.fan_in = FanIn::new(fan_in);
+        self
+    }
+
+    pub fn with_graph(mut self, graph: crate::algorithm::GraphKind) -> Self {
+        self.graph = graph;
+        self
+    }
+
     pub fn validate(&self) -> Result<(), ConfigError> {
         self.memory.validate()?;
         self.salt_length.validate()?;
-        self.passes.validate()?;
-        self.dependency_depth.validate()?;
         self.block_size.validate()?;
-        self.parallelism.validate()?;
+        self.fan_in.validate()?;
         self.output_length.validate()?;
+        if self.num_blocks() < 64 {
+            return Err(ConfigError::InvalidParameterValue(
+                "memory/block_size must yield at least 64 blocks".into(),
+            ));
+        }
         Ok(())
     }
 }
 
-/// Builder pattern for `AntechConfig`.
+/// Builder for [`AntechConfig`].
 #[derive(Debug, Clone, Default)]
 pub struct AntechConfigBuilder {
     config: AntechConfig,
@@ -274,23 +279,18 @@ impl AntechConfigBuilder {
         self
     }
 
-    pub fn passes(mut self, passes: u32) -> Self {
-        self.config.passes = PassCount::new(passes);
-        self
-    }
-
-    pub fn dependency_depth(mut self, depth: u32) -> Self {
-        self.config.dependency_depth = DependencyDepth::new(depth);
-        self
-    }
-
     pub fn block_size(mut self, size: usize) -> Self {
         self.config.block_size = BlockSize::bytes(size);
         self
     }
 
-    pub fn parallelism(mut self, lanes: u32) -> Self {
-        self.config.parallelism = Parallelism::new(lanes);
+    pub fn fan_in(mut self, fan_in: u32) -> Self {
+        self.config.fan_in = FanIn::new(fan_in);
+        self
+    }
+
+    pub fn graph(mut self, graph: GraphKind) -> Self {
+        self.config.graph = graph;
         self
     }
 

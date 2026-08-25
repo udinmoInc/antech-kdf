@@ -60,21 +60,16 @@ impl<'a> CheckpointStore<'a> {
                 self.recompute_through(base - 1);
             }
         }
-        let block_size = self.cfg.block_size as usize;
+        let block_size = self.cfg.block_size.as_bytes();
+        let fan_in = self.cfg.fan_in.get();
         let period = self.cfg.critical_period();
         let tile_len = self.cfg.tile_len();
         let mut state = self.state_before[&base];
         for j in base..=idx {
-            let parents = graph::parents_for_node(
-                self.cfg.graph,
-                &state,
-                j,
-                self.cfg.fan_in,
-                period,
-                tile_len,
-            );
+            let parents =
+                graph::parents_for_node(self.cfg.graph, &state, j, fan_in, period, tile_len);
             let parent_views: Vec<Vec<u8>> = if j == 0 {
-                (0..self.cfg.fan_in)
+                (0..fan_in)
                     .map(|slot| {
                         let mut b = vec![0u8; block_size];
                         phantom_block(&self.seed, slot, block_size, &mut b);
@@ -116,7 +111,8 @@ impl<'a> CheckpointStore<'a> {
     }
 
     fn run(&mut self) -> ([u64; 4], Vec<u8>) {
-        let block_size = self.cfg.block_size as usize;
+        let block_size = self.cfg.block_size.as_bytes();
+        let fan_in = self.cfg.fan_in.get();
         let num_blocks = self.cfg.num_blocks();
         let period = self.cfg.critical_period();
         let tile_len = self.cfg.tile_len();
@@ -124,16 +120,10 @@ impl<'a> CheckpointStore<'a> {
         self.state_before.insert(0, state);
 
         for i in 0..num_blocks {
-            let parents = graph::parents_for_node(
-                self.cfg.graph,
-                &state,
-                i,
-                self.cfg.fan_in,
-                period,
-                tile_len,
-            );
+            let parents =
+                graph::parents_for_node(self.cfg.graph, &state, i, fan_in, period, tile_len);
             let parent_views: Vec<Vec<u8>> = if i == 0 {
-                (0..self.cfg.fan_in)
+                (0..fan_in)
                     .map(|slot| {
                         let mut b = vec![0u8; block_size];
                         phantom_block(&self.seed, slot, block_size, &mut b);
@@ -211,7 +201,7 @@ impl TmtoEvaluator {
         let _ = engine.derive_cfg(password, salt, cfg);
         let base = t0.elapsed().as_secs_f64().max(1e-6);
         let base_gps = 1.0 / base;
-        let mem_mib = cfg.memory_kib as f64 / 1024.0;
+        let mem_mib = cfg.memory.as_kib() as f64 / 1024.0;
 
         TMTO_FRACTIONS
             .iter()

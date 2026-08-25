@@ -8,5 +8,4 @@ repository.workspace = true
 
 [dependencies]
 antech-kdf = { workspace = true }
-antech-kdf-research = { workspace = true }
 clap = { workspace = true }

@@ -49,9 +49,8 @@ fn sequential_cut(state: &[u64; 4], i: usize, fan_in: u32, epoch_len: usize) -> 
     }
 
     while indices.len() < fan_in as usize {
-        let mix = state[indices.len() % 4]
-            ^ (i as u64).wrapping_mul(GOLDEN)
-            ^ state[0].rotate_left(17);
+        let mix =
+            state[indices.len() % 4] ^ (i as u64).wrapping_mul(GOLDEN) ^ state[0].rotate_left(17);
         let min_dist = (i / 4).max(1);
         let span = i.saturating_sub(min_dist).max(1);
         let mut addr = mix as usize % span;

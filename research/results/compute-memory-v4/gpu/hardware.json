@@ -1,33 +1,47 @@
 {
-  "timestamp": "2026-08-25T12:45:00+05:30",
   "gpu_name": "NVIDIA GeForce RTX 3050",
   "vram_total_mib": 8191,
   "toolchain": {
-    "nvidia_smi": "ok",
     "nvcc": "13.3",
-    "cl": "F:/vs MSVC 19.44.35227",
-    "windows_sdk": "10.0.26100",
-    "argon2_gpu_lib": "third_party/argon2-gpu (WebDollar, CUDA sm_86)"
+    "cl": "F:/vs MSVC 19.44",
+    "windows_sdk": "10.0.26100"
   },
   "benchmark_status": "REAL GPU BENCHMARK COMPLETED",
   "antech_v4c": {
     "memory_mib": 16,
-    "batch": 256,
-    "guesses_per_sec": 23.9139,
-    "kernel_p50_ms": 10714.2,
-    "vram_used_mib": 5133,
-    "correctness": "10/10"
+    "baseline": {
+      "batch": 64,
+      "threads_per_block": 1,
+      "guesses_per_sec": 13.7397,
+      "kernel_p50_ms": 4656.38,
+      "occupancy": 0.0104167,
+      "vram_used_mib": 2061
+    },
+    "optimized": {
+      "batch": 192,
+      "threads_per_block": 32,
+      "guesses_per_sec": 32.9552,
+      "kernel_p50_ms": 5820.12,
+      "occupancy": 0.333333,
+      "vram_used_mib": 4109
+    },
+    "fully_optimized": {
+      "batch": 256,
+      "threads_per_block": 128,
+      "guesses_per_sec": 21.152,
+      "kernel_p50_ms": 12097.2,
+      "occupancy": 0.833333,
+      "vram_used_mib": 5133
+    },
+    "best_mode": "optimized",
+    "correctness": "10/50/100 all matched CPU"
   },
   "argon2id": {
     "memory_mib": 64,
-    "m_cost_kib": 65536,
-    "t_cost": 2,
-    "lanes": 1,
     "batch": 96,
-    "guesses_per_sec": 431.557,
-    "kernel_p50_ms": 221.396,
-    "vram_used_mib": 7383,
-    "correctness": "10/10 vs argon2 crate"
-  },
-  "gpu_head_to_head": "Argon2id ~18× faster than Antech v4-C on GPU (431.6 vs 23.9 g/s)"
+    "guesses_per_sec": 435.556,
+    "kernel_p50_ms": 220.376,
+    "vram_used_mib": 7425,
+    "correctness": "10/10 matched argon2 crate"
+  }
 }

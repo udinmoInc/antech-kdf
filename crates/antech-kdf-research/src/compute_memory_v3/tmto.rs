@@ -109,11 +109,7 @@ impl<'a> CheckpointStore<'a> {
             let parent_blocks = if i == 0 {
                 phantom_parents(&self.seed, self.cfg.fan_in, block_size)
             } else {
-                parents
-                    .indices
-                    .iter()
-                    .map(|&p| self.get_block(p))
-                    .collect()
+                parents.indices.iter().map(|&p| self.get_block(p)).collect()
             };
             mix_parent_blocks(&mut state, &parent_blocks);
             let mut block = vec![0u8; block_size];

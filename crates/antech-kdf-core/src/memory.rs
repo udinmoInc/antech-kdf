@@ -1,41 +1,50 @@
-//! Memory buffer management and zeroization.
-//!
-//! # Memory Security & Rust Guarantees
-//!
-//! - Secret key buffers and intermediate state arrays are wrapped in [`zeroize::Zeroizing`]
-//!   or zeroized upon drop to overwrite memory with zeroes.
-//! - **Limitations**: Rust standard library allocators do not guarantee protection against OS
-//!   swapping (paging to disk), core dumps, or compiler optimizations re-ordering un-pinned buffers.
-//!   Users in extreme threat environments should ensure OS-level memory locking (mlock) is enabled.
+//! Private frontier ring for sequential verifier locality.
 
-use zeroize::Zeroize;
+use crate::config::FRONTIER_WIDTH;
 
-/// Secure memory buffer container that zeroizes memory on drop.
-pub struct ProtectedBuffer {
+/// In-process copy of the most recent frontier blocks for one derivation.
+pub struct FrontierRing {
+    width: usize,
+    block_size: usize,
     data: Vec<u8>,
+    newest: Option<usize>,
+    count: usize,
 }
 
-impl ProtectedBuffer {
-    /// Creates a new zero-initialized buffer of specified size.
-    pub fn new(size: usize) -> Self {
+impl FrontierRing {
+    pub fn new(block_size: usize) -> Self {
+        let width = FRONTIER_WIDTH;
         Self {
-            data: vec![0u8; size],
+            width,
+            block_size,
+            data: vec![0u8; width * block_size],
+            newest: None,
+            count: 0,
         }
     }
 
-    /// Access underlying byte slice.
-    pub fn as_slice(&self) -> &[u8] {
-        &self.data
+    #[inline(always)]
+    pub fn push(&mut self, block_idx: usize, block: &[u8]) {
+        let slot = block_idx % self.width;
+        let off = slot * self.block_size;
+        debug_assert_eq!(block.len(), self.block_size);
+        self.data[off..off + self.block_size].copy_from_slice(block);
+        self.newest = Some(block_idx);
+        self.count = (self.count + 1).min(self.width);
     }
 
-    /// Access underlying mutable byte slice.
-    pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        &mut self.data
-    }
-}
-
-impl Drop for ProtectedBuffer {
-    fn drop(&mut self) {
-        self.data.zeroize();
+    #[inline(always)]
+    pub fn get(&self, idx: usize) -> Option<&[u8]> {
+        let newest = self.newest?;
+        if idx > newest {
+            return None;
+        }
+        let age = newest - idx;
+        let window = self.count.min(self.width);
+        if age >= window {
+            return None;
+        }
+        let off = (idx % self.width) * self.block_size;
+        Some(&self.data[off..off + self.block_size])
     }
 }

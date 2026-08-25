@@ -183,11 +183,7 @@ where
     (all_latencies, throughput, avg_cycles, cpu_util)
 }
 
-fn measure_attacker<F>(
-    threads: usize,
-    duration: Duration,
-    derive_one: F,
-) -> (f64, f64, u64)
+fn measure_attacker<F>(threads: usize, duration: Duration, derive_one: F) -> (f64, f64, u64)
 where
     F: Fn(&[u8], &[u8]) + Sync,
 {
@@ -254,40 +250,28 @@ pub fn run_cpu_head_to_head(
 
     for &threads in &CPU_WORKER_COUNTS {
         eprintln!("CPU H2H: {threads} thread(s) — Antech v2 defender...");
-        let (antech_lats, antech_tps, antech_cycles, antech_cpu) = measure_defender_concurrent(
-            threads,
-            defender_samples_per_thread,
-            |pw, salt| {
+        let (antech_lats, antech_tps, antech_cycles, antech_cpu) =
+            measure_defender_concurrent(threads, defender_samples_per_thread, |pw, salt| {
                 let _ = antech.derive(pw, salt, &antech_params);
-            },
-        );
+            });
 
         eprintln!("CPU H2H: {threads} thread(s) — Argon2id defender...");
-        let (argon_lats, argon_tps, argon_cycles, argon_cpu) = measure_defender_concurrent(
-            threads,
-            defender_samples_per_thread,
-            |pw, salt| {
+        let (argon_lats, argon_tps, argon_cycles, argon_cpu) =
+            measure_defender_concurrent(threads, defender_samples_per_thread, |pw, salt| {
                 let _ = argon2_derive(&argon_params, pw, salt);
-            },
-        );
+            });
 
         eprintln!("CPU H2H: {threads} thread(s) — Antech v2 attacker...");
-        let (antech_gps, antech_att_lat, antech_rss) = measure_attacker(
-            threads,
-            attacker_window,
-            |pw, salt| {
+        let (antech_gps, antech_att_lat, antech_rss) =
+            measure_attacker(threads, attacker_window, |pw, salt| {
                 let _ = antech.derive(pw, salt, &antech_params);
-            },
-        );
+            });
 
         eprintln!("CPU H2H: {threads} thread(s) — Argon2id attacker...");
-        let (argon_gps, argon_att_lat, argon_rss) = measure_attacker(
-            threads,
-            attacker_window,
-            |pw, salt| {
+        let (argon_gps, argon_att_lat, argon_rss) =
+            measure_attacker(threads, attacker_window, |pw, salt| {
                 let _ = argon2_derive(&argon_params, pw, salt);
-            },
-        );
+            });
 
         if threads == 1 {
             antech_attacker_base = antech_gps.max(1e-9);
@@ -446,7 +430,10 @@ fn find<'a>(rows: &'a [HeadToHeadRow], threads: usize, algo: &str) -> &'a HeadTo
 
 fn write_report_md(path: &Path, rows: &[HeadToHeadRow]) -> Result<(), Box<dyn std::error::Error>> {
     let mut f = File::create(path)?;
-    writeln!(f, "# CPU-Only Head-to-Head: Antech Compute-Memory v2 vs Argon2id\n")?;
+    writeln!(
+        f,
+        "# CPU-Only Head-to-Head: Antech Compute-Memory v2 vs Argon2id\n"
+    )?;
     writeln!(f, "**Mode:** CPU only — no CUDA / GPU metrics.\n")?;
     writeln!(f, "## Configurations (unchanged)\n")?;
     writeln!(

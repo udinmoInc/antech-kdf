@@ -41,6 +41,6 @@ Results are compared with established password KDFs, primarily **Argon2id**, usi
 ## 🔬 Running Research Benchmarks
 
 ```bash
-# Execute research benchmark suite and export dataset CSVs to research/data/
-cargo run --release -p antech-kdf-cli -- benchmark --output research/data
+# Example: compute-memory v4 research runner
+cargo run --release -p antech-kdf-research --example compute_memory_v4_runner
 ```

@@ -1,15 +1,15 @@
-//! Rehash Policy configuration for checking stored password hash freshness.
+//! Rehash policy comparing stored parameters against an application target.
 
-use crate::config::{AntechConfig, MemorySize, Parallelism, PassCount};
+use crate::config::{AntechConfig, FanIn, MemorySize, OutputLength};
 
-/// Policy specification used by `needs_rehash_with_policy` to evaluate stored password hashes.
+/// Policy used by `needs_rehash_with_policy`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RehashPolicy {
     pub minimum_memory: MemorySize,
     pub preferred_memory: MemorySize,
-    pub preferred_passes: PassCount,
-    pub preferred_parallelism: Parallelism,
+    pub preferred_fan_in: FanIn,
+    pub preferred_output_length: OutputLength,
 }
 
 impl Default for RehashPolicy {
@@ -17,8 +17,8 @@ impl Default for RehashPolicy {
         Self {
             minimum_memory: MemorySize::mib(16),
             preferred_memory: MemorySize::mib(16),
-            preferred_passes: PassCount::new(1),
-            preferred_parallelism: Parallelism::new(1),
+            preferred_fan_in: FanIn::new(2),
+            preferred_output_length: OutputLength::bytes(32),
         }
     }
 }
@@ -28,16 +28,16 @@ impl RehashPolicy {
         RehashPolicyBuilder::default()
     }
 
-    /// Evaluate whether a target configuration satisfies this rehash policy.
+    /// Returns true when stored parameters are below this policy's targets.
     pub fn needs_rehash(&self, config: &AntechConfig) -> bool {
         config.memory.as_kib() < self.minimum_memory.as_kib()
             || config.memory.as_kib() < self.preferred_memory.as_kib()
-            || config.passes.get() < self.preferred_passes.get()
-            || config.parallelism.get() < self.preferred_parallelism.get()
+            || config.fan_in.get() < self.preferred_fan_in.get()
+            || config.output_length.as_bytes() < self.preferred_output_length.as_bytes()
     }
 }
 
-/// Builder pattern for `RehashPolicy`.
+/// Builder for [`RehashPolicy`].
 #[derive(Debug, Clone, Default)]
 pub struct RehashPolicyBuilder {
     policy: RehashPolicy,
@@ -58,13 +58,13 @@ impl RehashPolicyBuilder {
         self
     }
 
-    pub fn preferred_passes(mut self, passes: u32) -> Self {
-        self.policy.preferred_passes = PassCount::new(passes);
+    pub fn preferred_fan_in(mut self, fan_in: u32) -> Self {
+        self.policy.preferred_fan_in = FanIn::new(fan_in);
         self
     }
 
-    pub fn preferred_parallelism(mut self, lanes: u32) -> Self {
-        self.policy.preferred_parallelism = Parallelism::new(lanes);
+    pub fn preferred_output_length(mut self, bytes: usize) -> Self {
+        self.policy.preferred_output_length = OutputLength::bytes(bytes);
         self
     }
 

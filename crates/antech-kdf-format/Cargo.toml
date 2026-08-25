@@ -8,5 +8,3 @@ repository.workspace = true
 
 [dependencies]
 antech-kdf-types = { workspace = true }
-base64 = { workspace = true }
-thiserror = { workspace = true }

@@ -46,5 +46,8 @@ pub fn parents_for_node(state: &[u64; 4], i: usize, fan_in: u32) -> ParentSet {
 
 /// Logarithmic back-reference distance used in documentation / analysis.
 pub fn graph_log_span(num_blocks: usize) -> u32 {
-    (num_blocks as u64).next_power_of_two().trailing_zeros().max(1)
+    (num_blocks as u64)
+        .next_power_of_two()
+        .trailing_zeros()
+        .max(1)
 }

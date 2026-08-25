@@ -1,12 +1,13 @@
 metric,argon2id,antech_v4c_16mib,notes
 GPU model,NVIDIA GeForce RTX 3050,NVIDIA GeForce RTX 3050,
 VRAM,8191 MiB,8191 MiB,
-Actual guesses/sec,431.557,23.9139,measured CUDA
-Kernel p50,221.396 ms,10714.2 ms,
+Actual guesses/sec,435.556,32.9552,measured CUDA
+Kernel p50,220.376 ms,5820.12 ms,best Antech mode = optimized
 GPU utilization,100,100,peak nvidia-smi
-Global memory traffic,,21474836480,Antech est only
-Occupancy,,0.0104167,Antech only
-Registers/thread,,48,Antech only
+Global memory traffic,,16106127360,Antech estimate for best mode only
+Occupancy,,0.333333,baseline was 0.0104167
+Registers/thread,,48,no meaningful register change across Antech modes
 CPU attacker 16t g/s,22.9,40.6,prior CPU suite
-GPU/CPU speedup vs 16t CPU,18.8453,0.5890,GPU_gps/CPU_16t
-gpu_head_to_head_ratio,18.0463,1.0,Argon2 GPU faster than Antech GPU
+GPU/CPU speedup vs 16t CPU,19.0199,0.8112,GPU_gps/CPU_16t
+gpu_head_to_head_ratio,13.2178,1.0,Argon2 GPU faster than optimized Antech GPU
+verdict,,,GPU ANTECH SLOWER TO ATTACK

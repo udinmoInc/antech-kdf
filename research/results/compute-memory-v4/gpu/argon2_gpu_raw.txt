@@ -1,9 +1,9 @@
-guesses_per_sec=431.557
-kernel_p50_ms=221.396
-kernel_p95_ms=224.963
-kernel_p99_ms=224.963
-vram_used_mib=7383
-host_device_transfer_ms=4.9921
+guesses_per_sec=435.556
+kernel_p50_ms=220.376
+kernel_p95_ms=220.559
+kernel_p99_ms=220.559
+vram_used_mib=7425
+host_device_transfer_ms=4.5648
 batch=96
 m_cost_kib=65536
 t_cost=2

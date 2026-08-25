@@ -12,7 +12,6 @@ default = []
 cuda = []
 
 [dependencies]
-antech-kdf = { workspace = true }
 antech-kdf-core = { workspace = true }
 antech-kdf-types = { workspace = true }
 argon2 = { workspace = true }
@@ -24,5 +23,3 @@ rayon = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 csv = { workspace = true }
-getrandom = { workspace = true }
-zeroize = { workspace = true }

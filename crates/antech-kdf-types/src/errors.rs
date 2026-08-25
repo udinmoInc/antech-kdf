@@ -1,4 +1,4 @@
-//! Error types for Antech KDF configuration, validation, and execution.
+//! Error types for configuration, encoding, and derivation.
 
 use std::fmt;
 
@@ -15,17 +15,11 @@ pub enum ConfigError {
         min_kib: usize,
         max_kib: usize,
     },
-    InvalidPassCount {
-        passes: u32,
-    },
-    InvalidDependencyDepth {
-        depth: u32,
-    },
     InvalidBlockSize {
         size: usize,
     },
-    InvalidParallelism {
-        lanes: u32,
+    InvalidFanIn {
+        fan_in: u32,
     },
     InvalidOutputLength {
         len: usize,
@@ -41,8 +35,7 @@ impl fmt::Display for ConfigError {
             ConfigError::InvalidSaltLength { len, min, max } => {
                 write!(
                     f,
-                    "Salt length {} bytes out of allowed bounds [{}..{}]",
-                    len, min, max
+                    "salt length {len} bytes out of allowed bounds [{min}..{max}]"
                 )
             }
             ConfigError::InvalidMemorySize {
@@ -52,31 +45,26 @@ impl fmt::Display for ConfigError {
             } => {
                 write!(
                     f,
-                    "Memory size {} KiB out of allowed bounds [{}..{} KiB]",
-                    kib, min_kib, max_kib
+                    "memory size {kib} KiB out of allowed bounds [{min_kib}..{max_kib} KiB]"
                 )
             }
-            ConfigError::InvalidPassCount { passes } => {
-                write!(f, "Pass count {} must be >= 1", passes)
-            }
-            ConfigError::InvalidDependencyDepth { depth } => {
-                write!(f, "Dependency depth {} must be >= 10", depth)
-            }
             ConfigError::InvalidBlockSize { size } => {
-                write!(f, "Block size {} must be power of 2 and >= 16 bytes", size)
+                write!(
+                    f,
+                    "block size {size} must be a power of two and >= 16 bytes"
+                )
             }
-            ConfigError::InvalidParallelism { lanes } => {
-                write!(f, "Parallelism {} must be >= 1", lanes)
+            ConfigError::InvalidFanIn { fan_in } => {
+                write!(f, "fan-in {fan_in} must be in 2..=8")
             }
             ConfigError::InvalidOutputLength { len, min, max } => {
                 write!(
                     f,
-                    "Output length {} bytes out of allowed bounds [{}..{}]",
-                    len, min, max
+                    "output length {len} bytes out of allowed bounds [{min}..{max}]"
                 )
             }
             ConfigError::InvalidParameterValue(msg) => {
-                write!(f, "Invalid parameter value: {}", msg)
+                write!(f, "invalid parameter value: {msg}")
             }
         }
     }
@@ -96,10 +84,10 @@ pub enum KdfError {
 impl fmt::Display for KdfError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            KdfError::Config(err) => write!(f, "Configuration error: {}", err),
-            KdfError::Encoding(msg) => write!(f, "Encoding error: {}", msg),
-            KdfError::Derivation(msg) => write!(f, "Derivation error: {}", msg),
-            KdfError::ResourceExhausted(msg) => write!(f, "Resource exhausted: {}", msg),
+            KdfError::Config(err) => write!(f, "configuration error: {err}"),
+            KdfError::Encoding(msg) => write!(f, "encoding error: {msg}"),
+            KdfError::Derivation(msg) => write!(f, "derivation error: {msg}"),
+            KdfError::ResourceExhausted(msg) => write!(f, "resource exhausted: {msg}"),
         }
     }
 }

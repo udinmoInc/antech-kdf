@@ -80,7 +80,8 @@ pub fn compute_node_inplace(
         } else {
             let mut parent_blocks = Vec::with_capacity(parents.indices.len());
             for &idx in &parents.indices {
-                parent_blocks.push(buffer[idx * block_size..idx * block_size + block_size].to_vec());
+                parent_blocks
+                    .push(buffer[idx * block_size..idx * block_size + block_size].to_vec());
             }
             mix_parents(state, &parent_blocks);
         }

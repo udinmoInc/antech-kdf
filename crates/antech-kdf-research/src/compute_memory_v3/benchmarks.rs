@@ -1,9 +1,7 @@
 //! Benchmark suite for compute-memory v3 graph variants.
 
 use super::attacker::{self, AttackerRecord};
-use super::config::{
-    ComputeMemoryV3Config, GraphKind, CPU_WORKER_COUNTS, V3_DEFAULT_MEMORY_KIB,
-};
+use super::config::{ComputeMemoryV3Config, GraphKind, CPU_WORKER_COUNTS, V3_DEFAULT_MEMORY_KIB};
 use super::engine::V3Engine;
 use super::tmto::{TmtoEvaluator, TmtoRecord};
 use super::variants::{VariantA, VariantB, VariantC};
@@ -494,12 +492,19 @@ fn write_report(
             writeln!(
                 f,
                 "- **{}**: 16t={:.2} g/s (eff {:.3}), 32t={:.2} g/s (eff {:.3})",
-                n, a.guesses_per_sec, a.parallel_efficiency, b.guesses_per_sec, b.parallel_efficiency
+                n,
+                a.guesses_per_sec,
+                a.parallel_efficiency,
+                b.guesses_per_sec,
+                b.parallel_efficiency
             )?;
         }
     }
 
-    writeln!(f, "\n## 5. Real dependency structure vs extra iterations?\n")?;
+    writeln!(
+        f,
+        "\n## 5. Real dependency structure vs extra iterations?\n"
+    )?;
     writeln!(
         f,
         "Yes — every variant still executes exactly `num_blocks = memory/block_size` (= {}) node transitions. Differences are parent addressing (cuts, recursive intervals, frontier+remote scatter), not an exposed depth/pass count.\n",

@@ -20,14 +20,9 @@ homepage = "https://github.com/udinmoInc/antech-kdf"
 rust-version = "1.70.0"
 
 [workspace.dependencies]
-getrandom = "0.2"
 rand = "0.8"
-base64 = "0.22"
 subtle = "2.5"
-zeroize = { version = "1.8", features = ["zeroize_derive"] }
-thiserror = "1.0"
 clap = { version = "4.4", default-features = false, features = ["derive", "std"] }
-criterion = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 argon2 = "0.5"

@@ -1,9 +1,7 @@
 //! Research benchmark suite for structure-derived compute-memory v2.
 
 use super::attacker::CpuAttackerEngine;
-use super::config::{
-    ComputeMemoryConfig, CPU_WORKER_COUNTS, MEMORY_TARGETS_MIB, TMTO_FRACTIONS,
-};
+use super::config::{ComputeMemoryConfig, CPU_WORKER_COUNTS, MEMORY_TARGETS_MIB, TMTO_FRACTIONS};
 use super::contention::ContentionEvaluator;
 use super::gpu::GpuEvaluator;
 use super::memory_layout::MemoryLayoutAnalysis;
@@ -106,7 +104,9 @@ pub fn run_compute_memory_suite(output_dir: &Path) -> Result<(), Box<dyn std::er
         let params = ComputeMemoryConfig::default()
             .memory_mib(16)
             .to_research_params();
-        contention_records.extend(ContentionEvaluator::evaluate_contention(&optimized, &params));
+        contention_records.extend(ContentionEvaluator::evaluate_contention(
+            &optimized, &params,
+        ));
     }
 
     // CPU attacker at 16 MiB
@@ -200,7 +200,12 @@ fn write_cpu_attacker_csv(
         writeln!(
             f,
             "{},{},{},{:.4},{:.4},{:.4}",
-            r.variant, r.threads, r.total_guesses, r.duration_secs, r.guesses_per_sec, r.scaling_efficiency
+            r.variant,
+            r.threads,
+            r.total_guesses,
+            r.duration_secs,
+            r.guesses_per_sec,
+            r.scaling_efficiency
         )?;
     }
     Ok(())
@@ -261,7 +266,10 @@ fn write_cache_csv(
     profiles: &[ExecutionProfile],
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut f = File::create(path)?;
-    writeln!(f, "variant,memory_mib,l2_cache_misses,l3_cache_misses,memory_ops")?;
+    writeln!(
+        f,
+        "variant,memory_mib,l2_cache_misses,l3_cache_misses,memory_ops"
+    )?;
     for p in profiles {
         writeln!(
             f,
@@ -369,7 +377,10 @@ fn write_argon2_csv(
     records: &[BaselineRecord],
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut f = File::create(path)?;
-    writeln!(f, "algorithm,parameters,mean_latency_ms,p50_latency_ms,memory_kib")?;
+    writeln!(
+        f,
+        "algorithm,parameters,mean_latency_ms,p50_latency_ms,memory_kib"
+    )?;
     for r in records {
         writeln!(
             f,
@@ -443,8 +454,7 @@ fn write_report_markdown(
     writeln!(
         f,
         "| DAG nodes / work bound | (Argon2 lanes×blocks) | depth={} loop | **{} nodes** |",
-        120,
-        cm.num_blocks
+        120, cm.num_blocks
     )?;
     writeln!(
         f,

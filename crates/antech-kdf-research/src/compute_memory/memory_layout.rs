@@ -74,9 +74,12 @@ impl MemoryLayout {
             64 - (raw_total % 64)
         };
 
-        let total_accounted_bytes =
-            blocks_bytes + state_bytes + seed_bytes + metadata_bytes
-            + temporary_workspace_bytes + alignment_padding_bytes;
+        let total_accounted_bytes = blocks_bytes
+            + state_bytes
+            + seed_bytes
+            + metadata_bytes
+            + temporary_workspace_bytes
+            + alignment_padding_bytes;
 
         Self {
             memory_target_bytes,
@@ -141,26 +144,59 @@ impl MemoryLayoutAnalysis {
         let mut f = std::fs::File::create(&path)?;
 
         writeln!(f, "# Antech KDF — Memory Layout Analysis\n")?;
-        writeln!(f, "This document explains exactly where every byte goes for each memory target.")?;
+        writeln!(
+            f,
+            "This document explains exactly where every byte goes for each memory target."
+        )?;
         writeln!(f, "There are no unexplained allocations.\n")?;
         writeln!(f, "## Memory Formula\n")?;
         writeln!(f, "```")?;
         writeln!(f, "working_memory =")?;
         writeln!(f, "    blocks           (num_blocks × block_size)")?;
-        writeln!(f, "  + seed             (32 bytes, SHA-256 password+salt derivation)")?;
-        writeln!(f, "  + metadata         (12 bytes: memory_kib u32 + depth u32 + passes u32)")?;
-        writeln!(f, "  + temp_workspace   (32 bytes, SHA-256 scratch per block fill)")?;
-        writeln!(f, "  + alignment        (0–63 bytes, 64-byte cache-line rounding)")?;
+        writeln!(
+            f,
+            "  + seed             (32 bytes, SHA-256 password+salt derivation)"
+        )?;
+        writeln!(
+            f,
+            "  + metadata         (12 bytes: memory_kib u32 + depth u32 + passes u32)"
+        )?;
+        writeln!(
+            f,
+            "  + temp_workspace   (32 bytes, SHA-256 scratch per block fill)"
+        )?;
+        writeln!(
+            f,
+            "  + alignment        (0–63 bytes, 64-byte cache-line rounding)"
+        )?;
         writeln!(f, "")?;
-        writeln!(f, "Note: state (4 × u64 = 32 bytes) lives in CPU registers, not heap.")?;
+        writeln!(
+            f,
+            "Note: state (4 × u64 = 32 bytes) lives in CPU registers, not heap."
+        )?;
         writeln!(f, "```\n")?;
 
         writeln!(f, "## Why This Memory Size?\n")?;
-        writeln!(f, "The buffer is filled with SHA-256 hashes of each block index before the main")?;
-        writeln!(f, "dependency loop runs. This makes the initial buffer content non-trivially")?;
-        writeln!(f, "compressible — an attacker cannot regenerate arbitrary blocks cheaply.")?;
-        writeln!(f, "The dependency loop then reads and writes blocks based on current state,")?;
-        writeln!(f, "so all `num_blocks` blocks must remain available in RAM throughout execution.\n")?;
+        writeln!(
+            f,
+            "The buffer is filled with SHA-256 hashes of each block index before the main"
+        )?;
+        writeln!(
+            f,
+            "dependency loop runs. This makes the initial buffer content non-trivially"
+        )?;
+        writeln!(
+            f,
+            "compressible — an attacker cannot regenerate arbitrary blocks cheaply."
+        )?;
+        writeln!(
+            f,
+            "The dependency loop then reads and writes blocks based on current state,"
+        )?;
+        writeln!(
+            f,
+            "so all `num_blocks` blocks must remain available in RAM throughout execution.\n"
+        )?;
 
         writeln!(f, "## Per-Target Breakdown\n")?;
         writeln!(f, "| Target | Blocks | Block Size | Num Blocks | State | Seed | Metadata | Temp | Align | Total Heap | Security Property |")?;
@@ -187,30 +223,80 @@ impl MemoryLayoutAnalysis {
         writeln!(f, "\n## Detailed Per-Target Analysis\n")?;
         for l in &self.layouts {
             let target_mib = l.memory_target_bytes / (1024 * 1024);
-            writeln!(f, "### {} Working Memory\n", MemoryLayout::to_mib_str(l.memory_target_bytes))?;
+            writeln!(
+                f,
+                "### {} Working Memory\n",
+                MemoryLayout::to_mib_str(l.memory_target_bytes)
+            )?;
             writeln!(f, "```")?;
-            writeln!(f, "blocks:            {:>10}  ({} × {} bytes)",
-                MemoryLayout::to_mib_str(l.blocks_bytes), l.num_blocks, l.block_size_bytes)?;
-            writeln!(f, "seed:              {:>10}  (SHA-256 of password + salt)", MemoryLayout::to_mib_str(l.seed_bytes))?;
-            writeln!(f, "metadata:          {:>10}  (memory_kib u32, depth u32, passes u32)", MemoryLayout::to_mib_str(l.metadata_bytes))?;
-            writeln!(f, "temp_workspace:    {:>10}  (SHA-256 init scratch per block)", MemoryLayout::to_mib_str(l.temporary_workspace_bytes))?;
-            writeln!(f, "alignment:         {:>10}  (64-byte cache line rounding)", MemoryLayout::to_mib_str(l.alignment_padding_bytes))?;
+            writeln!(
+                f,
+                "blocks:            {:>10}  ({} × {} bytes)",
+                MemoryLayout::to_mib_str(l.blocks_bytes),
+                l.num_blocks,
+                l.block_size_bytes
+            )?;
+            writeln!(
+                f,
+                "seed:              {:>10}  (SHA-256 of password + salt)",
+                MemoryLayout::to_mib_str(l.seed_bytes)
+            )?;
+            writeln!(
+                f,
+                "metadata:          {:>10}  (memory_kib u32, depth u32, passes u32)",
+                MemoryLayout::to_mib_str(l.metadata_bytes)
+            )?;
+            writeln!(
+                f,
+                "temp_workspace:    {:>10}  (SHA-256 init scratch per block)",
+                MemoryLayout::to_mib_str(l.temporary_workspace_bytes)
+            )?;
+            writeln!(
+                f,
+                "alignment:         {:>10}  (64-byte cache line rounding)",
+                MemoryLayout::to_mib_str(l.alignment_padding_bytes)
+            )?;
             writeln!(f, "───────────────────────────────────────")?;
-            writeln!(f, "total heap:        {:>10}", MemoryLayout::to_mib_str(l.total_accounted_bytes))?;
-            writeln!(f, "state (registers): {:>10}  (4 × u64, not heap-allocated)", MemoryLayout::to_mib_str(l.state_bytes))?;
+            writeln!(
+                f,
+                "total heap:        {:>10}",
+                MemoryLayout::to_mib_str(l.total_accounted_bytes)
+            )?;
+            writeln!(
+                f,
+                "state (registers): {:>10}  (4 × u64, not heap-allocated)",
+                MemoryLayout::to_mib_str(l.state_bytes)
+            )?;
             writeln!(f, "```\n")?;
-            writeln!(f, "**What fails at {} MiB?** {}\n", target_mib.max(1), l.security_property())?;
+            writeln!(
+                f,
+                "**What fails at {} MiB?** {}\n",
+                target_mib.max(1),
+                l.security_property()
+            )?;
         }
 
         writeln!(f, "## What Fails Without the Memory?\n")?;
         writeln!(f, "| Memory Removed | What Breaks |")?;
         writeln!(f, "|----------------|-------------|")?;
         writeln!(f, "| Blocks removed | Attacker can regenerate any block in O(1) with 1 SHA-256 call; no sequentiality enforced |")?;
-        writeln!(f, "| Seed removed | Block contents become predictable; password binding lost |")?;
-        writeln!(f, "| Metadata removed | Parameters can be forged; no config commitment |")?;
+        writeln!(
+            f,
+            "| Seed removed | Block contents become predictable; password binding lost |"
+        )?;
+        writeln!(
+            f,
+            "| Metadata removed | Parameters can be forged; no config commitment |"
+        )?;
         writeln!(f, "| State removed | No sequential dependency; all steps become independent; trivially parallelizable |")?;
-        writeln!(f, "| Memory <4 MiB | Fits in GPU shared memory; GPU batch attack trivially parallel |")?;
-        writeln!(f, "| Memory <16 MiB | May fit in high-end GPU L2 cache; cache-hit attacks feasible |")?;
+        writeln!(
+            f,
+            "| Memory <4 MiB | Fits in GPU shared memory; GPU batch attack trivially parallel |"
+        )?;
+        writeln!(
+            f,
+            "| Memory <16 MiB | May fit in high-end GPU L2 cache; cache-hit attacks feasible |"
+        )?;
         writeln!(f, "| Memory >16 MiB | GPU forced to DRAM for random block reads; significant latency per step |")?;
 
         Ok(())

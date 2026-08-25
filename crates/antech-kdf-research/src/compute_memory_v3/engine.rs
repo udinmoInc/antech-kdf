@@ -30,8 +30,7 @@ impl V3Engine {
         salt: &[u8],
         cfg: &ComputeMemoryV3Config,
     ) -> Result<Vec<u8>, ResearchError> {
-        cfg.validate()
-            .map_err(ResearchError::InvalidParameters)?;
+        cfg.validate().map_err(ResearchError::InvalidParameters)?;
 
         let seed = bind_seed_v3(password, salt, cfg);
         let block_size = cfg.block_size as usize;

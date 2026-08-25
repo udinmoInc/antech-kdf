@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn work_bound_is_num_blocks() {
-        let cfg = ComputeMemoryV4Config::default().memory_mib(16);
+        let cfg = ComputeMemoryV4Config::default().with_memory_mib(16);
         assert_eq!(cfg.num_blocks(), 16 * 1024 * 1024 / 32);
         assert_eq!(cfg.critical_period(), 4);
         assert!(cfg.tile_len() >= 64);

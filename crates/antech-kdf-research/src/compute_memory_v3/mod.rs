@@ -35,10 +35,21 @@ mod tests {
     #[test]
     fn variants_deterministic_and_distinct() {
         let p = tiny();
-        let a = VariantA::new().derive(b"pwd", b"salt_16_bytes!!", &p).unwrap();
-        let b = VariantB::new().derive(b"pwd", b"salt_16_bytes!!", &p).unwrap();
-        let c = VariantC::new().derive(b"pwd", b"salt_16_bytes!!", &p).unwrap();
-        assert_eq!(a, VariantA::new().derive(b"pwd", b"salt_16_bytes!!", &p).unwrap());
+        let a = VariantA::new()
+            .derive(b"pwd", b"salt_16_bytes!!", &p)
+            .unwrap();
+        let b = VariantB::new()
+            .derive(b"pwd", b"salt_16_bytes!!", &p)
+            .unwrap();
+        let c = VariantC::new()
+            .derive(b"pwd", b"salt_16_bytes!!", &p)
+            .unwrap();
+        assert_eq!(
+            a,
+            VariantA::new()
+                .derive(b"pwd", b"salt_16_bytes!!", &p)
+                .unwrap()
+        );
         assert_ne!(a, b);
         assert_ne!(b, c);
         assert_eq!(a.len(), 32);
@@ -57,8 +68,12 @@ mod tests {
         let mut p2 = tiny();
         p1.dependency_depth = 10;
         p2.dependency_depth = 999999;
-        let a = VariantC::new().derive(b"x", b"salt_16_bytes!!", &p1).unwrap();
-        let b = VariantC::new().derive(b"x", b"salt_16_bytes!!", &p2).unwrap();
+        let a = VariantC::new()
+            .derive(b"x", b"salt_16_bytes!!", &p1)
+            .unwrap();
+        let b = VariantC::new()
+            .derive(b"x", b"salt_16_bytes!!", &p2)
+            .unwrap();
         assert_eq!(a, b);
     }
 }

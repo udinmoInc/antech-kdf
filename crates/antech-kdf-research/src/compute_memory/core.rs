@@ -10,13 +10,7 @@ use crate::candidates::cand_004::ResearchError;
 use std::collections::HashMap;
 
 fn bind(cfg: &ComputeMemoryConfig, password: &[u8], salt: &[u8]) -> [u8; 32] {
-    bind_seed(
-        password,
-        salt,
-        cfg.memory_kib,
-        cfg.block_size,
-        cfg.fan_in, 
-    )
+    bind_seed(password, salt, cfg.memory_kib, cfg.block_size, cfg.fan_in)
 }
 
 /// Reference derive — clarity-first traversal of the memory-sized DAG.
@@ -25,8 +19,7 @@ pub fn derive_reference(
     salt: &[u8],
     cfg: &ComputeMemoryConfig,
 ) -> Result<Vec<u8>, ResearchError> {
-    cfg.validate()
-        .map_err(ResearchError::InvalidParameters)?;
+    cfg.validate().map_err(ResearchError::InvalidParameters)?;
 
     let seed = bind(cfg, password, salt);
     let block_size = cfg.block_size as usize;
@@ -48,8 +41,7 @@ pub fn derive_optimized(
     salt: &[u8],
     cfg: &ComputeMemoryConfig,
 ) -> Result<Vec<u8>, ResearchError> {
-    cfg.validate()
-        .map_err(ResearchError::InvalidParameters)?;
+    cfg.validate().map_err(ResearchError::InvalidParameters)?;
 
     let seed = bind(cfg, password, salt);
     let block_size = cfg.block_size as usize;
@@ -192,8 +184,7 @@ pub fn derive_sparse(
     cfg: &ComputeMemoryConfig,
     memory_fraction: f64,
 ) -> Result<Vec<u8>, ResearchError> {
-    cfg.validate()
-        .map_err(ResearchError::InvalidParameters)?;
+    cfg.validate().map_err(ResearchError::InvalidParameters)?;
 
     let frac = memory_fraction.clamp(0.01, 1.0);
     if (frac - 1.0).abs() < 1e-9 {

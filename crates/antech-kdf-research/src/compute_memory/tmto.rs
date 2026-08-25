@@ -37,9 +37,7 @@ impl TmtoEvaluator {
         let password = b"tmto_password";
         let salt = b"tmto_salt_16b!";
 
-        let full = engine
-            .derive(password, salt, params)
-            .unwrap_or_default();
+        let full = engine.derive(password, salt, params).unwrap_or_default();
 
         let base_start = Instant::now();
         let _ = engine.derive(password, salt, params);

@@ -1,2 +1,2 @@
 variant,memory_mib,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,vram_used_mib,gpu_util_pct,occupancy,registers_per_thread,shared_mem_bytes,global_mem_traffic_bytes,host_device_transfer_ms,kernel_exec_ms,batch,status
-v4-c-combined-frontier,16,23.9139,10714.2,10782.2,10782.2,5133,100,0.0104167,48,0,21474836480,118.403,53525.3,256,REAL
+v4-c-combined-frontier,16,32.9552,5820.12,5870.92,5870.92,4109,100,0.333333,48,0,16106127360,95.9234,29130.4,192,REAL_BEST_OPTIMIZED

@@ -1,5 +1,7 @@
 # antech-kdf-research
 
-Laboratory research crate containing Candidate-004 variants (Variant K1, Variant K2), multi-worker CPU attacker, CUDA GPU spatial bounds framework, and benchmark runners.
+Research-only crate: CPU/CUDA attackers, TMTO, multi-target and concurrency experiments, and benchmark runners.
 
-See [Research and Evaluation](../../research/README.md) for full research documentation and evaluation datasets.
+Depends on `antech-kdf-core`. Never imported by production crates.
+
+See [research/README.md](../../research/README.md).

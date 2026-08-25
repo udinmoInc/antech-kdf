@@ -7,8 +7,8 @@
 //! Tunables: `memory_kib`, `block_size`, `fan_in`.
 //! Protocol constants (not work knobs): version label, ARX mix rounds.
 
-use antech_kdf_types::AntechConfig;
 use crate::candidates::cand_004::ResearchParams;
+use antech_kdf_types::AntechConfig;
 
 /// Working-memory grid used by the research suite (MiB).
 pub const MEMORY_TARGETS_MIB: [usize; 6] = [12, 16, 20, 24, 28, 32];

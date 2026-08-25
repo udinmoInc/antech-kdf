@@ -96,8 +96,7 @@ impl ExecutionProfile {
             cpu_cycles_per_guess: cpu_cycles,
             dram_bytes_per_guess: dram_bytes_moved,
             attacker_guesses_per_sec: 1.0 / elapsed_secs,
-            compute_security_efficiency: (cpu_cycles as f64)
-                / (total_bytes as f64 / 1024.0),
+            compute_security_efficiency: (cpu_cycles as f64) / (total_bytes as f64 / 1024.0),
             num_blocks,
             fan_in,
         }

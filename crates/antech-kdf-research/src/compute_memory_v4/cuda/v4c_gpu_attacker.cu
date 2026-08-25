@@ -588,7 +588,7 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
     double h2d = std::chrono::duration<double, std::milli>(t_h1 - t_h0).count();
 
     int threads = cfg.threads;
-    int blocks = n;
+    int blocks = (n + threads - 1) / threads;
 
     // Occupancy / resource query
     int regs = 0; size_t smem = 0;
@@ -702,9 +702,31 @@ static std::vector<std::string> attacker_corpus() {
     return v;
 }
 
+static LaunchConfig cfg_for_mode(const std::string& mode) {
+    LaunchConfig cfg;
+    if (mode == "baseline") {
+        cfg.threads = 1;
+    } else if (mode == "optimized") {
+        cfg.threads = 32;
+        cfg.pinned_host = true;
+        cfg.async_copy = true;
+    } else if (mode == "fully_optimized") {
+        cfg.threads = 128;
+        cfg.pinned_host = true;
+        cfg.async_copy = true;
+        cfg.fused_zero = true;
+    } else {
+        cfg.threads = 1;
+    }
+    return cfg;
+}
+
 int main(int argc, char** argv) {
     std::string mode = (argc > 1) ? argv[1] : "bench";
     std::string out_dir = (argc > 2) ? argv[2] : "research/results/compute-memory-v4/gpu";
+    std::string impl_mode = (argc > 3) ? argv[3] : "baseline";
+    int correctness_count = (argc > 4) ? atoi(argv[4]) : 10;
+    LaunchConfig launch = cfg_for_mode(impl_mode);
 
     cudaDeviceProp prop;
     CUDA_CHECK(cudaGetDeviceProperties(&prop, 0));
@@ -717,9 +739,8 @@ int main(int argc, char** argv) {
     uint32_t salt_len = (uint32_t)strlen((const char*)salt);
 
     if (mode == "correctness") {
-        // 10 deterministic vectors — passwords chosen; digests compared to file from Rust if provided
         std::vector<std::string> pws;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < correctness_count; i++) {
             char buf[64];
             snprintf(buf, sizeof(buf), "v4c_gpu_vector_%02d", i);
             pws.emplace_back(buf);
@@ -731,11 +752,11 @@ int main(int argc, char** argv) {
         std::vector<uint8_t> seeds, ph, digests;
         prepare_batch(pws, csalt, cslen, seeds, ph);
         GpuProfile prof{};
-        run_gpu_batch(seeds, ph, digests, &prof, false);
+        run_gpu_batch(seeds, ph, digests, &prof, false, launch);
 
         // Write GPU digests
         std::ofstream out(out_dir + "/cuda_digests.txt");
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < correctness_count; i++) {
             out << pws[i] << " " << hex32(digests.data() + (size_t)i * 32) << "\n";
             printf("GPU[%d] %s %s\n", i, pws[i].c_str(), hex32(digests.data() + i*32).c_str());
         }
@@ -745,7 +766,7 @@ int main(int argc, char** argv) {
         std::ifstream ref(out_dir + "/cpu_digests.txt");
         int mismatches = 0;
         if (ref) {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < correctness_count; i++) {
                 std::string pw, hex;
                 ref >> pw >> hex;
                 uint8_t expect[32];
@@ -762,7 +783,7 @@ int main(int argc, char** argv) {
                 printf("CORRECTNESS FAILED: %d mismatches\n", mismatches);
                 return 3;
             }
-            printf("CORRECTNESS OK: 10/10\n");
+            printf("CORRECTNESS OK: %d/%d\n", correctness_count, correctness_count);
         } else {
             printf("No cpu_digests.txt yet — wrote cuda_digests.txt for host compare.\n");
         }
@@ -779,10 +800,17 @@ int main(int argc, char** argv) {
     if (max_batch < 1) max_batch = 1;
     if (max_batch > 256) max_batch = 256; // VRAM-limited concurrency of full 16 MiB walks
     int batch = max_batch;
-    // Prefer power-of-two-ish near max for cleaner launches
-    if (batch >= 320) batch = 320;
-    else if (batch >= 256) batch = 256;
-    else if (batch >= 96) batch = 96;
+    if (impl_mode == "baseline") {
+        if (batch > 64) batch = 64;
+    } else if (impl_mode == "optimized") {
+        if (batch >= 192) batch = 192;
+        else if (batch >= 128) batch = 128;
+        else if (batch >= 96) batch = 96;
+    } else {
+        if (batch >= 256) batch = 256;
+        else if (batch >= 192) batch = 192;
+        else if (batch >= 128) batch = 128;
+    }
     printf("Selected batch=%d (%.2f MiB buffers)\n", batch,
            (batch * (double)NUM_BLOCKS * BLOCK_SIZE) / (1024.0*1024.0));
 
@@ -793,16 +821,17 @@ int main(int argc, char** argv) {
     std::vector<uint8_t> seeds, ph, digests;
     prepare_batch(batch_pws, salt, salt_len, seeds, ph);
     GpuProfile prof{};
-    run_gpu_batch(seeds, ph, digests, &prof, true);
+    run_gpu_batch(seeds, ph, digests, &prof, true, launch);
 
-    printf("GPS=%.4f  k_p50=%.3f ms  k_p95=%.3f  k_p99=%.3f\n",
+    printf("[%s] GPS=%.4f  k_p50=%.3f ms  k_p95=%.3f  k_p99=%.3f\n",
+           impl_mode.c_str(),
            prof.guesses_per_sec, prof.kernel_p50_ms, prof.kernel_p95_ms, prof.kernel_p99_ms);
-    printf("VRAM_used≈%zu MiB  occ=%.3f  regs=%d  smem=%zu  H<->D=%.3f ms\n",
+    printf("VRAM_used≈%zu MiB  occ=%.3f  regs=%d  smem=%zu  tpb=%d  H<->D=%.3f ms\n",
            prof.vram_used_bytes/(1024*1024), prof.occupancy, prof.regs_per_thread,
-           prof.shared_mem, prof.host_device_ms);
+           prof.shared_mem, prof.threads_per_block, prof.host_device_ms);
 
     // Write machine-readable profile
-    std::ofstream pf(out_dir + "/antech_gpu_raw.txt");
+    std::ofstream pf(out_dir + "/antech_gpu_raw_" + impl_mode + ".txt");
     pf << "guesses_per_sec=" << prof.guesses_per_sec << "\n"
        << "kernel_p50_ms=" << prof.kernel_p50_ms << "\n"
        << "kernel_p95_ms=" << prof.kernel_p95_ms << "\n"
@@ -811,10 +840,12 @@ int main(int argc, char** argv) {
        << "occupancy=" << prof.occupancy << "\n"
        << "registers_per_thread=" << prof.regs_per_thread << "\n"
        << "shared_mem_bytes=" << prof.shared_mem << "\n"
+       << "threads_per_block=" << prof.threads_per_block << "\n"
        << "global_mem_traffic_est=" << prof.global_traffic_est << "\n"
        << "host_device_transfer_ms=" << prof.host_device_ms << "\n"
        << "kernel_exec_ms_total=" << prof.kernel_exec_ms_total << "\n"
        << "batch=" << prof.batch << "\n"
+       << "impl_mode=" << impl_mode << "\n"
        << "gpu_name=" << prop.name << "\n"
        << "vram_total_mib=" << (prop.totalGlobalMem/(1024*1024)) << "\n";
     pf.close();

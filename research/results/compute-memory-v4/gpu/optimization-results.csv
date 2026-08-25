@@ -1,0 +1,4 @@
+mode,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,shared_mem_bytes,global_mem_traffic_bytes,host_device_transfer_ms,kernel_exec_ms_total,threads_per_block,batch
+baseline,13.7397,4656.38,4663.35,4663.35,0.0104167,48,0,5368709120,27.9031,23290.2,1,64
+optimized,32.9552,5820.12,5870.92,5870.92,0.333333,48,0,16106127360,95.9234,29130.4,32,192
+fully_optimized,21.152,12097.2,12144.1,12144.1,0.833333,48,0,21474836480,117.011,60514.3,128,256

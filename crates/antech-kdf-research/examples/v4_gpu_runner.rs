@@ -1,8 +1,6 @@
 //! Generate CPU reference digests and orchestrate v4-C GPU correctness + results.
 
-use antech_kdf_research::compute_memory_v4::{
-    ComputeMemoryV4Config, GraphKind, V4Engine,
-};
+use antech_kdf_research::compute_memory_v4::{ComputeMemoryV4Config, GraphKind, V4Engine};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -12,98 +10,145 @@ fn hex32(d: &[u8]) -> String {
     d.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
+const MODES: [&str; 3] = ["baseline", "optimized", "fully_optimized"];
+const COUNTS: [usize; 3] = [10, 50, 100];
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out = PathBuf::from("research/results/compute-memory-v4/gpu");
     fs::create_dir_all(&out)?;
 
     let eng = V4Engine::new(GraphKind::CombinedFrontier);
     let cfg = ComputeMemoryV4Config::default()
-        .memory_mib(16)
-        .graph(GraphKind::CombinedFrontier);
+        .with_memory_mib(16)
+        .with_graph(GraphKind::CombinedFrontier);
 
-    // --- correctness vectors ---
     let salt = b"v4_gpu_correct_salt";
-    let mut cpu_path = File::create(out.join("cpu_digests.txt"))?;
     let mut correctness_csv = File::create(out.join("correctness.csv"))?;
     writeln!(
         correctness_csv,
-        "vector_id,password,salt,cpu_digest_hex,cuda_digest_hex,match,status"
+        "mode,vector_count,vector_id,password,salt,cpu_digest_hex,cuda_digest_hex,match,status"
     )?;
-
-    for i in 0..10 {
-        let pw = format!("v4c_gpu_vector_{:02}", i);
-        let dig = eng.derive_cfg(pw.as_bytes(), salt, &cfg)?;
-        writeln!(cpu_path, "{} {}", pw, hex32(&dig))?;
-    }
-    drop(cpu_path);
-    println!("Wrote CPU reference digests");
 
     let cuda_bin = find_cuda_bin()?;
     println!("Using CUDA binary: {}", cuda_bin.display());
 
-    let status = Command::new(&cuda_bin)
-        .arg("correctness")
-        .arg(out.to_string_lossy().as_ref())
-        .status()?;
-    if !status.success() {
-        eprintln!("CUDA correctness run failed: {:?}", status.code());
-        // still write skipped rows
-        for i in 0..10 {
-            writeln!(
-                correctness_csv,
-                "{},v4c_gpu_vector_{:02},v4_gpu_correct_salt,,,false,CUDA_RUN_FAILED",
-                i, i
-            )?;
+    for &count in &COUNTS {
+        let cpu_path = out.join("cpu_digests.txt");
+        let mut cpu_file = File::create(&cpu_path)?;
+        for i in 0..count {
+            let pw = format!("v4c_gpu_vector_{:02}", i);
+            let dig = eng.derive_cfg(pw.as_bytes(), salt, &cfg)?;
+            writeln!(cpu_file, "{} {}", pw, hex32(&dig))?;
         }
-        return Err("CUDA correctness failed".into());
-    }
+        drop(cpu_file);
 
-    // Compare
-    let cpu = read_digest_file(&out.join("cpu_digests.txt"))?;
-    let gpu = read_digest_file(&out.join("cuda_digests.txt"))?;
-    let mut mismatches = 0;
-    for i in 0..10 {
-        let pw = format!("v4c_gpu_vector_{:02}", i);
-        let c = cpu.get(&pw).cloned().unwrap_or_default();
-        let g = gpu.get(&pw).cloned().unwrap_or_default();
-        let ok = c == g && !c.is_empty();
-        if !ok {
-            mismatches += 1;
+        for &mode in &MODES {
+            let status = Command::new(&cuda_bin)
+                .arg("correctness")
+                .arg(out.to_string_lossy().as_ref())
+                .arg(mode)
+                .arg(count.to_string())
+                .status()?;
+            if !status.success() {
+                return Err(format!("CUDA correctness failed for {mode}/{count}").into());
+            }
+
+            let cpu = read_digest_file(&out.join("cpu_digests.txt"))?;
+            let gpu = read_digest_file(&out.join("cuda_digests.txt"))?;
+            let mut mismatches = 0;
+            for i in 0..count {
+                let pw = format!("v4c_gpu_vector_{:02}", i);
+                let c = cpu.get(&pw).cloned().unwrap_or_default();
+                let g = gpu.get(&pw).cloned().unwrap_or_default();
+                let ok = c == g && !c.is_empty();
+                if !ok {
+                    mismatches += 1;
+                }
+                writeln!(
+                    correctness_csv,
+                    "{mode},{count},{i},{pw},v4_gpu_correct_salt,{c},{g},{ok},{}",
+                    if ok { "OK" } else { "MISMATCH" }
+                )?;
+            }
+            if mismatches > 0 {
+                return Err(
+                    format!("{mismatches} correctness mismatches for {mode}/{count}").into(),
+                );
+            }
+            println!("CORRECTNESS OK {mode} {count}/{count}");
         }
-        writeln!(
-            correctness_csv,
-            "{},{},v4_gpu_correct_salt,{},{},{},{}",
-            i,
-            pw,
-            c,
-            g,
-            ok,
-            if ok { "OK" } else { "MISMATCH" }
-        )?;
-        println!("vector {i}: match={ok}");
-    }
-    if mismatches > 0 {
-        return Err(format!("{mismatches} correctness mismatches — stopping").into());
-    }
-    println!("CORRECTNESS OK 10/10");
-
-    // --- bench ---
-    let status = Command::new(&cuda_bin)
-        .arg("bench")
-        .arg(out.to_string_lossy().as_ref())
-        .status()?;
-    if !status.success() {
-        return Err("CUDA bench failed".into());
     }
 
-    let raw = fs::read_to_string(out.join("antech_gpu_raw.txt"))?;
+    let mut opt_base = File::create(out.join("optimization-baseline.csv"))?;
+    writeln!(
+        opt_base,
+        "mode,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,shared_mem_bytes,global_mem_traffic_bytes,host_device_transfer_ms,kernel_exec_ms_total,threads_per_block,batch"
+    )?;
+    let mut opt_results = File::create(out.join("optimization-results.csv"))?;
+    writeln!(
+        opt_results,
+        "mode,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,shared_mem_bytes,global_mem_traffic_bytes,host_device_transfer_ms,kernel_exec_ms_total,threads_per_block,batch"
+    )?;
+
+    let mut best_mode = "baseline".to_string();
+    let mut best_gps = 0.0f64;
+    for &mode in &MODES {
+        let status = Command::new(&cuda_bin)
+            .arg("bench")
+            .arg(out.to_string_lossy().as_ref())
+            .arg(mode)
+            .status()?;
+        if !status.success() {
+            return Err(format!("CUDA bench failed for {mode}").into());
+        }
+        let raw = fs::read_to_string(out.join(format!("antech_gpu_raw_{mode}.txt")))?;
+        let get = |k: &str| -> String {
+            raw.lines()
+                .find(|l| l.starts_with(k))
+                .map(|l| {
+                    l.split_once('=')
+                        .map(|(_, v)| v.to_string())
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default()
+        };
+        let line = format!(
+            "{mode},{},{},{},{},{},{},{},{},{},{},{},{}",
+            get("guesses_per_sec"),
+            get("kernel_p50_ms"),
+            get("kernel_p95_ms"),
+            get("kernel_p99_ms"),
+            get("occupancy"),
+            get("registers_per_thread"),
+            get("shared_mem_bytes"),
+            get("global_mem_traffic_est"),
+            get("host_device_transfer_ms"),
+            get("kernel_exec_ms_total"),
+            get("threads_per_block"),
+            get("batch")
+        );
+        if mode == "baseline" {
+            writeln!(opt_base, "{line}")?;
+        }
+        writeln!(opt_results, "{line}")?;
+        let gps = get("guesses_per_sec").parse::<f64>().unwrap_or(0.0);
+        if gps > best_gps {
+            best_gps = gps;
+            best_mode = mode.to_string();
+        }
+    }
+
+    let raw = fs::read_to_string(out.join(format!("antech_gpu_raw_{best_mode}.txt")))?;
     let get = |k: &str| -> String {
         raw.lines()
             .find(|l| l.starts_with(k))
-            .map(|l| l.split_once('=').map(|(_, v)| v.to_string()).unwrap_or_default())
+            .map(|l| {
+                l.split_once('=')
+                    .map(|(_, v)| v.to_string())
+                    .unwrap_or_default()
+            })
             .unwrap_or_default()
     };
-
     write_results(&out, &get)?;
     println!("Results written to {}", out.display());
     Ok(())
@@ -123,7 +168,9 @@ fn find_cuda_bin() -> Result<PathBuf, Box<dyn std::error::Error>> {
     Err("v4c_gpu_attacker.exe not found — compile CUDA binary first".into())
 }
 
-fn read_digest_file(path: &Path) -> Result<std::collections::HashMap<String, String>, Box<dyn std::error::Error>> {
+fn read_digest_file(
+    path: &Path,
+) -> Result<std::collections::HashMap<String, String>, Box<dyn std::error::Error>> {
     let f = File::open(path)?;
     let mut map = std::collections::HashMap::new();
     for line in BufReader::new(f).lines() {
@@ -206,10 +253,16 @@ fn write_results(
     writeln!(c, "metric,argon2id,antech_v4c_16mib,notes")?;
     writeln!(c, "GPU model,{gpu_name},{gpu_name},")?;
     writeln!(c, "VRAM,{vram_total} MiB,{vram_total} MiB,")?;
-    writeln!(c, "Actual guesses/sec,,{gps},Argon2id GPU kernel not present — not modeled")?;
+    writeln!(
+        c,
+        "Actual guesses/sec,,{gps},Argon2id GPU kernel not present — not modeled"
+    )?;
     writeln!(c, "Kernel p50,,{p50} ms,")?;
     writeln!(c, "GPU utilization,,,not sampled via NVML this pass")?;
-    writeln!(c, "Global memory traffic,,{traffic},estimate from node traffic model")?;
+    writeln!(
+        c,
+        "Global memory traffic,,{traffic},estimate from node traffic model"
+    )?;
     writeln!(c, "Occupancy,,{occ},")?;
     writeln!(c, "Registers/thread,,{regs},")?;
     writeln!(c, "CPU attacker 16t g/s,,{cpu_16},prior CPU suite")?;

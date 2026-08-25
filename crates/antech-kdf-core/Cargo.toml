@@ -9,14 +9,6 @@ repository.workspace = true
 [dependencies]
 antech-kdf-types = { workspace = true }
 antech-kdf-format = { workspace = true }
-getrandom = { workspace = true }
 rand = { workspace = true }
 sha2 = { workspace = true }
 subtle = { workspace = true }
-zeroize = { workspace = true }
-thiserror = { workspace = true }
-
-[features]
-default = []
-k1 = []
-k2 = []

@@ -1,21 +1,143 @@
-//! Candidate-004 KDF engine implementation.
+//! Canonical compute-memory derivation engine.
+//!
+//! # Security notice
+//!
+//! This is the project's current Antech construction. Benchmark results do not
+//! establish cryptographic security; independent review is still required.
 
+use crate::graph::{self, MAX_PARENTS};
+use crate::memory::FrontierRing;
+use crate::state::{
+    bind_seed, finalize, mix_parent_views, phantom_block, seed_to_state, state_to_block_fast,
+    xor_state_into_block_fast,
+};
 use crate::traits::KdfEngine;
 use antech_kdf_types::{Algorithm, AntechConfig, KdfError};
-use sha2::{Digest, Sha256};
-use std::sync::Arc;
 
-/// Candidate-004 core KDF engine.
+const MAX_BLOCK: usize = 64;
+
+/// Canonical Antech compute-memory engine.
 #[derive(Debug, Clone, Default)]
-pub struct Candidate004Engine;
+pub struct AntechEngine;
 
-impl Candidate004Engine {
+impl AntechEngine {
     pub fn new() -> Self {
         Self
     }
+
+    pub fn derive(
+        &self,
+        password: &[u8],
+        salt: &[u8],
+        cfg: &AntechConfig,
+    ) -> Result<Vec<u8>, KdfError> {
+        cfg.validate()?;
+        if cfg.algorithm != Algorithm::Antech {
+            return Err(KdfError::Derivation("unsupported algorithm".into()));
+        }
+
+        let block_size = cfg.block_size.as_bytes();
+        if block_size > MAX_BLOCK {
+            return Err(KdfError::Derivation(
+                "block size exceeds engine stack scratch".into(),
+            ));
+        }
+
+        let num_blocks = cfg.num_blocks();
+        let period = cfg.critical_period();
+        let tile_len = cfg.tile_len();
+        let seed = bind_seed(password, salt, cfg);
+        let mut buffer = vec![0u8; cfg.memory.as_bytes()];
+        let mut state = seed_to_state(&seed);
+        let mut ring = FrontierRing::new(block_size);
+
+        let mut phantoms = [[0u8; MAX_BLOCK]; MAX_PARENTS];
+        let fan = (cfg.fan_in.get() as usize).min(MAX_PARENTS);
+        for slot in 0..fan {
+            phantom_block(
+                &seed,
+                slot as u32,
+                block_size,
+                &mut phantoms[slot][..block_size],
+            );
+        }
+
+        for i in 0..num_blocks {
+            let parents =
+                graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
+
+            let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
+            let mut n_views = 0usize;
+
+            if i == 0 {
+                for slot in 0..fan {
+                    views[slot] = &phantoms[slot][..block_size];
+                }
+                n_views = fan;
+            } else {
+                #[cfg(target_arch = "x86_64")]
+                {
+                    for k in 0..parents.len {
+                        let p = parents.indices[k];
+                        let ptr = buffer.as_ptr().wrapping_add(p * block_size);
+                        // SAFETY: prefetch hint only; pointer is within `buffer`.
+                        unsafe {
+                            core::arch::x86_64::_mm_prefetch(
+                                ptr as *const i8,
+                                core::arch::x86_64::_MM_HINT_T0,
+                            );
+                        }
+                    }
+                }
+                for k in 0..parents.len {
+                    let p = parents.indices[k];
+                    views[n_views] = match ring.get(p) {
+                        Some(v) => v,
+                        None => &buffer[p * block_size..(p + 1) * block_size],
+                    };
+                    n_views += 1;
+                }
+            }
+
+            mix_parent_views(&mut state, &views[..n_views]);
+
+            {
+                let out = &mut buffer[i * block_size..(i + 1) * block_size];
+                state_to_block_fast(&state, out);
+                ring.push(i, out);
+            }
+
+            if let Some(dest) = parents.scatter_dest {
+                if dest < num_blocks && dest != i {
+                    xor_state_into_block_fast(
+                        &state,
+                        &mut buffer[dest * block_size..(dest + 1) * block_size],
+                    );
+                }
+            }
+            if let Some(dest) = parents.scatter_dest2 {
+                if dest < num_blocks && dest != i {
+                    xor_state_into_block_fast(
+                        &state,
+                        &mut buffer[dest * block_size..(dest + 1) * block_size],
+                    );
+                }
+            }
+        }
+
+        let last = &buffer[(num_blocks - 1) * block_size..num_blocks * block_size];
+        let mut digest = finalize(&seed, &state, last, cfg.graph);
+        let out_len = cfg.output_length.as_bytes();
+        if digest.len() > out_len {
+            digest.truncate(out_len);
+        } else if digest.len() < out_len {
+            digest.resize(out_len, 0);
+        }
+        Ok(digest)
+    }
 }
 
-impl KdfEngine for Candidate004Engine {
+impl KdfEngine for AntechEngine {
     fn algorithm(&self) -> Algorithm {
         Algorithm::Antech
     }
@@ -26,95 +148,61 @@ impl KdfEngine for Candidate004Engine {
         salt: &[u8],
         config: &AntechConfig,
     ) -> Result<Vec<u8>, KdfError> {
-        config.validate()?;
-
-        let mut hasher = Sha256::new();
-        hasher.update(b"antech-v1-domain-separator");
-        hasher.update((config.memory.as_kib() as u32).to_le_bytes());
-        hasher.update(config.dependency_depth.get().to_le_bytes());
-        hasher.update(config.passes.get().to_le_bytes());
-        hasher.update((salt.len() as u32).to_le_bytes());
-        hasher.update(salt);
-        hasher.update((password.len() as u32).to_le_bytes());
-        hasher.update(password);
-        let seed = hasher.finalize();
-
-        let total_blocks = config.memory.as_bytes() / config.block_size.as_bytes();
-        let mut buffer = vec![0u8; config.memory.as_bytes()];
-
-        for chunk_idx in 0..total_blocks {
-            let mut chunk_hasher = Sha256::new();
-            chunk_hasher.update(seed);
-            chunk_hasher.update((chunk_idx as u32).to_le_bytes());
-            let chunk = chunk_hasher.finalize();
-            let start = chunk_idx * 32;
-            let end = (start + 32).min(buffer.len());
-            buffer[start..end].copy_from_slice(&chunk[..end - start]);
-        }
-
-        let mut state = [0u64; 4];
-        state[0] = u64::from_le_bytes(seed[0..8].try_into().unwrap());
-        state[1] = u64::from_le_bytes(seed[8..16].try_into().unwrap());
-        state[2] = u64::from_le_bytes(seed[16..24].try_into().unwrap());
-        state[3] = u64::from_le_bytes(seed[24..32].try_into().unwrap());
-
-        let depth = config.dependency_depth.get() as usize;
-
-        for _pass in 0..config.passes.get() {
-            for step in 0..depth {
-                let addr_idx = (state[0] as usize ^ step) % total_blocks;
-                let block_start = addr_idx * 32;
-
-                let b0 =
-                    u64::from_le_bytes(buffer[block_start..block_start + 8].try_into().unwrap());
-                let b1 = u64::from_le_bytes(
-                    buffer[block_start + 8..block_start + 16]
-                        .try_into()
-                        .unwrap(),
-                );
-
-                state[0] = state[0].wrapping_add(b0).rotate_left(13) ^ state[3];
-                state[1] = state[1].wrapping_add(b1).rotate_left(17) ^ state[0];
-                state[2] = state[2].wrapping_add(state[0]).rotate_left(19) ^ state[1];
-                state[3] = state[3].wrapping_add(state[1]).rotate_left(23) ^ state[2];
-
-                buffer[block_start..block_start + 8].copy_from_slice(&state[0].to_le_bytes());
-            }
-        }
-
-        let mut final_hasher = Sha256::new();
-        final_hasher.update(seed);
-        final_hasher.update(state[0].to_le_bytes());
-        final_hasher.update(state[1].to_le_bytes());
-        final_hasher.update(state[2].to_le_bytes());
-        final_hasher.update(state[3].to_le_bytes());
-        let digest = final_hasher.finalize();
-
-        let out_len = config.output_length.as_bytes();
-        let mut result = vec![0u8; out_len];
-        let copy_len = out_len.min(32);
-        result[..copy_len].copy_from_slice(&digest[..copy_len]);
-
-        Ok(result)
+        AntechEngine::derive(self, password, salt, config)
     }
 }
 
-/// Provider factory selecting `KdfEngine` implementation.
-pub struct KdfProvider;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use antech_kdf_types::GraphKind;
 
-impl KdfProvider {
-    pub fn get_engine(algo: Algorithm) -> Result<Arc<dyn KdfEngine>, KdfError> {
-        match algo {
-            Algorithm::Antech => Ok(Arc::new(Candidate004Engine::new())),
-            #[cfg(feature = "k1")]
-            Algorithm::K1 => Err(KdfError::Derivation(
-                "K1 engine requires research feature enable".to_string(),
-            )),
-            #[cfg(feature = "k2")]
-            Algorithm::K2 => Err(KdfError::Derivation(
-                "K2 engine requires research feature enable".to_string(),
-            )),
-            _ => Ok(Arc::new(Candidate004Engine::new())),
-        }
+    #[test]
+    fn deterministic_default_config() {
+        let cfg = AntechConfig::default();
+        let engine = AntechEngine::new();
+        let a = engine.derive(b"pwd", b"salt_16_bytes!!", &cfg).unwrap();
+        let b = engine.derive(b"pwd", b"salt_16_bytes!!", &cfg).unwrap();
+        assert_eq!(a, b);
+        assert_eq!(a.len(), 32);
+    }
+
+    #[test]
+    fn graph_kinds_distinct() {
+        let engine = AntechEngine::new();
+        let salt = b"salt_16_bytes!!";
+        let pwd = b"pwd";
+        let a = engine
+            .derive(
+                pwd,
+                salt,
+                &AntechConfig::builder()
+                    .graph(GraphKind::ReducedCriticalPath)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap();
+        let b = engine
+            .derive(
+                pwd,
+                salt,
+                &AntechConfig::builder()
+                    .graph(GraphKind::CacheLocality)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap();
+        let c = engine
+            .derive(
+                pwd,
+                salt,
+                &AntechConfig::builder()
+                    .graph(GraphKind::CombinedFrontier)
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap();
+        assert_ne!(a, b);
+        assert_ne!(b, c);
     }
 }
