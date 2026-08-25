@@ -6,33 +6,18 @@ order: 0
 sectionOrder: 0
 ---
 
-Antech is a password key-derivation function for hosts that cannot dedicate large Argon2-style working sets, but still want offline attack cost that does not fall apart when defender memory is modest. The shipping profile walks a **combined-frontier** dependency graph in roughly **16 MiB**. Work is defined as `memory / block_size` — there is no separate iteration-count knob.
-
-<InlineBadge type="experimental" /> <InlineBadge type="rust" />
+Antech is a password key-derivation function for hosts that cannot dedicate large Argon2-style working sets, but still want offline attack cost that holds up when defender memory is modest. The shipping profile walks a **combined-frontier** graph in roughly **16 MiB**. Work is `memory / block_size` — there is no separate iteration-count knob.
 
 <HeroFeatureCard
-  title="Antech KDF"
-  description="One canonical engine in Rust. Thin SDKs for C, Go, Python, Node, Java, Kotlin, Swift, and .NET. Digests match across languages through a shared conformance suite."
+  title="Start with the Rust API"
+  description="Hash, verify, and rehash against one canonical engine. Language SDKs load the same FFI — digests match through a shared conformance suite."
   buttonText="Get started"
   href="./quickstart"
-  image="https://appcontent.udinmo.com/os/img/antech-kdf.webp"
 />
 
-<ButtonGroup>
-  <Button href="./installation" variant="primary">Install</Button>
-  <Button href="./quickstart" variant="secondary">Quickstart</Button>
-  <Button href="https://github.com/udinmoInc/antech-kdf" variant="secondary">GitHub</Button>
-</ButtonGroup>
+## What Antech does
 
-## Status
-
-Antech is **experimental**. Use it for research, comparative benchmarks, and early integrations behind an explicit risk acceptance. Prefer **Argon2id** for production password storage until independent cryptanalysis is complete.
-
-<Note>
-Package metadata marks this product Experimental — not Beta. Review materials ship in the repository under `research/security-review/`.
-</Note>
-
-## At a glance
+Use Antech when you need a compute-memory password hash with a small working set, portable `$antech$v2$` strings, and thin multi-language bindings over a single Rust core. Prefer **Argon2id** for public production auth until independent review concludes.
 
 <StatsRow>
   <Stat value="16 MiB" label="Default working set" />
@@ -45,67 +30,50 @@ Package metadata marks this product Experimental — not Beta. Review materials 
 
 Password and salt bind into a seed, the engine walks the DAG, then the digest is packed into a portable string:
 
-<Mermaid chart={`
-graph LR
-  A["Password + salt"] --> B["Bind seed"]
-  B --> C["Combined-frontier DAG"]
-  C --> D["Finalize digest"]
-  D --> E["Encode antech v2"]
-`} />
+<DiagramFlow
+  nodes={[
+    { id: "bind", label: "Password + salt", subtitle: "bind seed" },
+    { id: "dag", label: "CombinedFrontier", subtitle: "DAG walk", highlight: true },
+    { id: "finalize", label: "Finalize", subtitle: "digest" },
+    { id: "encode", label: "Encode", subtitle: "antech v2" }
+  ]}
+  edges={[
+    { from: "bind", to: "dag" },
+    { from: "dag", to: "finalize" },
+    { from: "finalize", to: "encode" }
+  ]}
+/>
 
-## What you can build with it
+## Core capabilities
 
 <FeatureGrid>
   <FeatureCard
-    icon="🔐"
+    icon="lock-closed"
     title="Hash and verify"
-    description="Stable hash, verify, and needs_rehash API with constant-time comparison on verify."
+    description="Stable hash, verify, and needs_rehash with constant-time comparison on verify."
     href="./quickstart"
   />
   <FeatureCard
-    icon="🎛️"
-    title="Tune structural knobs"
+    icon="cog-6-tooth"
+    title="Structural knobs"
     description="Memory, block size, fan-in, graph, salt and output length — validated the same way in every SDK."
     href="./configuration"
   />
   <FeatureCard
-    icon="🧩"
-    title="Ship across languages"
+    icon="code-bracket"
+    title="Multi-language SDKs"
     description="C ABI plus thin wrappers. No second crypto implementation in Python, Go, or Node."
     href="./sdk/overview"
   />
   <FeatureCard
-    icon="✅"
+    icon="check-badge"
     title="Conformance vectors"
     description="Shared KATs so FFI and language packages must match digests and error mapping."
     href="./sdk/conformance"
   />
 </FeatureGrid>
 
-## Repository layout
-
-<FileTree>
-  <Folder name="crates">
-    <File name="antech-kdf" />
-    <File name="antech-kdf-core" />
-    <File name="antech-kdf-ffi" />
-  </Folder>
-  <Folder name="bindings">
-    <File name="python" />
-    <File name="node" />
-    <File name="go" />
-  </Folder>
-  <Folder name="sdk">
-    <File name="conformance" />
-    <File name="scripts" />
-  </Folder>
-  <Folder name="research">
-    <File name="security-review" />
-    <File name="code" />
-  </Folder>
-</FileTree>
-
-## Defaults worth memorizing
+## Defaults
 
 | Knob | Default |
 |---|---|
@@ -116,19 +84,16 @@ graph LR
 | Salt length | 16 bytes |
 | Output length | 32 bytes |
 
-Stored form:
-
 ```text
 $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
 ```
 
-<Prerequisites items={[
-  'Rust 1.70+ for the core crate',
-  'Optional: release build of antech-kdf-ffi for language SDKs'
-]} />
+<Warning>
+Antech is experimental. Prefer Argon2id for production password storage until review materials in `research/security-review/` are complete and you accept residual risk.
+</Warning>
 
 <NextSteps links={[
   { href: './installation', title: 'Install the crate and native library' },
   { href: './quickstart', title: 'Hash and verify in five minutes' },
-  { href: './guides/security', title: 'Read the security posture' }
+  { href: './guides/security', title: 'Security posture' }
 ]} />

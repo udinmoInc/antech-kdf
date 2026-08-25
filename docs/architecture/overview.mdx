@@ -9,6 +9,8 @@ Antech keeps a hard line between **production** code and **research**. SDKs and 
 
 ## Dependency direction
 
+Branching crate graph (research may import core; production never imports research):
+
 <Mermaid chart={`
 flowchart TD
   API["antech-kdf"]
@@ -44,10 +46,10 @@ Research lives under `research/code/` as a **separate Cargo workspace**. Product
 ## Layer map
 
 <FeatureGrid>
-  <FeatureCard icon="⚙️" title="Engine" description="Seed bind, DAG walk, finalize." href="./engine" />
-  <FeatureCard icon="🕸️" title="Graph" description="CombinedFrontier parents and tiles." href="./graph" />
-  <FeatureCard icon="📄" title="Format" description="Self-describing v2 strings." href="./format" />
-  <FeatureCard icon="🔗" title="FFI" description="Thread-safe C ABI for SDKs." href="./ffi" />
+  <FeatureCard icon="cpu-chip" title="Engine" description="Seed bind, DAG walk, finalize." href="./engine" />
+  <FeatureCard icon="share" title="Graph" description="CombinedFrontier parents and tiles." href="./graph" />
+  <FeatureCard icon="document-text" title="Format" description="Self-describing v2 strings." href="./format" />
+  <FeatureCard icon="link" title="FFI" description="Thread-safe C ABI for SDKs." href="./ffi" />
 </FeatureGrid>
 
 ## What stays out of production

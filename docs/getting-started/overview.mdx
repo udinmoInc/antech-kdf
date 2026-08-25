@@ -27,14 +27,23 @@ Language SDKs call `antech-kdf-ffi`. They do not reimplement mixing, parenting, 
 
 ## Mental model
 
-<Mermaid chart={`
-graph TB
-  App["Your app"] --> API["antech-kdf API"]
-  API --> Core["antech-kdf-core engine"]
-  SDK["Python / Node / Go / …"] --> FFI["antech-kdf-ffi"]
-  FFI --> API
-  Core --> Fmt["antech-kdf-format v2"]
-`} />
+Apps and language SDKs both land on the same engine:
+
+<DiagramFlow
+  nodes={[
+    { id: "app", label: "Your app / SDK" },
+    { id: "api", label: "antech-kdf", subtitle: "public API" },
+    { id: "core", label: "antech-kdf-core", subtitle: "engine", highlight: true },
+    { id: "fmt", label: "antech-kdf-format", subtitle: "v2 string" }
+  ]}
+  edges={[
+    { from: "app", to: "api" },
+    { from: "api", to: "core" },
+    { from: "core", to: "fmt" }
+  ]}
+/>
+
+Non-Rust SDKs reach the API through `antech-kdf-ffi` rather than reimplementing derive.
 
 ## When to use it today
 
@@ -47,7 +56,7 @@ graph TB
 <StatsRow>
   <Stat value="16 MiB" label="Default memory" />
   <Stat value="g=3" label="Default graph tag" />
-  <Stat value="Experimental" label="Release status" />
+  <Stat value="64+" label="Minimum blocks per derive" />
 </StatsRow>
 
 <NextSteps links={[

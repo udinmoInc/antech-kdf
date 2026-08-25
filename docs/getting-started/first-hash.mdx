@@ -104,7 +104,7 @@ Rehash only after a successful verify. Wrong passwords should not force expensiv
 2. Compare passwords with `verify`, never with string equality of two hashes.
 3. Apply rehash policy after a successful match.
 4. Cap concurrent hashing with the host resource scheduler (default **128 MiB** in-flight).
-5. Treat Antech as <InlineBadge type="experimental" /> until review concludes — prefer Argon2id for production unless you have written risk acceptance.
+5. Treat Antech as experimental until review concludes — prefer Argon2id for production unless you have written risk acceptance.
 
 <NextSteps links={[
   { href: './guides/rehash-policy', title: 'Rehash policy details' },

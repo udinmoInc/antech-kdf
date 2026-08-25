@@ -1,5 +1,6 @@
 {
-  "name": "Antech KDF",
+  "name": "antech-kdf",
+  "title": "Antech KDF",
   "version": "0.1.0",
   "status": "Experimental",
   "framework": "rust",

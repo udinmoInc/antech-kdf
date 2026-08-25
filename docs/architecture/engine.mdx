@@ -9,13 +9,21 @@ order: 11
 
 ## Call path
 
-<Mermaid chart={`
-graph LR
-  A["Validate config"] --> B["Acquire scheduler permit"]
-  B --> C["Derive password + salt + config"]
-  C --> D["Encode antech v2"]
-  D --> E["Release permit"]
-`} />
+<DiagramFlow
+  nodes={[
+    { id: "validate", label: "Validate config" },
+    { id: "permit", label: "Acquire permit", subtitle: "scheduler" },
+    { id: "derive", label: "Derive", subtitle: "password + salt", highlight: true },
+    { id: "encode", label: "Encode v2" },
+    { id: "release", label: "Release permit" }
+  ]}
+  edges={[
+    { from: "validate", to: "permit" },
+    { from: "permit", to: "derive" },
+    { from: "derive", to: "encode" },
+    { from: "encode", to: "release" }
+  ]}
+/>
 
 ## Stages inside derive
 
