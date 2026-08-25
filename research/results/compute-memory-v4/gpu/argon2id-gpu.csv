@@ -1,0 +1,2 @@
+variant,memory_mib,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,vram_used_mib,gpu_util_pct,occupancy,registers_per_thread,shared_mem_bytes,global_mem_traffic_bytes,host_device_transfer_ms,kernel_exec_ms,batch,status
+argon2id,64,431.557,221.396,224.963,224.963,7383,,,,,,4.9921,,96,REAL

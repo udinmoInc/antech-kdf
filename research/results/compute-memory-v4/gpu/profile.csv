@@ -1,0 +1,14 @@
+metric,value,unit,algorithm,status
+guesses_per_sec,431.557,1/s,argon2id,REAL
+kernel_p50_ms,221.396,ms,argon2id,REAL
+kernel_p95_ms,224.963,ms,argon2id,REAL
+kernel_p99_ms,224.963,ms,argon2id,REAL
+vram_used_mib,7383,MiB,argon2id,REAL
+host_device_transfer_ms,4.9921,ms,argon2id,REAL
+batch,96,guesses,argon2id,REAL
+correctness_match,10/10,,argon2id,REAL
+guesses_per_sec,23.9139,1/s,antech_v4c,REAL
+kernel_p50_ms,10714.2,ms,antech_v4c,REAL
+vram_used_mib,5133,MiB,antech_v4c,REAL
+batch,256,guesses,antech_v4c,REAL
+correctness_match,10/10,,antech_v4c,REAL

@@ -8,6 +8,7 @@ pub mod benchmarks;
 pub mod config;
 pub mod contention;
 pub mod core;
+pub mod cpu_head_to_head;
 pub mod crypto_mixing;
 pub mod cuda;
 pub mod dependency_graph;
@@ -25,6 +26,7 @@ pub mod variant_d;
 
 pub use benchmarks::run_compute_memory_suite;
 pub use config::ComputeMemoryConfig;
+pub use cpu_head_to_head::run_cpu_head_to_head;
 pub use optimized::OptimizedEngine;
 pub use reference::ReferenceEngine;
 pub use variant_a::VariantA;

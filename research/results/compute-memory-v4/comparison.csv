@@ -1,0 +1,12 @@
+variant,memory_mib,defender_p50_ms,attacker_1t_gps,attacker_16t_gps,attacker_32t_gps,meets_latency_100,meets_attacker_25,meets_all_targets
+v4-a-reduced-critical-path,16,71.898,15.0161,79.3173,64.4144,true,false,false
+v4-b-cache-locality,16,69.161,14.6939,78.3372,71.6718,true,false,false
+v4-c-combined-frontier,16,96.287,10.1585,40.5566,38.2726,true,false,false
+v4-a-reduced-critical-path,24,109.807,9.0952,45.9228,44.3567,false,false,false
+v4-b-cache-locality,24,98.178,8.3625,47.3192,42.9077,true,false,false
+v4-c-combined-frontier,24,162.381,5.6469,25.1750,27.6639,false,false,false
+v4-a-reduced-critical-path,32,147.293,6.1371,34.8548,31.1344,false,false,false
+v4-b-cache-locality,32,135.090,7.0081,35.6173,30.0038,false,false,false
+v4-c-combined-frontier,32,224.811,4.0835,18.6155,18.2184,false,true,false
+argon2id,64,0.000,10.3474,22.9427,23.6582,false,false,false
+v3-c-narrow-frontier(ref),16,247.000,3.8000,25.2000,24.0000,false,true,false

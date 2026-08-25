@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-08-25T12:45:00+05:30",
+  "gpu_name": "NVIDIA GeForce RTX 3050",
+  "vram_total_mib": 8191,
+  "toolchain": {
+    "nvidia_smi": "ok",
+    "nvcc": "13.3",
+    "cl": "F:/vs MSVC 19.44.35227",
+    "windows_sdk": "10.0.26100",
+    "argon2_gpu_lib": "third_party/argon2-gpu (WebDollar, CUDA sm_86)"
+  },
+  "benchmark_status": "REAL GPU BENCHMARK COMPLETED",
+  "antech_v4c": {
+    "memory_mib": 16,
+    "batch": 256,
+    "guesses_per_sec": 23.9139,
+    "kernel_p50_ms": 10714.2,
+    "vram_used_mib": 5133,
+    "correctness": "10/10"
+  },
+  "argon2id": {
+    "memory_mib": 64,
+    "m_cost_kib": 65536,
+    "t_cost": 2,
+    "lanes": 1,
+    "batch": 96,
+    "guesses_per_sec": 431.557,
+    "kernel_p50_ms": 221.396,
+    "vram_used_mib": 7383,
+    "correctness": "10/10 vs argon2 crate"
+  },
+  "gpu_head_to_head": "Argon2id ~18× faster than Antech v4-C on GPU (431.6 vs 23.9 g/s)"
+}
