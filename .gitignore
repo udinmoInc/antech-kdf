@@ -29,3 +29,6 @@ Thumbs.db
 **/scratch/
 tmp/
 *.tmp
+
+# External research-only vendor trees (not Antech source)
+/research/third_party/argon2-gpu/

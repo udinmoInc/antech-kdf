@@ -11,6 +11,7 @@ Antech explores whether a password KDF can run in roughly 16 MiB of defender mem
 | Narrative chapters | [`docs/`](docs/) |
 | Datasets | [`data/`](data/) |
 | Measured / modeled results | [`results/`](results/) |
+| External baselines (e.g. argon2-gpu) | [`third_party/`](third_party/) |
 
 ## Build research (separate Cargo workspace)
 

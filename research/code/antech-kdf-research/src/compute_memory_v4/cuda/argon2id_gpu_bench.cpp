@@ -1,5 +1,5 @@
 // Real CUDA Argon2id attacker bench — matches research baseline m=65536 KiB, t=2, p=1.
-// Uses argon2-gpu (WebDollar) CUDA backend; static single-binary build.
+// Uses external WebDollar argon2-gpu (research/third_party/argon2-gpu); not Antech production code.
 
 #include "argon2-cuda/globalcontext.h"
 #include "argon2-cuda/programcontext.h"
