@@ -1,0 +1,7 @@
+variant,memory_mib,gpu_model,actual_guesses_per_sec,status,is_gpu_hardened,register_pressure
+compute-memory-optimized,12,NVIDIA GeForce RTX 3050,0.0000,"CUDA UNAVAILABLE (nvcc found, MSVC cl.exe host compiler missing) — no fabricated GPU throughput",true,96
+compute-memory-optimized,16,NVIDIA GeForce RTX 3050,0.0000,"CUDA UNAVAILABLE (nvcc found, MSVC cl.exe host compiler missing) — no fabricated GPU throughput",true,96
+compute-memory-optimized,20,NVIDIA GeForce RTX 3050,0.0000,"CUDA UNAVAILABLE (nvcc found, MSVC cl.exe host compiler missing) — no fabricated GPU throughput",true,96
+compute-memory-optimized,24,NVIDIA GeForce RTX 3050,0.0000,"CUDA UNAVAILABLE (nvcc found, MSVC cl.exe host compiler missing) — no fabricated GPU throughput",true,96
+compute-memory-optimized,28,NVIDIA GeForce RTX 3050,0.0000,"CUDA UNAVAILABLE (nvcc found, MSVC cl.exe host compiler missing) — no fabricated GPU throughput",true,96
+compute-memory-optimized,32,NVIDIA GeForce RTX 3050,0.0000,"CUDA UNAVAILABLE (nvcc found, MSVC cl.exe host compiler missing) — no fabricated GPU throughput",true,96

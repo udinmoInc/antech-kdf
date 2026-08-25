@@ -1,0 +1,10 @@
+target_mib,blocks_mib,num_blocks,block_size_bytes,state_bytes,seed_bytes,metadata_bytes,temp_bytes,align_bytes,total_heap_bytes,security_tier
+1,1.000,32768,32,32,32,12,32,52,1048736,"Fits in L3 cache — GPU SIMD trivially parallelizable; no meaningful memory hardness"
+2,2.000,65536,32,32,32,12,32,52,2097312,"May exceed L3 on some GPUs; modest cache pressure; dependency still primary cost"
+4,4.000,131072,32,32,32,12,32,52,4194464,"May exceed L3 on some GPUs; modest cache pressure; dependency still primary cost"
+12,12.000,393216,32,32,32,12,32,52,12583072,"Exceeds GPU shared memory (48–96KB typical); forces DRAM on GPU; meaningful capacity hardness"
+16,16.000,524288,32,32,32,12,32,52,16777376,"Exceeds GPU shared memory (48–96KB typical); forces DRAM on GPU; meaningful capacity hardness"
+20,20.000,655360,32,32,32,12,32,52,20971680,"32 GPU threads × 500 KB each = 16 MB shared; GPU must page; real DRAM latency enforced"
+24,24.000,786432,32,32,32,12,32,52,25165984,"Exceeds GPU L2 cache (typically 4–6 MB per SM); forces full DRAM on GPU; strong capacity hardness"
+28,28.000,917504,32,32,32,12,32,52,29360288,"Exceeds GPU L2 cache (typically 4–6 MB per SM); forces full DRAM on GPU; strong capacity hardness"
+32,32.000,1048576,32,32,32,12,32,52,33554592,"Exceeds GPU L2 cache (typically 4–6 MB per SM); forces full DRAM on GPU; strong capacity hardness"

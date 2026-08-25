@@ -1,0 +1,9 @@
+variant,memory_mib,defender_latency_ms,p50_ms,p95_ms,compute_security_efficiency,dram_bandwidth_gbps
+compute-memory-optimized,12,9.13,8.97,9.54,112.0000,1.2856
+compute-memory-optimized,16,11.69,11.74,11.97,106.4000,1.3378
+compute-memory-optimized,20,14.73,14.75,14.93,103.0400,1.3283
+compute-memory-optimized,24,17.34,17.34,17.61,100.8000,1.3537
+compute-memory-optimized,28,20.93,19.75,26.50,99.2000,1.3084
+compute-memory-optimized,32,25.26,23.45,30.00,98.0000,1.2383
+compute-memory-reference,16,11.98,11.93,12.33,106.4000,1.3056
+variant-d-combined,16,11.72,11.65,11.92,106.4000,1.3347

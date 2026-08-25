@@ -1,0 +1,17 @@
+algorithm,parameters,mean_latency_ms,p50_latency_ms,memory_kib
+argon2id,"memory_kib=8192,time_cost=1,parallelism=1",5.82,5.82,8192
+argon2id,"memory_kib=8192,time_cost=1,parallelism=2",5.73,5.73,8192
+argon2id,"memory_kib=8192,time_cost=2,parallelism=1",9.99,9.99,8192
+argon2id,"memory_kib=8192,time_cost=2,parallelism=2",10.07,10.07,8192
+argon2id,"memory_kib=16384,time_cost=1,parallelism=1",12.39,12.39,16384
+argon2id,"memory_kib=16384,time_cost=1,parallelism=2",12.48,12.48,16384
+argon2id,"memory_kib=16384,time_cost=2,parallelism=1",20.76,20.76,16384
+argon2id,"memory_kib=16384,time_cost=2,parallelism=2",21.28,21.28,16384
+argon2id,"memory_kib=32768,time_cost=1,parallelism=1",25.75,25.75,32768
+argon2id,"memory_kib=32768,time_cost=1,parallelism=2",26.12,26.12,32768
+argon2id,"memory_kib=32768,time_cost=2,parallelism=1",43.37,43.37,32768
+argon2id,"memory_kib=32768,time_cost=2,parallelism=2",43.70,43.70,32768
+argon2id,"memory_kib=65536,time_cost=1,parallelism=1",53.22,53.22,65536
+argon2id,"memory_kib=65536,time_cost=1,parallelism=2",52.14,52.14,65536
+argon2id,"memory_kib=65536,time_cost=2,parallelism=1",92.06,92.06,65536
+argon2id,"memory_kib=65536,time_cost=2,parallelism=2",91.22,91.22,65536

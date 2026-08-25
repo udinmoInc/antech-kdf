@@ -1,0 +1,9 @@
+variant,memory_mib,latency_ms,p50_ms,p95_ms,cpu_cycles,cpu_instructions,integer_ops,dependency_stalls
+compute-memory-optimized,12,9.13,8.97,9.54,1376256,1228800,196608,8192
+compute-memory-optimized,16,11.69,11.74,11.97,1743257,1556480,196608,8192
+compute-memory-optimized,20,14.73,14.75,14.93,2110259,1884160,196608,8192
+compute-memory-optimized,24,17.34,17.34,17.61,2477260,2211840,196608,8192
+compute-memory-optimized,28,20.93,19.75,26.50,2844262,2539520,196608,8192
+compute-memory-optimized,32,25.26,23.45,30.00,3211264,2867200,196608,8192
+compute-memory-reference,16,11.98,11.93,12.33,1743257,1556480,196608,8192
+variant-d-combined,16,11.72,11.65,11.92,1743257,1556480,196608,8192

@@ -6,6 +6,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[features]
+default = []
+# Optional CUDA attacker path (requires nvcc + device runtime).
+cuda = []
+
 [dependencies]
 antech-kdf = { workspace = true }
 antech-kdf-core = { workspace = true }

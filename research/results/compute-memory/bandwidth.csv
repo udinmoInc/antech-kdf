@@ -1,0 +1,9 @@
+variant,memory_mib,bytes_read,bytes_written,dram_bytes_moved,dram_bandwidth_gbps,dram_bytes_per_guess
+compute-memory-optimized,12,262144,131072,12598592,1.2856,12598592
+compute-memory-optimized,16,262144,131072,16792896,1.3378,16792896
+compute-memory-optimized,20,262144,131072,21010816,1.3283,21010816
+compute-memory-optimized,24,262144,131072,25205120,1.3537,25205120
+compute-memory-optimized,28,262144,131072,29399424,1.3084,29399424
+compute-memory-optimized,32,262144,131072,33593728,1.2383,33593728
+compute-memory-reference,16,262144,131072,16792896,1.3056,16792896
+variant-d-combined,16,262144,131072,16792896,1.3347,16792896
