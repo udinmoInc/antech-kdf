@@ -1,3 +1,3 @@
-# CPU Benchmarks
+# CPU benchmarks
 
-Evaluates CPU instruction efficiency, multi-thread scaling (1 to 32 worker threads), and cycle counts across Candidate-004, Variant K1, Variant K2, and Argon2id baselines.
+Single- and multi-thread attacker throughput and defender cost on CPU. Prefer the research runners under `antech-kdf-research` for current campaigns.

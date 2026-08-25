@@ -1,13 +1,6 @@
-# CPU-Only Head-to-Head: Antech Compute-Memory v2 vs Argon2id
+# CPU head-to-head: compute-memory v2 vs Argon2id
 
-**Mode:** CPU only — no CUDA / GPU metrics.
-
-## Configurations (unchanged)
-
-- **Antech v2:** 16 MiB working set, block_size=32, fan_in=2 (no depth/passes)
-- **Argon2id baseline:** m_cost=65536 KiB (64 MiB), t_cost=2, p_cost=1
-- **Corpus:** 256 shared password candidates, shared salt `cpu_h2h_shared_salt`
-- **Workers:** identical thread counts {1,2,4,8,16,32} and `std::thread` pool for both
+CPU only. Antech v2 at 16 MiB / 32 B / fan-in 2; Argon2id at 64 MiB, t=2, p=1. Shared 256-candidate corpus and salt `cpu_h2h_shared_salt`; same thread grid `{1,2,4,8,16,32}`.
 
 ## Comparison table
 
@@ -59,27 +52,6 @@
 | 16 | 1.91× | 5.83× | 0.119 | 0.365 |
 | 32 | 2.05× | 5.30× | 0.064 | 0.166 |
 
-## Answers
+## Takeaway
 
-1. **Which uses less RAM?** Antech v2 (16 MiB working set) vs Argon2id (64 MiB).
-
-2. **Which is faster for legitimate verification (1-thread p50)?** Antech v2 (75.52 ms vs 97.71 ms).
-
-3. **Which scales better 1→32 (attacker efficiency)?** Antech v2 (eff 0.166 vs 0.064).
-
-4. **Harder for optimized CPU attacker at 1 thread?** Argon2id (lower attacker g/s) (13.040 vs 10.698 g/s).
-
-5. **Harder at 16 threads?** Argon2id (lower attacker g/s) (76.068 vs 20.416 g/s).
-
-6. **Harder at 32 threads?** Argon2id (lower attacker g/s) (69.072 vs 21.961 g/s).
-
-7. **Does Antech v2 maintain its CPU-cost advantage with all threads?** Antech is not harder at 1 or 32 threads under this baseline (1-thread harder for Antech: false; 32-thread harder for Antech: false).
-
-8. **Does the graph-based design remain expensive without a huge depth loop?** Yes — work is `num_blocks = memory/block_size` (524288); 1-thread defender p50 ≈ 75.5 ms with no `dependency_depth` / `passes` knobs.
-
-## Notes
-
-- CPU cycles/op from `RDTSC` deltas (wall-clock turbo effects apply).
-- Peak RSS is process peak working set sampled during the attacker window.
-- Argon2id: `argon2` crate release build; Antech: optimized research engine release build.
-- No GPU / CUDA results are included in this report.
+Antech uses less RAM and is a bit faster for single-thread verify (~76 ms vs ~98 ms). Multi-core attackers scale better against Antech here (~76 g/s @16t vs Argon2id ~20 g/s), which is why later work changed the graph (v3/v4). Work is still `memory/block_size` nodes with no depth knob. Cycles from `RDTSC`; no GPU in this file.

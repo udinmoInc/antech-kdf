@@ -1,9 +1,10 @@
-# Antech KDF Measured Benchmark Summary
+# Early CPU summary (K1 / K2)
 
-| Metric | Argon2id Baseline | Antech Variant K1 | Antech Variant K2 | Classification |
-| :--- | :--- | :--- | :--- | :--- |
-| **Working Memory** | 64 MB | **16 MB (4x Savings)** | **16 MB (4x Savings)** | **MEASURED** |
-| **Defender p50 Latency** | 138.20 ms | **112.91 ms** | **109.31 ms** | **MEASURED** |
-| **16-Core CPU Attacker** | 24.20 g/s | **19.20 g/s** | **18.80 g/s** | **MEASURED** |
-| **Physical CUDA Execution** | UNAVAILABLE | UNAVAILABLE | UNAVAILABLE | **UNAVAILABLE** |
-| **TMTO @ 50% RAM** | 3.25x | 4.00x | **13.93x (Quad-DAG)** | **MEASURED** |
+| Metric | Argon2id | Antech K1 | Antech K2 | Class |
+|---|---:|---:|---:|---|
+| Memory | 64 MiB | 16 MiB | 16 MiB | MEASURED |
+| Defender p50 | 138.20 ms | ~109–113 ms | ~109–112 ms | MEASURED |
+| 16-core attacker | 24.20 g/s | 19.20 g/s | 18.80 g/s | MEASURED |
+| TMTO @ 50% RAM | 3.25× | 4.00× | 13.93× | MEASURED |
+
+GPU for that campaign was not run. Production is combined-frontier / v4-C; see [../results/compute-memory-v4/gpu/report.md](../results/compute-memory-v4/gpu/report.md) for RTX 3050 numbers (~33 g/s Antech vs ~436 g/s Argon2id).

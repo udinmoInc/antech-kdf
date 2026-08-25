@@ -1,8 +1,8 @@
-# Threat model (research)
+# Threat model
 
-Adversarial assumptions, attacker models, and measured vs modeled results are documented in the research chapters:
+Assumptions and attacker models are written up in research:
 
-- [research/05-security.md](../research/05-security.md)
-- [research/06-limitations.md](../research/06-limitations.md)
+- [05-security.md](../research/05-security.md)
+- [06-limitations.md](../research/06-limitations.md)
 
-Production libraries implement the canonical compute-memory construction only. Security claims belong in research documentation, not in production crate docs.
+Production code implements the combined-frontier compute-memory construction. Claims about offline cost, GPU throughput, and TMTO behavior belong with the measured/modeled research notes, not with the library crate docs.

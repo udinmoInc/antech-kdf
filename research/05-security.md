@@ -1,22 +1,9 @@
-# Chapter 5: Adversarial Cost & Security Analysis
+# 05 — Security
 
-Assessing the security of a key derivation function requires analyzing how architectural choices impact adversarial cracking economics. Lowering server working memory from 64 MB to 16 MB reduces physical hardware costs for legitimate defenders, but it could potentially advantage adversaries if not counterbalanced by strict algorithmic resistance.
+Lower defender memory only helps if offline cost stays painful. Early K1/K2 CPU attackers were slower than the Argon2id 64 MiB profile on the same 16-core host (~19 g/s vs ~24 g/s). That is one datapoint on one machine class, not a general proof.
 
-### Offline Password Guessing Resistance
-Our empirical measurements in [Chapter 4: Evaluation](04-evaluation.md) demonstrate that Antech Variant K1 and Variant K2 restrict 16-core CPU cracking throughput to **19.20 g/s** and **18.80 g/s**, respectively. This represents a **1.25–1.28x reduction in CPU attacker speed** compared to Argon2id (24.20 g/s). 
+TMTO sweeps for K2 showed a steep recomputation curve when only a fraction of the buffer is kept (about **14×** at half memory in that campaign; much higher at 12.5%). Combined-frontier / v4 work changes the graph; do not paste K2 TMTO numbers onto the production engine without re-running the sweep.
 
-However, measured CPU throughput alone does not prove equivalent overall security. CPU benchmarking measures execution speed on a specific x86 architecture; it does not account for specialized hardware acceleration or alternative memory trade-offs.
+Salts and structural parameters are bound into the seed so multi-target amortization across users is not free. Memory addressing is state-dependent, which helps TMTO and parallel divergence but can leak via cache timing on shared hardware.
 
-### Time-Memory Trade-Off (TMTO) Resistance
-A critical vulnerability in memory-reduced KDFs is the susceptibility to TMTO attacks, where an adversary allocates only a fraction of the required memory ($M < N$) and dynamically recalculates missing blocks. 
-
-* In **Variant K1**, memory addresses depend on sequential ARX state evolution. Storing only 50% of the memory buffer forces an attacker to perform **4.00x additional recomputation steps**.
-* In **Variant K2**, the 4-way directed acyclic graph requires reading 4 pseudo-random blocks simultaneously per step. Storing 50% of the memory buffer forces an **13.93x recomputation multiplier**. Reducing memory to 12.5% increases recomputation penalty to over **1,200x**, rendering low-memory cracking economically unviable for an attacker. Dataset details are exported in [TMTO Sweep Data](data/tmto.csv).
-
-### Multi-Target & Precomputation Resistance
-To prevent adversaries from amortizing cracking costs across millions of stolen password hashes, Antech incorporates unique salt and parameter binding in its initial domain-separated seed expansion (`$antech$v1$...`). Because every salt generates a distinct initial buffer filling sequence, multi-target work-amortization attacks are rendered ineffective.
-
-### Side-Channel & Memory Access Considerations
-Because block addresses in Candidate-004 depend on intermediate state variables, memory accesses are data-dependent. While data-dependent indexing maximizes TMTO and GPU warp divergence resistance, it introduces potential cache-timing side-channel risks on multi-tenant shared hardware.
-
-For explicit discussion of unresolved hardware risks and security bounds, see [Chapter 6: Limitations](06-limitations.md).
+GPU results on RTX 3050 show Argon2id still much faster to attack than Antech at 16 MiB (~436 g/s vs ~33 g/s). Treat that as an attacker-side measurement, not as "Antech is more secure than Argon2id."

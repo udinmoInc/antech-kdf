@@ -1,6 +1,6 @@
-# Antech KDF — Go Language Bindings
+# Go bindings
 
-Go bindings for Antech KDF via C FFI.
+CGo / FFI wrappers around `antech-kdf-ffi`.
 
 ```go
 package main

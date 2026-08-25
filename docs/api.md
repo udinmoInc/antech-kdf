@@ -1,18 +1,14 @@
-# Antech KDF — Developer API
+# API
 
-The `antech-kdf` crate exposes password hashing and verification with a self-describing v2 hash format.
-
-## Public API
+The `antech-kdf` crate is the stable entry point.
 
 | Function | Purpose |
 |---|---|
-| `hash(password)` | Hash with default config (16 MiB, combined-frontier) |
-| `hash_with_config(password, &config)` | Hash with explicit structural parameters |
-| `verify(password, stored_hash)` | Constant-time verification |
-| `needs_rehash(stored_hash)` | Check against default rehash policy |
-| `needs_rehash_with_policy(stored_hash, &policy)` | Check against custom policy |
-
-## Default usage
+| `hash(password)` | Hash with defaults (16 MiB, combined-frontier) |
+| `hash_with_config(password, &config)` | Hash with an explicit `AntechConfig` |
+| `verify(password, stored)` | Constant-time verify against a v2 string |
+| `needs_rehash(stored)` | Compare against the default rehash policy |
+| `needs_rehash_with_policy(stored, &policy)` | Compare against a custom policy |
 
 ```rust
 use antech_kdf::{hash, verify, needs_rehash, Error};
@@ -26,12 +22,10 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-## Custom configuration
-
-Work is structure-derived from `memory / block_size`. There are no dependency-depth or pass-count knobs.
+Work is `memory / block_size` nodes. There is no dependency-depth or pass-count setting.
 
 ```rust
-use antech_kdf::{hash_with_config, verify, AntechConfig, GraphKind, Error};
+use antech_kdf::{hash_with_config, AntechConfig, GraphKind, Error};
 
 fn main() -> Result<(), Error> {
     let config = AntechConfig::builder()
@@ -44,12 +38,9 @@ fn main() -> Result<(), Error> {
         .build()?;
 
     let stored = hash_with_config("password", &config)?;
-    assert!(verify("password", &stored)?);
     Ok(())
 }
 ```
-
-## Rehash policy
 
 ```rust
 use antech_kdf::{hash, needs_rehash_with_policy, RehashPolicy};
@@ -66,6 +57,4 @@ if needs_rehash_with_policy(&stored, &policy)? {
 }
 ```
 
-## Security notice
-
-This construction is experimental. Passing benchmarks does not establish cryptographic security. Independent review is required before production password storage.
+Errors are `antech_kdf::Error` (`KdfError` from `antech-kdf-types`). Graph tags in the encoded string: `1` reduced-critical-path, `2` cache-locality, `3` combined-frontier.

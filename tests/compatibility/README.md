@@ -1,3 +1,3 @@
-# Compatibility Tests
+# Compatibility tests
 
-Ensures cross-platform and cross-language ABI compatibility between Rust core, C FFI bindings, and language wrapper layers.
+Cross-checks that the Rust API, C FFI, and language wrappers agree on hash/verify behavior for shared fixtures.

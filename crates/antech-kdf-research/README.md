@@ -1,7 +1,5 @@
 # antech-kdf-research
 
-Research-only crate: CPU/CUDA attackers, TMTO, multi-target and concurrency experiments, and benchmark runners.
-
-Depends on `antech-kdf-core`. Never imported by production crates.
+Attackers, CUDA kernels, TMTO/concurrency experiments, and historical compute-memory variants. Depends on `antech-kdf-core`. Production crates do not depend on this package.
 
 See [research/README.md](../../research/README.md).

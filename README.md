@@ -1,35 +1,26 @@
 # Antech KDF
 
-Antech KDF is a password hashing project built around a compute-memory construction tuned for small-server memory budgets while preserving resistance to offline guessing attacks.
+Password hashing library built around a compute-memory construction. The default profile uses 16 MiB of working memory and a combined-frontier dependency graph. Work is derived from `memory / block_size`; there is no separate iteration-count knob.
 
-## Overview
+This is experimental software. Benchmarks are useful for comparing attacker cost under fixed conditions. They are not a substitute for cryptographic review. Prefer Argon2id for production password storage until Antech has been independently audited.
 
-The **production implementation** lives in `antech-kdf-core` and is exposed through the stable `antech-kdf` crate:
-
-- `hash` / `hash_with_config`
-- `verify`
-- `needs_rehash` / `needs_rehash_with_policy`
-
-Work is structure-derived: one traversal of a `memory / block_size` dependency graph. There are no user-facing iteration-count or dependency-depth knobs.
-
-The default graph family is **combined-frontier**.
-
-## Installation
+## Install
 
 ```toml
 [dependencies]
 antech-kdf = "0.1"
 ```
 
-Requires Rust 1.70+.
+Rust 1.70+.
 
 ## Usage
 
 ```rust
-use antech_kdf::{hash, verify};
+use antech_kdf::{hash, verify, needs_rehash};
 
 let stored = hash("correct_horse_battery_staple")?;
 assert!(verify("correct_horse_battery_staple", &stored)?);
+assert!(!needs_rehash(&stored)?);
 ```
 
 Custom parameters:
@@ -42,88 +33,71 @@ let config = AntechConfig::builder()
     .fan_in(2)
     .graph(GraphKind::CombinedFrontier)
     .build()?;
+
 let stored = hash_with_config("password", &config)?;
 ```
 
-## Configuration
+| Parameter | Default | Notes |
+|---|---|---|
+| Memory | 16 MiB | Working set |
+| Block size | 32 B | DAG node size |
+| Fan-in | 2 | Parents mixed per node |
+| Graph | combined-frontier | Tag `g=3` in the encoded hash |
+| Salt length | 16 B | 8–256 |
+| Output length | 32 B | Digest size |
 
-Supported structural parameters:
+## Hash format
 
-| Parameter | Role |
-|---|---|
-| Memory | Working set size (default 16 MiB) |
-| Block size | DAG node size (default 32 B) |
-| Fan-in | Parents mixed per node (default 2) |
-| Graph | Dependency shape (default combined-frontier) |
-| Salt length | 8–256 bytes |
-| Output length | Digest size |
-
-## Verification
-
-Stored hashes use format version **`v2`**:
+Stored hashes are self-describing:
 
 ```text
 $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
 ```
 
-`verify()` reconstructs configuration from the stored string. Legacy **`v1`** research hashes are rejected — they are not silently reinterpreted.
+`verify` rebuilds the config from the string. Legacy `v1` encodings are rejected.
 
-## Rehashing
-
-Compare stored parameters against application policy:
+Rehash policy:
 
 ```rust
 use antech_kdf::{needs_rehash_with_policy, RehashPolicy};
 
 let policy = RehashPolicy::builder().preferred_memory_mib(32).build();
 if needs_rehash_with_policy(&stored, &policy)? {
-    // upgrade hash
+    // upgrade on login
 }
 ```
 
-## Resource policy
+Per-hash memory comes from `AntechConfig`. Server-wide admission control is separate (`BoundedResourceScheduler` in `antech-kdf-core`, default 128 MiB global ceiling).
 
-KDF memory (`AntechConfig`) is separate from server admission control (`BoundedResourceScheduler` in core). Example: 16 MiB per operation can coexist with a 128 MiB global budget.
+## Crates
 
-## Security status
+| Crate | Role |
+|---|---|
+| `antech-kdf` | Public API |
+| `antech-kdf-core` | Engine and resource scheduler |
+| `antech-kdf-format` | Encode / parse |
+| `antech-kdf-types` | Config and errors |
+| `antech-kdf-cli` | `hash` / `verify` CLI |
+| `antech-kdf-ffi` | C ABI |
+| `antech-kdf-research` | Attackers, CUDA, historical variants |
 
-**Experimental — not production-proven.**
+Dependency rule: research imports core; production never imports research.
 
-The current implementation reflects validated benchmark work on the combined-frontier construction. Passing benchmarks does **not** substitute for independent cryptographic review. Do not claim security equivalence with Argon2id without evidence.
+## Research highlights
 
-## Research
-
-Attacker tooling, CUDA kernels, TMTO, multi-target experiments, and historical variants remain in `antech-kdf-research`. Research imports core; production never imports research.
+At 16 MiB on an RTX 3050 (measured), optimized Antech GPU attacker throughput was about **33 g/s** versus Argon2id at about **436 g/s**. Details and methodology live under [`research/`](research/README.md).
 
 ```bash
 cargo run --release -p antech-kdf-research --example compute_memory_v4_runner
 ```
 
-See [research/README.md](research/README.md).
-
-## Build & test
+## Build
 
 ```bash
 cargo fmt --all
-cargo check -p antech-kdf
-cargo check -p antech-kdf-core
+cargo check -p antech-kdf -p antech-kdf-core
 cargo test -p antech-kdf -p antech-kdf-core -p antech-kdf-format
 cargo clippy -p antech-kdf -p antech-kdf-core --all-targets
 ```
 
-## Crate layout
-
-```text
-crates/
-├── antech-kdf/          # Public API
-├── antech-kdf-core/     # Canonical engine
-├── antech-kdf-format/   # Hash encoding
-├── antech-kdf-types/    # Config & errors
-├── antech-kdf-cli/      # Production CLI
-├── antech-kdf-ffi/      # C ABI
-└── antech-kdf-research/ # Benchmarks & attackers
-```
-
-## License
-
-MIT OR Apache-2.0
+More detail: [`docs/`](docs/api.md). License: MIT OR Apache-2.0.

@@ -1,34 +1,13 @@
-# Host Hardware & Reproducibility Telemetry
+# Hardware notes
 
-This document records the physical hardware platform, operating system configuration, compiler toolchain, and environmental variables used to produce the benchmark datasets in `research/data/`.
+Host used for the early CSV tables under `research/data/` and later GPU work:
 
----
+- CPU: 16 physical / 32 logical x86_64
+- RAM: 32 GB
+- GPU: NVIDIA GeForce RTX 3050, 8 GiB VRAM (driver noted in GPU result files)
+- OS: Windows 11, `x86_64-pc-windows-gnu`
+- Rust: 1.98.x class toolchain; release profile with `opt-level=3`
 
-## 🖥️ Benchmark Host Platform
+CUDA/`nvcc` was unavailable for some early campaigns (those rows stay `UNAVAILABLE` or `MODELED`). Later v4-C GPU runs on this RTX 3050 are `MEASURED` under `results/compute-memory-v4/gpu/`.
 
-* **CPU**: AMD Ryzen / Intel Core x86_64 Multicore Processor
-* **Physical Cores**: 16 Physical Cores
-* **Logical Threads**: 32 Logical Threads
-* **System RAM**: 32 GB DDR4 / DDR5
-* **GPU Hardware**: NVIDIA GeForce RTX 3050 (WDDM Driver 591.86)
-* **VRAM Capacity**: 8.0 GB (8,192 MiB)
-* **Supported CUDA Driver API**: CUDA 13.1
-* **CUDA Compiler (`nvcc.exe`) Status**: `UNAVAILABLE` (Not installed in host system PATH)
-
----
-
-## ⚙️ Software & Build Settings
-
-* **Operating System**: Windows 11 64-bit (x86_64-pc-windows-gnu)
-* **Rust Toolchain**: Rustc 1.98.0 (2026-08-18 release)
-* **Cargo Profile**: `release` (`opt-level=3, codegen-units=1, lto=thin`)
-* **Benchmark Date**: August 2026
-
----
-
-## 📂 CSV Dataset File Index
-
-* [`data/baseline.csv`](data/baseline.csv): Baseline grid benchmarks for Argon2id, scrypt, bcrypt, and PBKDF2.
-* [`data/defender.csv`](data/defender.csv): Defender verification latency measurements (p50, p95, p99).
-* [`data/attacker.csv`](data/attacker.csv): Multi-worker SIMD CPU (1, 4, 16, 32 cores) and GPU spatial bounds.
-* [`data/tmto.csv`](data/tmto.csv): Time-memory trade-off recomputation multiplier sweep.
+CSV index: [baseline.csv](baseline.csv), [defender.csv](defender.csv), [attacker.csv](attacker.csv), [tmto.csv](tmto.csv).

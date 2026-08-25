@@ -1,3 +1,3 @@
-# Memory Bandwidth Benchmarks
+# Bandwidth benchmarks
 
-Measures MB/s memory bus churn rate across L1/L2/L3 cache hierarchies and main DRAM access patterns.
+Rough memory-bus traffic for walks at the configured working set. Research CUDA/profile CSVs are more current for GPU bandwidth notes.

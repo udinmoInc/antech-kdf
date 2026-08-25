@@ -1,38 +1,26 @@
-# Antech KDF — Architecture
-
-Production crates form a strict dependency stack. Research never feeds production.
+# Architecture
 
 ```text
-antech-kdf          public API (hash / verify / needs_rehash)
-    ↓
-antech-kdf-core     AntechEngine + resource scheduler
-    ↓
-antech-kdf-format   v2 encode / parse
-antech-kdf-types    config, GraphKind, errors, rehash policy
+antech-kdf            hash / verify / needs_rehash
+    │
+antech-kdf-core       AntechEngine, BoundedResourceScheduler
+    │
+antech-kdf-format     v2 encode / parse
+antech-kdf-types      AntechConfig, GraphKind, errors, RehashPolicy
 
-antech-kdf-research → antech-kdf-core   (attackers, CUDA, benchmarks)
+antech-kdf-research → antech-kdf-core   (attackers, CUDA, old variants)
 ```
-
-## Crates
 
 | Crate | Role |
 |---|---|
-| `antech-kdf` | Stable developer API |
-| `antech-kdf-core` | Canonical compute-memory engine |
-| `antech-kdf-format` | `$antech$v2$...` encoding |
-| `antech-kdf-types` | Configuration and error types |
-| `antech-kdf-cli` | Production CLI |
+| `antech-kdf` | Developer API |
+| `antech-kdf-core` | Canonical engine |
+| `antech-kdf-format` | `$antech$v2$...` strings |
+| `antech-kdf-types` | Shared types |
+| `antech-kdf-cli` | CLI |
 | `antech-kdf-ffi` | C ABI |
-| `antech-kdf-research` | Research-only tooling |
+| `antech-kdf-research` | Research only |
 
-## Engine
+There is one production engine: `AntechEngine`. Structural knobs are memory, block size, fan-in, graph kind, salt length, and output length. Defaults use the combined-frontier graph.
 
-One production engine: `AntechEngine` in `antech-kdf-core`.
-
-Work is derived from `memory / block_size`. Supported structural parameters:
-
-- memory, block size, fan-in, graph kind, salt length, output length
-
-There are no dependency-depth or pass-count knobs.
-
-Default graph kind is **combined-frontier**.
+`AntechConfig` sets per-operation memory. `BoundedResourceScheduler` enforces a separate host ceiling (default 128 MiB across concurrent jobs). The two layers do not substitute for each other.

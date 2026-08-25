@@ -1,3 +1,3 @@
-# Concurrency Benchmarks
+# Concurrency benchmarks
 
-Evaluates throughput and server memory saturation across 1, 10, 50, 100, 500, and 1000 concurrent hashing threads under bounded resource scheduling.
+Throughput and admission behavior under many concurrent hashes, including runs against `BoundedResourceScheduler`.

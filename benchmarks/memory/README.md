@@ -1,3 +1,3 @@
-# Memory Benchmarks
+# Memory benchmarks
 
-Evaluates working set RAM allocations (16 MB default vs 64 MB baseline) and peak host memory footprints under concurrent verification loads.
+Working-set size and peak RSS under concurrent verifies (typically 16 MiB Antech profiles vs larger Argon2id baselines).
