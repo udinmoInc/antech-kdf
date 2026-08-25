@@ -1,16 +1,16 @@
 ---
 title: "Cross-language conformance"
 sidebarTitle: "Conformance"
-description: "Run shared KATs so every SDK matches digests, verify results, and error mapping."
+description: "Shared KATs that every SDK must match for digests, verify, and error mapping."
 order: 39
 ---
 
-Canonical cases: `sdk/conformance/vectors.json` (derived from the security-review test vectors).
+Canonical cases live in `sdk/conformance/vectors.json` (derived from the security-review test vectors).
 
-## Requirements for each SDK
+## What each package must prove
 
-1. `hash_with_config_and_salt(password, salt, config)` produces `$antech$v2$…`
-2. Digest hex (last `$` field) equals `digest_hex`
+1. `hash_with_config_and_salt(password, salt, config)` returns a `$antech$v2$…` string
+2. The digest hex (final `$` field) equals `digest_hex`
 3. `verify(password, encoded)` is true
 4. Malformed hashes map to the shared invalid-hash error
 
@@ -21,4 +21,19 @@ cargo test -p antech-kdf conformance -- --nocapture
 python sdk/conformance/run_python.py
 ```
 
-CI workflow `.github/workflows/sdk.yml` runs Rust + Python conformance on multiple OSes.
+CI workflow `.github/workflows/sdk.yml` runs Rust and Python conformance across OSes after building natives.
+
+<StatsRow>
+  <Stat number="12" label="KAT cases in vectors.json" />
+  <Stat number="1" label="Digest source of truth" />
+</StatsRow>
+
+<FileTree>
+  <Folder name="sdk">
+    <Folder name="conformance">
+      <File name="vectors.json" />
+      <File name="run_python.py" />
+      <File name="README.md" />
+    </Folder>
+  </Folder>
+</FileTree>

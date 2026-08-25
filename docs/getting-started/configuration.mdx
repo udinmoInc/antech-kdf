@@ -1,13 +1,13 @@
 ---
-title: "Configuration basics"
+title: "Configuration"
 sidebarTitle: "Configuration"
-description: "Configure memory, block size, fan-in, graph, salt length, and output length for Antech hashing."
+description: "Set memory, block size, fan-in, graph, salt length, and output length with shared validation."
 order: 4
 ---
 
-All structural knobs live on `AntechConfig`. Validation is identical in Rust and via the FFI POD used by SDKs.
+Structural parameters live on `AntechConfig`. Builders in Rust and POD structs in FFI validate the same bounds, so a rejected config in Python is a rejected config in Go.
 
-## Builder example
+## Builder
 
 ```rust
 use antech_kdf::{hash_with_config, AntechConfig, GraphKind};
@@ -24,35 +24,49 @@ let config = AntechConfig::builder()
 let stored = hash_with_config("password", &config)?;
 ```
 
-## Parameter summary
+## Parameter table
 
-| Field | Default | Constraints |
+| Field | Default | Bounds |
 |---|---|---|
-| Memory | 16 MiB (`16384` KiB) | 1024…1048576 KiB |
+| Memory | 16 MiB (`16384` KiB) | 1024…1 048 576 KiB |
 | Salt length | 16 B | 8…256 |
-| Block size | 32 B | power of two, ≥ 16 |
+| Block size | 32 B | ≥ 16, power of two |
 | Fan-in | 2 | 2…8 |
 | Graph | CombinedFrontier | tags `1`, `2`, `3` |
 | Output length | 32 B | 8…128 |
 
-Work equals `memory_bytes / block_size` nodes (must yield at least 64 blocks).
+Work equals `memory_bytes / block_size` and must yield **at least 64** blocks.
 
 <Note>
-There is no iteration-count or dependency-depth security knob. Changing memory or block size changes work.
+There is no iteration-count or “depth” security knob. Changing memory or block size is how you change work.
 </Note>
 
 ## Graph tags
 
-| Tag | Name | Role |
+| Tag | Name | Use |
 |---|---|---|
-| `1` | ReducedCriticalPath | Research / non-default |
-| `2` | CacheLocality | Research / non-default |
-| `3` | CombinedFrontier | **Production default** |
+| `3` | CombinedFrontier | Production default and review target |
+| `1` | ReducedCriticalPath | Research contrast |
+| `2` | CacheLocality | Research contrast |
 
-<Tip>
-Keep `CombinedFrontier` unless you are deliberately studying alternatives. Production guidance and review materials assume `g=3`.
-</Tip>
+Keep `CombinedFrontier` unless you are deliberately studying alternatives. Digests change when the graph changes.
 
-## Full reference
+## FFI field names
 
-See [Configuration reference](/reference/configuration-reference) for bounds, builders, and FFI field names.
+When you fill `AntechConfig` from C or ctypes, use KiB for memory and the numeric graph tag:
+
+```c
+AntechConfig cfg;
+antech_config_default(&cfg);
+cfg.memory_kib = 16384;
+cfg.graph = ANTECH_GRAPH_COMBINED_FRONTIER; /* 3 */
+```
+
+<Related links={[
+  { href: '../reference/configuration-reference', title: 'Full configuration reference' },
+  { href: '../reference/hash-format', title: 'How parameters appear in $antech$v2$' }
+]} />
+
+<NextSteps links={[
+  { href: './first-hash', title: 'Wire registration, login, and rehash' }
+]} />

@@ -1,13 +1,13 @@
 ---
 title: "Quickstart"
 sidebarTitle: "Quickstart"
-description: "Hash, verify, and check rehash needs with the default Antech profile in under a minute."
+description: "Hash a password, verify it, and check whether a stored hash should be upgraded."
 order: 3
 ---
 
-This quickstart uses the Rust API. Other SDKs expose the same operations with native naming.
+This page stays on the Rust API. Other SDKs expose the same operations with idiomatic names — see the SDK section once you need Python, Node, or Go.
 
-## Hash and verify
+## Hash, verify, rehash check
 
 ```rust
 use antech_kdf::{hash, verify, needs_rehash};
@@ -15,27 +15,60 @@ use antech_kdf::{hash, verify, needs_rehash};
 fn main() -> Result<(), antech_kdf::Error> {
     let password = "correct_horse_battery_staple";
     let stored = hash(password)?;
+
     assert!(verify(password, &stored)?);
+    assert!(!verify("wrong_password", &stored)?);
     assert!(!needs_rehash(&stored)?);
+
     println!("{stored}");
     Ok(())
 }
 ```
 
-Defaults: **16 MiB**, block size **32**, fan-in **2**, graph **CombinedFrontier**, salt length **16**, output **32** bytes.
+What you just used:
 
-## Wrong password fails closed
+- **16 MiB** working memory
+- Block size **32**, fan-in **2**
+- Graph **CombinedFrontier** (`g=3` in the encoded string)
+- Random salt, **32**-byte digest
 
-```rust
-assert!(!verify("wrong_password", &stored)?);
-```
+## Same idea in other languages
 
-## Next steps
+<FrameworkTabs frameworks={['Python', 'TypeScript', 'Go']}>
+  <FrameworkContent framework="Python">
+    ```python
+    import antech_kdf
 
-- Tune parameters in [Configuration](/getting-started/configuration)
-- Walk through a login upgrade path in [First hash](/getting-started/first-hash)
-- Mirror the same calls from [Python](/sdk/python) or [Node](/sdk/node)
+    stored = antech_kdf.hash("correct_horse_battery_staple")
+    assert antech_kdf.verify("correct_horse_battery_staple", stored)
+    assert not antech_kdf.needs_rehash(stored)
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="TypeScript">
+    ```typescript
+    import { hash, verify, needsRehash } from "antech-kdf";
 
-<Warning>
-Never log raw passwords. Prefer wiping buffers in long-lived processes after hashing when your language allows it.
-</Warning>
+    const stored = hash("correct_horse_battery_staple");
+    verify("correct_horse_battery_staple", stored); // true
+    needsRehash(stored); // false under default policy
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="Go">
+    ```go
+    h, err := antech.Hash([]byte("correct_horse_battery_staple"))
+    ok, err := antech.Verify([]byte("correct_horse_battery_staple"), h)
+    ```
+  </FrameworkContent>
+</FrameworkTabs>
+
+<Tip>
+Passwords are bytes in the Rust API (`AsRef<[u8]>`). Prefer byte-oriented FFI helpers when passwords may contain interior NUL bytes.
+</Tip>
+
+## What to read next
+
+<NextSteps links={[
+  { href: './configuration', title: 'Configuration knobs and bounds' },
+  { href: './first-hash', title: 'Registration and login upgrade flow' },
+  { href: '../guides/security', title: 'Experimental status and operational notes' }
+]} />

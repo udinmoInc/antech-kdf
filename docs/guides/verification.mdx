@@ -1,7 +1,7 @@
 ---
-title: "Verification guide"
+title: "Verification"
 sidebarTitle: "Verification"
-description: "Verify passwords against stored $antech$v2$ hashes in constant time."
+description: "Verify passwords against $antech$v2$ hashes and handle mismatch vs malformed input."
 order: 21
 ---
 
@@ -9,16 +9,22 @@ order: 21
 let ok = antech_kdf::verify(password, &stored)?;
 ```
 
-`verify` parses the string, rebuilds config, re-derives with the stored salt, and compares digests in constant time.
+`verify` parses the string, rebuilds config, re-derives with the embedded salt, and compares digests in constant time.
 
-## Failure modes
+## Outcomes
 
-| Outcome | Meaning |
+| Result | Meaning |
 |---|---|
-| `Ok(true)` | Match |
-| `Ok(false)` | Mismatch |
-| `Err(_)` | Malformed hash / invalid params |
+| `Ok(true)` | Password matches |
+| `Ok(false)` | Password does not match |
+| `Err(_)` | Malformed string or invalid embedded parameters |
+
+On the FFI, a mismatch is `ANTECH_VERIFICATION_FAILED` (status `1`), while parse failures are `ANTECH_INVALID_HASH`.
 
 <Note>
-Treat `Err` as an authentication infrastructure problem, not as “wrong password,” when responding to clients.
+Surface `Err` / invalid-hash as an infrastructure problem to operators. Do not tell end users “wrong password” when the stored string itself is corrupt.
 </Note>
+
+<NextSteps links={[
+  { href: './rehash-policy', title: 'Upgrade outdated parameters' }
+]} />

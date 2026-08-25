@@ -1,35 +1,38 @@
 ---
 title: "Canonical engine"
 sidebarTitle: "Engine"
-description: "Understand AntechEngine: seed binding, DAG walk, mixing, and finalization."
+description: "AntechEngine pipeline: validate config, schedule memory, derive, encode."
 order: 11
 ---
 
-`AntechEngine` in `antech-kdf-core` is the only production derivation implementation. SDKs must not fork this logic.
+`AntechEngine` in `antech-kdf-core` is the only production derivation. Language packages call into it through FFI; they must not reimplement mixing or graph selection.
 
-## Pipeline
+## Call path
 
-<Flow
-  nodesJSON='[
-    {"id": "1", "data": {"label": "validate config", "icon": "✅", "valid": true}},
-    {"id": "2", "data": {"label": "acquire scheduler permit", "icon": "🎟️"}},
-    {"id": "3", "data": {"label": "derive(password, salt, config)", "icon": "⚙️", "valid": true}},
-    {"id": "4", "data": {"label": "encode_hash", "icon": "🔤"}},
-    {"id": "5", "data": {"label": "release permit", "icon": "🔓"}}
-  ]'
-  edgesJSON='[
-    {"id": "e1-2", "source": "1", "target": "2", "animated": true},
-    {"id": "e2-3", "source": "2", "target": "3", "animated": true},
-    {"id": "e3-4", "source": "3", "target": "4", "animated": true},
-    {"id": "e4-5", "source": "4", "target": "5", "animated": true}
-  ]'
-/>
+<Mermaid chart={`
+graph LR
+  A["Validate config"] --> B["Acquire scheduler permit"]
+  B --> C["derive password salt config"]
+  C --> D["encode_hash"]
+  D --> E["Release permit"]
+`} />
 
-## Public helpers
+## Public helpers on top of the engine
 
-- `hash` / `hash_with_config` — random salt, encoded string
-- `hash_with_config_and_salt` — fixed salt for KATs / interop (not the default production path)
-- `verify` — parse → derive with stored salt → constant-time compare
-- `needs_rehash*` — compare stored params to policy
+| Helper | Behavior |
+|---|---|
+| `hash` / `hash_with_config` | Random salt, returns encoded string |
+| `hash_with_config_and_salt` | Fixed salt for KATs and interop tests |
+| `verify` | Parse → derive with stored salt → constant-time compare |
+| `needs_rehash*` | Compare stored parameters to a policy |
 
-Construction version and domain separation constants are fixed in core; do not change them casually — digests and review vectors depend on them.
+Construction version and domain-separation tags are fixed in core. Changing them silently breaks published vectors and review evidence.
+
+<Tip>
+Use `hash_with_config_and_salt` only in tests. Production authentication should keep random salts from `hash` / `hash_with_config`.
+</Tip>
+
+<Related links={[
+  { href: './graph', title: 'Dependency graph' },
+  { href: './scheduler', title: 'Host memory scheduler' }
+]} />

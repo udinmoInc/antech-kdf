@@ -1,9 +1,11 @@
 ---
 title: "Rehash policies"
 sidebarTitle: "Rehash policy"
-description: "Detect outdated stored parameters and upgrade hashes after successful login."
+description: "Detect when stored Antech parameters fall behind your preferred profile."
 order: 22
 ---
+
+Applications evolve memory targets over time. A rehash policy compares the parameters embedded in a stored string to your current floor and preference.
 
 ```rust
 use antech_kdf::{needs_rehash, needs_rehash_with_policy, RehashPolicy};
@@ -20,12 +22,17 @@ let policy = RehashPolicy::builder()
     .build();
 
 if needs_rehash_with_policy(&stored, &policy)? {
-    // upgrade
+    // upgrade after successful verify
 }
 ```
 
-A rehash is needed when stored memory, fan-in, or output length falls below policy targets.
+A rehash is signaled when stored memory, fan-in, or output length is below the policy targets.
 
 <Tip>
-Always verify successfully before spending CPU on an upgrade hash.
+Always verify successfully before spending another full derive on an upgrade.
 </Tip>
+
+<Related links={[
+  { href: '../getting-started/first-hash', title: 'Full login upgrade sequence' },
+  { href: '../reference/configuration-reference', title: 'Policy field defaults' }
+]} />

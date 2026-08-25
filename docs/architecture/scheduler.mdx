@@ -1,21 +1,19 @@
 ---
 title: "Resource scheduler"
 sidebarTitle: "Scheduler"
-description: "Use BoundedResourceScheduler to cap concurrent hashing memory on a host."
+description: "BoundedResourceScheduler caps concurrent hashing memory on a host."
 order: 14
 ---
 
-Per-hash memory comes from `AntechConfig`. Separately, `BoundedResourceScheduler` in core enforces a **host-wide** admission ceiling (default **128 MiB** across concurrent jobs).
-
-<Note>
-The scheduler does not replace choosing a safe per-hash memory. It prevents overload when many verifies run at once.
-</Note>
-
-## Interaction
+`AntechConfig` sets memory for **one** derive. Separately, `BoundedResourceScheduler` enforces a **host-wide** ceiling so many concurrent verifies cannot over-commit RAM. The default ceiling is **128 MiB** across in-flight jobs.
 
 ```text
-AntechConfig.memory  →  bytes for one derive
-BoundedResourceScheduler  →  acquire/release permits for concurrent derives
+AntechConfig.memory     →  bytes for a single derive
+BoundedResourceScheduler →  acquire / release permits for concurrency
 ```
 
-Diagnostics (`scheduler_stats`) are available for integration tests and are not a stable public product API.
+When permits are exhausted, calls fail with a resource error instead of allocating past the policy.
+
+<Note>
+The scheduler does not choose a safe per-hash memory for you. Pick a profile that matches your threat model, then let the scheduler protect the machine under load.
+</Note>

@@ -1,46 +1,50 @@
 ---
-title: "Your first production-shaped flow"
+title: "Registration and login flow"
 sidebarTitle: "First hash"
-description: "Register a password, verify on login, and upgrade parameters with a rehash policy."
+description: "Store an Antech hash on signup, verify on login, and upgrade parameters only after a successful match."
 order: 5
 ---
 
-A typical application path: hash on registration, verify on login, rehash when policy says parameters are outdated.
+A practical auth path has three library calls: hash on registration, verify on login, and an optional rehash when your policy says the stored parameters are behind.
 
 ## Sequence
 
-<Mermaid>
+<Mermaid chart={`
 sequenceDiagram
     participant App
     participant Antech
     participant DB
     App->>Antech: hash(password)
-    Antech-->>App: $antech$v2$…
-    App->>DB: store encoded hash
+    Antech-->>App: antech v2 string
+    App->>DB: store encoded hash only
     App->>DB: load encoded hash
     App->>Antech: verify(password, hash)
-    Antech-->>App: true / false
-    App->>Antech: needs_rehash_with_policy(hash, policy)
-    alt needs upgrade
-        App->>Antech: hash_with_config(password, new_config)
+    Antech-->>App: true or false
+    App->>Antech: needs_rehash_with_policy
+    alt upgrade needed
+        App->>Antech: hash_with_config(password, stronger)
         App->>DB: replace encoded hash
     end
-</Mermaid>
+`} />
 
 ## Registration
 
 ```rust
 let stored = antech_kdf::hash(password)?;
-// persist `stored` only — never the password
+// persist `stored` — never the password, never a separate parameter blob
 ```
 
-## Login + optional upgrade
+The string already carries memory, graph, salt, and digest. `verify` rebuilds config from it.
+
+## Login with optional upgrade
 
 ```rust
-use antech_kdf::{hash_with_config, needs_rehash_with_policy, verify, AntechConfig, RehashPolicy};
+use antech_kdf::{
+    hash_with_config, needs_rehash_with_policy, verify, AntechConfig, RehashPolicy,
+};
 
 if !verify(password, &stored)? {
-    return Err(/* auth failure */);
+    return Err(/* authentication failure */);
 }
 
 let policy = RehashPolicy::builder()
@@ -51,14 +55,54 @@ let policy = RehashPolicy::builder()
 if needs_rehash_with_policy(&stored, &policy)? {
     let stronger = AntechConfig::builder().memory_mib(32).build()?;
     let upgraded = hash_with_config(password, &stronger)?;
-    // replace stored hash in DB
+    // replace the row in your user store
 }
 ```
 
 <Tip>
-Rehash only after a successful verify so attackers cannot force expensive upgrades with wrong passwords.
+Rehash only after a successful verify. Wrong passwords should not force expensive upgrades.
 </Tip>
 
-<Warning>
-Antech is still experimental. Do not migrate production Argon2id stores to Antech without a published security review and an explicit risk acceptance.
-</Warning>
+## Multi-language sketch
+
+<FrameworkTabs frameworks={['Python', 'C#']}>
+  <FrameworkContent framework="Python">
+    ```python
+    import antech_kdf
+
+    if not antech_kdf.verify(password, stored):
+        raise AuthError()
+
+    policy = antech_kdf.RehashPolicy.default()
+    policy.preferred_memory_kib = 32768
+    if antech_kdf.needs_rehash_with_policy(stored, policy):
+        cfg = antech_kdf.Config.default()
+        cfg.memory_kib = 32768
+        stored = antech_kdf.hash_with_config(password, cfg)
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="C#">
+    ```csharp
+    if (!AntechKdf.Verify(password, stored))
+        throw new AuthException();
+
+    var policy = AntechKdf.DefaultRehashPolicy();
+    policy.PreferredMemoryKib = 32768;
+    if (AntechKdf.NeedsRehashWithPolicy(stored, policy))
+    {
+        var cfg = AntechKdf.DefaultConfig();
+        cfg.MemoryKib = 32768;
+        stored = AntechKdf.HashWithConfig(Encoding.UTF8.GetBytes(password), cfg);
+    }
+    ```
+  </FrameworkContent>
+</FrameworkTabs>
+
+<Note>
+Antech remains <InlineBadge type="experimental" />. For production password storage today, prefer Argon2id unless you have a written risk acceptance tied to the ongoing review.
+</Note>
+
+<NextSteps links={[
+  { href: '../guides/rehash-policy', title: 'Rehash policy details' },
+  { href: '../architecture/overview', title: 'Architecture overview' }
+]} />

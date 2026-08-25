@@ -1,9 +1,11 @@
 ---
 title: "Python SDK"
 sidebarTitle: "Python"
-description: "Install the ctypes antech_kdf package and call hash, verify, and rehash helpers."
+description: "Install antech-kdf via pip and call hash, verify, and rehash through ctypes."
 order: 33
 ---
+
+Build the native library first, then install the editable package:
 
 ```bash
 ./sdk/scripts/build-native.sh
@@ -19,14 +21,24 @@ assert antech_kdf.verify("correct_horse_battery_staple", stored)
 cfg = antech_kdf.Config.default()
 cfg.memory_kib = 1024
 custom = antech_kdf.hash_with_config("pw", cfg)
+
+policy = antech_kdf.RehashPolicy.default()
+policy.preferred_memory_kib = 32768
+needs = antech_kdf.needs_rehash_with_policy(custom, policy)
 ```
 
-<Note>
-The package discovers `sdk/native` by walking up to the repo `VERSION`, or uses `ANTECH_KDF_LIB`.
-</Note>
-
-Conformance:
+The loader walks upward for a repo `VERSION` plus `sdk/native`, or honors `ANTECH_KDF_LIB`.
 
 ```bash
 python sdk/conformance/run_python.py
 ```
+
+<Prerequisites items={[
+  'Python 3.9+',
+  'Release build of antech-kdf-ffi in sdk/native'
+]} />
+
+<NextSteps links={[
+  { href: './conformance', title: 'Conformance suite' },
+  { href: '../getting-started/quickstart', title: 'API quickstart' }
+]} />

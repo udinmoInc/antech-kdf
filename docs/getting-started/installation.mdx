@@ -1,66 +1,98 @@
 ---
 title: "Install Antech KDF"
 sidebarTitle: "Installation"
-description: "Install the Rust crate, build the native FFI library, and set up language SDKs."
+description: "Install the Rust crate, build the native FFI library, and wire language SDKs."
 order: 2
 ---
 
-Antech ships as a Rust workspace plus optional language bindings that load `libantech_kdf_ffi`.
+Pick the path that matches how you ship: Rust-only applications link `antech-kdf` directly. Other languages load `antech-kdf-ffi` as a shared library, then use a thin wrapper.
 
-## Requirements
+<Prerequisites items={[
+  'Rust 1.70 or newer',
+  'Git checkout of udinmoInc/antech-kdf for SDK native builds'
+]} />
 
-- Rust **1.70+**
-- For SDKs: a release build of `antech-kdf-ffi` (see native build below)
+## Rust crate
 
-## Rust
+Add the public API crate to your project:
 
 ```toml
 [dependencies]
 antech-kdf = "0.1"
 ```
 
-Or from a git checkout:
+From a local checkout:
 
 ```bash
 cargo add antech-kdf --path crates/antech-kdf
 ```
 
-## Build the native library (SDKs)
+That is enough for servers written in Rust. You do not need the FFI library unless another language will call Antech.
 
-Language wrappers need the shared library next to your app or on the loader path.
+## Native library for SDKs
 
-```bash
-# Unix
-./sdk/scripts/build-native.sh
+Wrappers under `bindings/` expect a release build of the C ABI:
 
-# Windows (PowerShell)
-./sdk/scripts/build-native.ps1
-```
+<FrameworkTabs frameworks={['Unix', 'Windows']}>
+  <FrameworkContent framework="Unix">
+    ```bash
+    ./sdk/scripts/build-native.sh
+    ls sdk/native/
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="Windows">
+    ```powershell
+    ./sdk/scripts/build-native.ps1
+    Get-ChildItem sdk\native
+    ```
+  </FrameworkContent>
+</FrameworkTabs>
 
-Artifacts land in `sdk/native/` (`antech_kdf_ffi.dll` / `.so` / `.dylib` plus `antech_kdf.h`).
+You should see the platform library (`antech_kdf_ffi.dll` / `.so` / `.dylib`) and `antech_kdf.h`.
 
-<Note>
-Set `ANTECH_KDF_LIB` to the library file or `sdk/native` directory if automatic discovery fails.
-</Note>
+<Tip>
+If a language package cannot find the library, set `ANTECH_KDF_LIB` to the file path or to the `sdk/native` directory.
+</Tip>
 
 ## Language packages
 
-| Ecosystem | Install |
+| Ecosystem | After native build |
 |---|---|
-| Python | `pip install -e bindings/python` (after native build) |
-| Node | `cd bindings/node && npm install && npm run build` |
-| Go | cgo against `sdk/native` — see `bindings/go` |
-| .NET | `dotnet add` / build `bindings/dotnet/Antech.Kdf` |
-| Java | Maven `bindings/java` + JNA + native on `java.library.path` |
+| Python | `pip install -e bindings/python` |
+| Node / TypeScript | `cd bindings/node && npm install && npm run build` |
+| Go | cgo module in `bindings/go` |
+| .NET | `dotnet build bindings/dotnet/Antech.Kdf` |
+| Java | Maven project in `bindings/java` + native on the library path |
 
-<Tip>
-Keep versions synchronized with `python sdk/scripts/sync-versions.py` using the root `VERSION` file.
-</Tip>
+Keep versions aligned with the root `VERSION` file:
 
-## Verify the build
+```bash
+python sdk/scripts/sync-versions.py
+```
+
+## Sanity checks
 
 ```bash
 cargo test -p antech-kdf
 cargo test -p antech-kdf-ffi
 python sdk/conformance/run_python.py
 ```
+
+<FileTree>
+  <Folder name="sdk">
+    <Folder name="native">
+      <File name="antech_kdf_ffi.*" />
+      <File name="antech_kdf.h" />
+    </Folder>
+    <Folder name="scripts">
+      <File name="build-native.sh" />
+      <File name="build-native.ps1" />
+      <File name="sync-versions.py" />
+    </Folder>
+  </Folder>
+</FileTree>
+
+<NextSteps links={[
+  { href: './quickstart', title: 'Quickstart: hash and verify' },
+  { href: '../sdk/overview', title: 'SDK overview by language' }
+]} />

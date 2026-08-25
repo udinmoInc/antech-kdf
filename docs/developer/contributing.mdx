@@ -1,7 +1,7 @@
 ---
 title: "Contributing"
 sidebarTitle: "Contributing"
-description: "Contribute to Antech production crates and SDKs without breaking the research boundary."
+description: "Build, format, lint, and test production crates without breaking the research boundary."
 order: 60
 ---
 
@@ -12,14 +12,21 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
-Research changes:
+Research workspace:
 
 ```bash
 cargo check --manifest-path research/code/Cargo.toml --workspace
 ```
 
-<Warning>
-Do not change canonical digest behavior, v2 format, or public API semantics unless the change is intentional, versioned, and covered by new vectors.
-</Warning>
+Production crates stay under `crates/`. SDKs under `bindings/` and `sdk/`. Experiments under `research/`.
 
-Layout: production under `crates/`, SDKs under `bindings/`, research under `research/`.
+<Note>
+Do not change digest behavior, v2 encoding, or public API semantics unless the change is intentional, versioned, and covered by updated vectors.
+</Note>
+
+Published docs: [developers.udinmo.com](https://developers.udinmo.com).
+
+<NextSteps links={[
+  { href: './testing', title: 'Testing and conformance' },
+  { href: './releasing', title: 'Release checklist' }
+]} />

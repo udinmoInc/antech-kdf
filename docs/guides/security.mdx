@@ -1,25 +1,36 @@
 ---
 title: "Security guidance"
 sidebarTitle: "Security"
-description: "Operational security notes for deploying Antech while review is ongoing."
+description: "Experimental status, what Antech is for today, and operational habits that matter."
 order: 26
 ---
 
-<Warning>
-Antech is experimental and under independent cryptanalysis. Do not treat passing benchmarks or SDK packaging as a security endorsement.
-</Warning>
+Antech is published as <InlineBadge type="experimental" /> software. Benchmarks and SDK packaging help you integrate and compare; they do **not** replace cryptographic review.
 
-## Do
+## Intended use today
 
-- Prefer Argon2id for production until review results are published
+- Research and attacker-cost comparison against Argon2-class baselines
+- Early product experiments behind explicit risk acceptance
+- Conformance and interoperability work across language bindings
+
+For production password storage on the public internet, **prefer Argon2id** until independent review concludes and you decide the residual risk is acceptable.
+
+## Practices that still apply
+
 - Store only `$antech$v2$` strings
-- Use TLS and constant-time auth responses
-- Keep SDKs on the published FFI — no reimplemented crypto
+- Never log passwords or cleartext salts
+- Keep crypto in the Rust core — do not “simplify” the DAG in an application language
+- Upgrade parameters only after successful verify
 
-## Don’t
+## Where to read evidence
 
-- Ship custom graphs as “compatible” without new vectors
-- Log passwords or salts in cleartext
-- Disable verification errors as soft failures
+| Material | Location |
+|---|---|
+| Review package | `research/security-review/` |
+| Narrative chapters | `research/docs/` |
+| Conformance KATs | `sdk/conformance/vectors.json` |
 
-Review package: `research/security-review/`.
+<Related links={[
+  { href: '../developer/research-boundary', title: 'Production vs research boundary' },
+  { href: '../sdk/conformance', title: 'Conformance suite' }
+]} />

@@ -1,55 +1,134 @@
 ---
-title: "Antech KDF overview"
+title: "Antech KDF"
 sidebarTitle: "Overview"
-description: "Learn what Antech KDF is, how the compute-memory construction works, and when to use it."
-order: 1
+description: "Compute-memory password hashing with a combined-frontier graph, self-describing v2 hashes, and SDKs that share one Rust core."
+order: 0
+sectionOrder: 0
 ---
 
-Antech KDF is an experimental password hashing library built around a **compute-memory** construction. The default profile uses **16 MiB** of working memory and a **combined-frontier** dependency graph. Work is derived from `memory / block_size` — there is no separate iteration-count knob.
+Antech is a password KDF aimed at servers that cannot spare a large Argon2 working set, but still want attacker cost that does not collapse when memory is scarce. The production profile walks a **combined-frontier** dependency graph in about **16 MiB**. Work is `memory / block_size` — there is no separate iteration knob.
 
-<Warning>
-Antech has not completed independent cryptographic review. Prefer Argon2id for production password storage until review conclusions are published. Treat benchmarks as comparative evidence, not a security proof.
-</Warning>
+<InlineBadge type="experimental" /> <InlineBadge type="rust" />
 
-## What you get
-
-- Stable Rust API: `hash`, `verify`, `needs_rehash`, `hash_with_config`, and rehash policies
-- Self-describing `$antech$v2$…` stored hashes
-- Thin SDKs for C/C++, Go, Python, Node, Java/Kotlin, Swift, and .NET over one FFI
-- Shared conformance vectors so every language matches the same digests
-
-## How hashing flows
-
-<Flow
-  nodesJSON='[
-    {"id": "1", "data": {"label": "Password + salt", "icon": "🔑"}},
-    {"id": "2", "data": {"label": "Bind seed", "icon": "🧬"}},
-    {"id": "3", "data": {"label": "DAG walk (combined-frontier)", "icon": "🕸️", "valid": true}},
-    {"id": "4", "data": {"label": "Finalize digest", "icon": "📦"}},
-    {"id": "5", "data": {"label": "$antech$v2$ encode", "icon": "💾", "valid": true}}
-  ]'
-  edgesJSON='[
-    {"id": "e1-2", "source": "1", "target": "2", "animated": true},
-    {"id": "e2-3", "source": "2", "target": "3", "animated": true},
-    {"id": "e3-4", "source": "3", "target": "4", "animated": true},
-    {"id": "e4-5", "source": "4", "target": "5", "animated": true}
-  ]'
+<HeroFeatureCard
+  title="Antech KDF"
+  description="One canonical engine in Rust. Thin SDKs for C, Go, Python, Node, Java, Kotlin, Swift, and .NET. Same digests everywhere — verified by a shared conformance suite."
+  buttonText="Get started"
+  href="./quickstart"
+  image="https://appcontent.udinmo.com/os/img/antech-kdf.webp"
 />
 
-## Single source of truth
+<ButtonGroup>
+  <Button href="./installation" variant="primary">Install</Button>
+  <Button href="./quickstart" variant="secondary">Quickstart</Button>
+  <Button href="https://github.com/udinmoInc/antech-kdf" variant="secondary">GitHub</Button>
+</ButtonGroup>
 
-Cryptography lives only in `antech-kdf-core`. Language packages call `antech-kdf-ffi` and never reimplement the engine.
+## Where things stand
 
-<Tip>
-Start with [Installation](/getting-started/installation) then [Quickstart](/getting-started/quickstart) for a five-minute hash/verify loop in Rust.
-</Tip>
+Antech is **experimental**. It is useful for research, comparative benchmarks, and early integration work. It is **not** a drop-in replacement for Argon2id in production until independent cryptanalysis is complete and you have explicitly accepted the risk.
 
-## Status
+<Note>
+Status in package metadata is <InlineBadge type="experimental" /> — not Beta. Review materials live under `research/security-review/` in the repository.
+</Note>
 
-| Item | Value |
+## At a glance
+
+<StatsRow>
+  <Stat number="16 MiB" label="Default working set" />
+  <Stat number="v2" label="Self-describing hash encoding" />
+  <Stat number="1 core" label="Cryptographic implementation" />
+  <Stat number="9+" label="Language surfaces via FFI" />
+</StatsRow>
+
+## How a hash is built
+
+Password and salt bind into a seed, the engine walks the DAG, then the digest is packed into a portable string:
+
+<Mermaid chart={`
+graph LR
+  A["Password + salt"] --> B["Bind seed"]
+  B --> C["Combined-frontier DAG"]
+  C --> D["Finalize digest"]
+  D --> E["Encode antech v2"]
+`} />
+
+## What you can do with it
+
+<FeatureGrid>
+  <FeatureCard
+    icon="lock"
+    title="Hash and verify"
+    description="Stable hash / verify / needs_rehash API with constant-time comparison on verify."
+    href="./quickstart"
+  />
+  <FeatureCard
+    icon="sliders"
+    title="Tune structural knobs"
+    description="Memory, block size, fan-in, graph kind, salt and output length — validated the same way in every SDK."
+    href="./configuration"
+  />
+  <FeatureCard
+    icon="layers"
+    title="Ship across languages"
+    description="C ABI plus thin wrappers. No second crypto implementation in Python, Go, or Node."
+    href="../sdk/overview"
+  />
+  <FeatureCard
+    icon="check"
+    title="Conformance vectors"
+    description="Shared KATs so FFI and language packages must match digests and error mapping."
+    href="../sdk/conformance"
+  />
+</FeatureGrid>
+
+## Repository layout
+
+<FileTree>
+  <Folder name="crates">
+    <File name="antech-kdf" />
+    <File name="antech-kdf-core" />
+    <File name="antech-kdf-ffi" />
+  </Folder>
+  <Folder name="bindings">
+    <File name="python" />
+    <File name="node" />
+    <File name="go" />
+  </Folder>
+  <Folder name="sdk">
+    <File name="conformance" />
+    <File name="scripts" />
+  </Folder>
+  <Folder name="research">
+    <File name="security-review" />
+    <File name="code" />
+  </Folder>
+</FileTree>
+
+## Defaults worth memorizing
+
+| Knob | Default |
 |---|---|
-| Version | `0.1.0` (see repo `VERSION`) |
-| Status | Experimental / under review |
-| Default memory | 16 MiB |
-| Default graph | CombinedFrontier (`g=3`) |
-| Encoding | `$antech$v2$…` only (`v1` rejected) |
+| Memory | 16 MiB |
+| Block size | 32 bytes |
+| Fan-in | 2 |
+| Graph | CombinedFrontier (`g=3`) |
+| Salt length | 16 bytes |
+| Output length | 32 bytes |
+
+Stored form:
+
+```text
+$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
+```
+
+<Prerequisites items={[
+  'Rust 1.70+ for the core crate',
+  'Optional: release build of antech-kdf-ffi for language SDKs'
+]} />
+
+<NextSteps links={[
+  { href: './installation', title: 'Install the crate and native library' },
+  { href: './quickstart', title: 'Hash and verify in five minutes' },
+  { href: '../guides/security', title: 'Read the security posture' }
+]} />

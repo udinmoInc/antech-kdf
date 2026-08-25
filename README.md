@@ -2,7 +2,7 @@
 
 Password hashing library built around a compute-memory construction. The default profile uses 16 MiB of working memory and a combined-frontier dependency graph. Work is derived from `memory / block_size`; there is no separate iteration-count knob.
 
-This is experimental software. Benchmarks are useful for comparing attacker cost under fixed conditions. They are not a substitute for cryptographic review. Prefer Argon2id for production password storage until Antech has undergone independent cryptographic review and any resulting conclusions are published.
+This is **experimental** software (not Beta). Benchmarks help compare attacker cost under fixed conditions; they are not a substitute for cryptographic review. Prefer Argon2id for production password storage until Antech has undergone independent cryptographic review and any resulting conclusions are published.
 
 ## Security Review
 
@@ -116,7 +116,9 @@ cargo run --manifest-path research/code/Cargo.toml --release -p antech-kdf-resea
 
 Full developer documentation: [developers.udinmo.com](https://developers.udinmo.com)
 
-Source MDX for that site lives in [`docs/`](docs/) (`docs/sidebar.json`).
+Product logo: [antech-kdf.webp](https://appcontent.udinmo.com/os/img/antech-kdf.webp)
+
+MDX source for the docs site: [`docs/`](docs/) (`package.json`, `sidebar.json`). Status: **Experimental**.
 
 ## Build
 

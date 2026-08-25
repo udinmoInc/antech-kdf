@@ -1,35 +1,59 @@
 ---
 title: "SDK overview"
 sidebarTitle: "Overview"
-description: "Cross-language Antech SDKs share one FFI and one conformance suite."
+description: "Language packages share one FFI, one version file, and one conformance suite."
 order: 30
 ---
 
-Every language package is a thin wrapper over `antech-kdf-ffi`. No language contains its own cryptographic implementation.
+Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation, and encoding come from the Rust core — not from a second implementation in the binding.
 
-## Uniform operations
+<img
+  src="https://appcontent.udinmo.com/os/img/antech-kdf.webp"
+  alt="Antech KDF logo"
+  width="120"
+/>
+
+## Shared operations
 
 | Operation | Purpose |
 |---|---|
-| `hash` | Default profile |
-| `hash_with_config` | Explicit config |
-| `verify` | Check password |
-| `needs_rehash` | Default policy |
-| `needs_rehash_with_policy` | Custom policy |
-| `hash_with_config_and_salt` | KATs / interop |
+| `hash` | Default 16 MiB profile |
+| `hash_with_config` | Explicit structural parameters |
+| `verify` | Constant-time check |
+| `needs_rehash` / `needs_rehash_with_policy` | Upgrade detection |
+| `hash_with_config_and_salt` | Deterministic KATs only |
 
-## Version authority
+## Choose a language
 
-Root `VERSION` is authoritative. Sync manifests with:
+<FeatureGrid>
+  <FeatureCard icon="rust" title="Rust" description="Canonical API crate." href="./rust" />
+  <FeatureCard icon="code" title="C / C++" description="Header + optional C++ wrapper." href="./c-cpp" />
+  <FeatureCard icon="python" title="Python" description="ctypes package over the cdylib." href="./python" />
+  <FeatureCard icon="typescript" title="Node / TS" description="koffi bindings with TypeScript types." href="./node" />
+  <FeatureCard icon="box" title="Go" description="cgo module." href="./go" />
+  <FeatureCard icon="coffee" title="Java / Kotlin" description="JNA plus Kotlin façade." href="./java-kotlin" />
+  <FeatureCard icon="hash" title=".NET" description="P/Invoke Antech.Kdf." href="./dotnet" />
+  <FeatureCard icon="apple" title="Swift" description="SwiftPM over the C ABI." href="./swift" />
+</FeatureGrid>
+
+## Version and native artifacts
+
+Root `VERSION` is authoritative:
 
 ```bash
 python sdk/scripts/sync-versions.py
+./sdk/scripts/build-native.sh   # or build-native.ps1
 ```
 
-## Native artifacts
+CI uploads per-OS natives on `v*` tags. Platform notes: `sdk/PLATFORMS.md`.
 
-```bash
-./sdk/scripts/build-native.sh   # or .ps1 on Windows
-```
+<StatsRow>
+  <Stat number="1" label="Crypto implementation" />
+  <Stat number="12" label="Conformance KAT cases" />
+  <Stat number="Experimental" label="Package status" />
+</StatsRow>
 
-See [Platforms](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/PLATFORMS.md) notes for Android/iOS/server distribution.
+<NextSteps links={[
+  { href: './conformance', title: 'Run the conformance suite' },
+  { href: './python', title: 'Python install and examples' }
+]} />

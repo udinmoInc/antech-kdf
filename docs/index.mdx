@@ -1,27 +1,32 @@
 ---
 title: "Antech KDF documentation"
-sidebarTitle: "Docs home"
-description: "Entry point for Instant-style MDX documentation of the Antech password KDF and SDKs."
+sidebarTitle: "Home"
+description: "Developer documentation for Antech KDF on developers.udinmo.com."
 order: 0
 ---
 
-Welcome to the Antech KDF docs. Start with [Overview](/getting-started/overview), then [Installation](/getting-started/installation).
+Documentation for **antech-kdf** — a compute-memory password KDF with a combined-frontier graph and multi-language SDKs over one Rust core.
 
-## Sections
+<InlineBadge type="experimental" /> <InlineBadge type="rust" />
 
-| Section | What you'll find |
-|---|---|
-| Get started | Install, quickstart, first login flow |
-| Architecture | Engine, graph, format, FFI |
-| Guides | Hashing, verify, rehash, async, security |
-| SDKs | Rust, C/C++, Python, Node, Go, JVM, .NET, Swift |
-| Reference | API, ABI, config, errors |
-| Developer | Contributing, tests, releases |
+<HeroFeatureCard
+  title="Antech KDF"
+  description="Password hashing for constrained defender memory, with self-describing v2 hashes and conformance-tested SDKs."
+  buttonText="Open overview"
+  href="./getting-started/overview"
+  image="https://appcontent.udinmo.com/os/img/antech-kdf.webp"
+/>
 
-<Note>
-Published docs: [developers.udinmo.com](https://developers.udinmo.com). This repository holds the MDX source under `docs/` (`sidebar.json`, `docs-generator.config.json`).
-</Note>
+Published at [developers.udinmo.com](https://developers.udinmo.com). This folder is the MDX source (`package.json`, `sidebar.json`).
 
-<Warning>
-Software status: **experimental**. Prefer Argon2id for production until independent review is complete.
-</Warning>
+<FeatureGrid>
+  <FeatureCard icon="rocket" title="Get started" description="Install, quickstart, and first login flow." href="./getting-started/overview" />
+  <FeatureCard icon="layers" title="Architecture" description="Engine, graph, format, scheduler, FFI." href="./architecture/overview" />
+  <FeatureCard icon="book" title="SDKs" description="Rust, C/C++, Python, Node, Go, JVM, .NET, Swift." href="./sdk/overview" />
+  <FeatureCard icon="code" title="Reference" description="API, ABI, configuration, errors." href="./reference/api" />
+</FeatureGrid>
+
+<ButtonGroup>
+  <Button href="./getting-started/installation" variant="primary">Install</Button>
+  <Button href="https://github.com/udinmoInc/antech-kdf" variant="secondary">GitHub</Button>
+</ButtonGroup>

@@ -1,13 +1,13 @@
 ---
 title: "Hash encoding"
 sidebarTitle: "Format"
-description: "Parse and emit the self-describing $antech$v2$ password hash string."
+description: "Self-describing $antech$v2$ strings: parameters, salt, and digest in one portable value."
 order: 13
 ---
 
-Stored hashes are portable strings. `verify` rebuilds config from the string — you do not store parameters separately.
+Stored hashes are strings. Applications should persist the string and nothing else for Antech parameters — `verify` rebuilds config from it.
 
-## Shape
+## Grammar
 
 ```text
 $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
@@ -16,16 +16,18 @@ $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<
 | Field | Meaning |
 |---|---|
 | `m` | Memory KiB |
-| `s` | Salt length (bytes) |
+| `s` | Salt length in bytes |
 | `b` | Block size |
 | `f` | Fan-in |
 | `g` | Graph tag |
 | `l` | Output length |
 
-<Warning>
-Legacy `v1` encodings are **rejected**. Do not reinterpret old research encodings as v2.
-</Warning>
+Encoding and parsing live in `antech-kdf-format`. Legacy **`v1` is rejected** — old research encodings are not reinterpreted as v2.
 
-## Ownership of truth
+<Note>
+Duplicate parameter keys, oversized hex, and out-of-range values fail closed as encoding / config errors.
+</Note>
 
-Encoding/parsing lives in `antech-kdf-format`. FFI and SDKs only pass through strings produced by that crate.
+<Related links={[
+  { href: '../reference/hash-format', title: 'Hash format reference' }
+]} />

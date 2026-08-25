@@ -1,40 +1,54 @@
 ---
 title: "Architecture overview"
 sidebarTitle: "Overview"
-description: "See how production crates, FFI, and research stay separated around one canonical engine."
+description: "How production crates, FFI, SDKs, and research stay separated around one engine."
 order: 10
 ---
 
-Antech keeps a strict dependency direction: research and SDKs depend on production; production never depends on research.
+Antech keeps a hard line between **production** code and **research**. SDKs and attackers both depend on core; core never depends on research.
 
-## Crate graph
+## Dependency direction
 
-<Mermaid>
+<Mermaid chart={`
 flowchart TD
-  API[antech-kdf]
-  CORE[antech-kdf-core]
-  FMT[antech-kdf-format]
-  TYPES[antech-kdf-types]
-  FFI[antech-kdf-ffi]
-  CLI[antech-kdf-cli]
-  SDK[Language SDKs]
+  API["antech-kdf"]
+  CORE["antech-kdf-core"]
+  FMT["antech-kdf-format"]
+  TYPES["antech-kdf-types"]
+  FFI["antech-kdf-ffi"]
+  CLI["antech-kdf-cli"]
+  SDK["Language SDKs"]
+  RES["research/code"]
   API --> CORE
   CORE --> FMT
   CORE --> TYPES
   FFI --> API
   CLI --> API
   SDK --> FFI
-</Mermaid>
+  RES --> CORE
+`} />
 
-| Crate | Role |
+## Production crates
+
+| Crate | Responsibility |
 |---|---|
-| `antech-kdf` | Public API |
-| `antech-kdf-core` | `AntechEngine`, scheduler |
-| `antech-kdf-format` | Encode / parse `$antech$v2$` |
+| `antech-kdf` | Public `hash` / `verify` / rehash API |
+| `antech-kdf-core` | `AntechEngine`, resource scheduler |
+| `antech-kdf-format` | `$antech$v2$` encode and parse |
 | `antech-kdf-types` | Config, errors, graph kinds |
-| `antech-kdf-ffi` | C ABI for all SDKs |
-| `antech-kdf-cli` | CLI `hash` / `verify` |
+| `antech-kdf-ffi` | C ABI used by every non-Rust SDK |
+| `antech-kdf-cli` | Command-line hash / verify |
 
-<Note>
-Research code lives under `research/code/` in a **separate** Cargo workspace and imports core only.
-</Note>
+Research lives under `research/code/` as a **separate Cargo workspace**.
+
+<FeatureGrid>
+  <FeatureCard icon="cpu" title="Engine" description="Seed bind, DAG walk, finalize." href="./engine" />
+  <FeatureCard icon="git-branch" title="Graph" description="CombinedFrontier and related kinds." href="./graph" />
+  <FeatureCard icon="file-text" title="Format" description="Self-describing v2 strings." href="./format" />
+  <FeatureCard icon="link" title="FFI" description="Thread-safe C ABI for SDKs." href="./ffi" />
+</FeatureGrid>
+
+<NextSteps links={[
+  { href: './engine', title: 'Canonical engine pipeline' },
+  { href: '../developer/research-boundary', title: 'Production vs research boundary' }
+]} />

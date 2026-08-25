@@ -1,7 +1,7 @@
 ---
 title: "Rust SDK"
 sidebarTitle: "Rust"
-description: "Use the canonical antech-kdf crate as the primary Antech API."
+description: "Use antech-kdf as the canonical API — every other language mirrors this surface."
 order: 31
 ---
 
@@ -11,9 +11,19 @@ antech-kdf = "0.1"
 ```
 
 ```rust
-use antech_kdf::{hash, verify, needs_rehash};
-let h = hash("secret")?;
-assert!(verify("secret", &h)?);
+use antech_kdf::{hash, verify, needs_rehash, hash_with_config, AntechConfig};
+
+let stored = hash("secret")?;
+assert!(verify("secret", &stored)?);
+
+let cfg = AntechConfig::builder().memory_mib(16).build()?;
+let custom = hash_with_config("secret", &cfg)?;
+let _ = (needs_rehash(&stored)?, custom);
 ```
 
-Rust is the source of truth. Other SDKs mirror this surface through FFI.
+Rust owns the cryptographic implementation. Prefer this crate for Rust services; use FFI only when another language must call in.
+
+<NextSteps links={[
+  { href: '../reference/api', title: 'API reference' },
+  { href: '../getting-started/quickstart', title: 'Quickstart' }
+]} />

@@ -1,15 +1,15 @@
 ---
 title: "Dependency graph"
 sidebarTitle: "Graph"
-description: "Learn how CombinedFrontier parents, frontier width, and tiles shape compute-memory work."
+description: "CombinedFrontier parents, frontier width, and tiles that define compute-memory work."
 order: 12
 ---
 
-Antech’s cost profile comes from a password-dependent DAG over memory blocks. Production defaults to **CombinedFrontier**.
+Antech’s cost comes from a password-dependent DAG over memory blocks. Production hashing defaults to **CombinedFrontier**.
 
-## CombinedFrontier (default)
+## CombinedFrontier
 
-Parents mix recent local frontier nodes with far/scatter edges so reduced-memory attackers cannot cheaply drop large regions of the address space while remaining correct.
+Parents mix a local frontier with far / scatter edges so a reduced-memory attacker cannot simply drop large regions of the address space and still match the digest.
 
 | Constant | Value |
 |---|---|
@@ -17,12 +17,15 @@ Parents mix recent local frontier nodes with far/scatter edges so reduced-memory
 | Tile blocks | 512 |
 | Mix rounds | 4 |
 
-<Tip>
-Graph kind is mixed into the seed and stored as `g=` in the encoded hash. Changing graph changes digests.
-</Tip>
+The graph kind is mixed into the seed and stored as `g=` in the encoded hash. Changing graph changes digests.
 
 ## Other kinds
 
-`ReducedCriticalPath` and `CacheLocality` remain available for research contrast. They are not the review target default.
+`ReducedCriticalPath` (`g=1`) and `CacheLocality` (`g=2`) remain available for research contrast. They are not the default review target.
 
-See research security-review materials for attacker measurements against CombinedFrontier.
+Attack measurements and limitations are documented in `research/security-review/` and `research/docs/`.
+
+<NextSteps links={[
+  { href: './format', title: 'How g= appears in the hash string' },
+  { href: '../guides/security', title: 'Security posture' }
+]} />

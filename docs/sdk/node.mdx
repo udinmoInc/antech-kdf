@@ -1,7 +1,7 @@
 ---
-title: "Node.js and TypeScript SDK"
+title: "Node.js and TypeScript"
 sidebarTitle: "Node / TS"
-description: "Use the antech-kdf npm package powered by koffi over the native FFI."
+description: "Use the antech-kdf npm package with TypeScript types over the native FFI."
 order: 34
 ---
 
@@ -10,15 +10,32 @@ order: 34
 cd bindings/node && npm install && npm run build
 ```
 
-```ts
-import { hash, verify, hashWithConfig, defaultConfig } from "antech-kdf";
+```typescript
+import {
+  hash,
+  verify,
+  hashWithConfig,
+  defaultConfig,
+  needsRehash,
+  needsRehashWithPolicy,
+  defaultRehashPolicy,
+} from "antech-kdf";
 
 const stored = hash("password");
 verify("password", stored);
 
 const cfg = defaultConfig();
 cfg.memory_kib = 1024;
-hashWithConfig("pw", cfg);
+const custom = hashWithConfig("pw", cfg);
+
+const policy = defaultRehashPolicy();
+policy.preferred_memory_kib = 32768;
+needsRehashWithPolicy(custom, policy);
 ```
 
-API uses camelCase (`needsRehash`, `hashWithConfig`) while preserving semantics.
+Naming is camelCase in TypeScript; semantics match Rust and Python.
+
+<NextSteps links={[
+  { href: './overview', title: 'SDK overview' },
+  { href: './conformance', title: 'Conformance' }
+]} />
