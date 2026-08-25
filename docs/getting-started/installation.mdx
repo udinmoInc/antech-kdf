@@ -1,0 +1,66 @@
+---
+title: "Install Antech KDF"
+sidebarTitle: "Installation"
+description: "Install the Rust crate, build the native FFI library, and set up language SDKs."
+order: 2
+---
+
+Antech ships as a Rust workspace plus optional language bindings that load `libantech_kdf_ffi`.
+
+## Requirements
+
+- Rust **1.70+**
+- For SDKs: a release build of `antech-kdf-ffi` (see native build below)
+
+## Rust
+
+```toml
+[dependencies]
+antech-kdf = "0.1"
+```
+
+Or from a git checkout:
+
+```bash
+cargo add antech-kdf --path crates/antech-kdf
+```
+
+## Build the native library (SDKs)
+
+Language wrappers need the shared library next to your app or on the loader path.
+
+```bash
+# Unix
+./sdk/scripts/build-native.sh
+
+# Windows (PowerShell)
+./sdk/scripts/build-native.ps1
+```
+
+Artifacts land in `sdk/native/` (`antech_kdf_ffi.dll` / `.so` / `.dylib` plus `antech_kdf.h`).
+
+<Note>
+Set `ANTECH_KDF_LIB` to the library file or `sdk/native` directory if automatic discovery fails.
+</Note>
+
+## Language packages
+
+| Ecosystem | Install |
+|---|---|
+| Python | `pip install -e bindings/python` (after native build) |
+| Node | `cd bindings/node && npm install && npm run build` |
+| Go | cgo against `sdk/native` — see `bindings/go` |
+| .NET | `dotnet add` / build `bindings/dotnet/Antech.Kdf` |
+| Java | Maven `bindings/java` + JNA + native on `java.library.path` |
+
+<Tip>
+Keep versions synchronized with `python sdk/scripts/sync-versions.py` using the root `VERSION` file.
+</Tip>
+
+## Verify the build
+
+```bash
+cargo test -p antech-kdf
+cargo test -p antech-kdf-ffi
+python sdk/conformance/run_python.py
+```

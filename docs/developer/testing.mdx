@@ -1,0 +1,21 @@
+---
+title: "Testing"
+sidebarTitle: "Testing"
+description: "Run unit, integration, fuzz, and cross-language conformance tests."
+order: 61
+---
+
+```bash
+cargo test --workspace
+cargo test -p antech-kdf conformance -- --nocapture
+cargo test -p antech-kdf-ffi
+python sdk/conformance/run_python.py
+```
+
+Fuzz (nightly + cargo-fuzz):
+
+```bash
+cargo fuzz run hash_parser -- -runs=10000
+```
+
+CI: `.github/workflows/ci.yml`, `fuzz.yml`, `sdk.yml`.

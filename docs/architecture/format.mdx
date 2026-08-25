@@ -1,0 +1,31 @@
+---
+title: "Hash encoding"
+sidebarTitle: "Format"
+description: "Parse and emit the self-describing $antech$v2$ password hash string."
+order: 13
+---
+
+Stored hashes are portable strings. `verify` rebuilds config from the string — you do not store parameters separately.
+
+## Shape
+
+```text
+$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
+```
+
+| Field | Meaning |
+|---|---|
+| `m` | Memory KiB |
+| `s` | Salt length (bytes) |
+| `b` | Block size |
+| `f` | Fan-in |
+| `g` | Graph tag |
+| `l` | Output length |
+
+<Warning>
+Legacy `v1` encodings are **rejected**. Do not reinterpret old research encodings as v2.
+</Warning>
+
+## Ownership of truth
+
+Encoding/parsing lives in `antech-kdf-format`. FFI and SDKs only pass through strings produced by that crate.

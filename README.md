@@ -112,6 +112,12 @@ Attacker-oriented measurements (CPU/GPU/TMTO) are summarized under [`research/se
 cargo run --manifest-path research/code/Cargo.toml --release -p antech-kdf-research --example cryptanalysis_runner
 ```
 
+## Documentation
+
+Full developer documentation: [developers.udinmo.com](https://developers.udinmo.com)
+
+Source MDX for that site lives in [`docs/`](docs/) (`docs/sidebar.json`).
+
 ## Build
 
 ```bash
@@ -126,4 +132,4 @@ cargo check --manifest-path research/code/Cargo.toml --workspace
 cargo test  --manifest-path research/code/Cargo.toml --workspace
 ```
 
-More detail: [`docs/`](docs/api.md). License: MIT OR Apache-2.0.
+More detail: [developers.udinmo.com](https://developers.udinmo.com). License: MIT OR Apache-2.0.

@@ -1,0 +1,19 @@
+---
+title: "Async and non-blocking guidance"
+sidebarTitle: "Async"
+description: "Run Antech hashing off the event loop because derives are CPU- and memory-bound."
+order: 25
+---
+
+Antech APIs are synchronous. A default 16 MiB derive is inappropriate on an async executor thread.
+
+| Runtime | Pattern |
+|---|---|
+| Tokio | `spawn_blocking` / dedicated thread pool |
+| Node | `worker_threads` or sync call outside hot paths |
+| .NET | `Task.Run` |
+| Python asyncio | `asyncio.to_thread` |
+
+<Tip>
+Batch offline migrations on worker fleets; keep interactive login verifies bounded by your scheduler ceiling.
+</Tip>

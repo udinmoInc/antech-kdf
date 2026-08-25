@@ -1,0 +1,24 @@
+---
+title: "Cross-language conformance"
+sidebarTitle: "Conformance"
+description: "Run shared KATs so every SDK matches digests, verify results, and error mapping."
+order: 39
+---
+
+Canonical cases: `sdk/conformance/vectors.json` (derived from the security-review test vectors).
+
+## Requirements for each SDK
+
+1. `hash_with_config_and_salt(password, salt, config)` produces `$antech$v2$…`
+2. Digest hex (last `$` field) equals `digest_hex`
+3. `verify(password, encoded)` is true
+4. Malformed hashes map to the shared invalid-hash error
+
+## Runners
+
+```bash
+cargo test -p antech-kdf conformance -- --nocapture
+python sdk/conformance/run_python.py
+```
+
+CI workflow `.github/workflows/sdk.yml` runs Rust + Python conformance on multiple OSes.

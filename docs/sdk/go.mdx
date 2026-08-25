@@ -1,0 +1,15 @@
+---
+title: "Go SDK"
+sidebarTitle: "Go"
+description: "Call Antech through cgo bindings in bindings/go."
+order: 35
+---
+
+Requires CGO and a built `libantech_kdf_ffi` visible to the linker (`sdk/native` / `target/release`).
+
+```go
+h, err := antech.Hash([]byte("password"))
+ok, err := antech.Verify([]byte("password"), h)
+```
+
+See `bindings/go/README.md` and `go test` in that module after native build.

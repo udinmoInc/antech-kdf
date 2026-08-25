@@ -1,0 +1,16 @@
+---
+title: "Production vs research boundary"
+sidebarTitle: "Research boundary"
+description: "Keep attackers, CUDA, and experiments out of production crates and SDK packages."
+order: 63
+---
+
+| Tree | Contents |
+|---|---|
+| `crates/` | Production library only |
+| `bindings/` + `sdk/` | Thin SDKs + packaging |
+| `research/` | Attackers, CUDA, TMTO, results, security-review |
+
+Dependency rule: research → core, never core → research.
+
+Historical narrative chapters: `research/docs/`. Review package: `research/security-review/`.

@@ -1,0 +1,24 @@
+---
+title: "Verification guide"
+sidebarTitle: "Verification"
+description: "Verify passwords against stored $antech$v2$ hashes in constant time."
+order: 21
+---
+
+```rust
+let ok = antech_kdf::verify(password, &stored)?;
+```
+
+`verify` parses the string, rebuilds config, re-derives with the stored salt, and compares digests in constant time.
+
+## Failure modes
+
+| Outcome | Meaning |
+|---|---|
+| `Ok(true)` | Match |
+| `Ok(false)` | Mismatch |
+| `Err(_)` | Malformed hash / invalid params |
+
+<Note>
+Treat `Err` as an authentication infrastructure problem, not as “wrong password,” when responding to clients.
+</Note>

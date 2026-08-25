@@ -1,0 +1,71 @@
+{
+  "$schema": "https://docs.instant.dev/schemas/generator.json",
+  "framework": {
+    "id": "antech-kdf",
+    "name": "Antech KDF",
+    "version": "0.1.0",
+    "status": "Experimental",
+    "language": "rust",
+    "sourceRepo": "https://github.com/udinmoInc/antech-kdf"
+  },
+  "generation": {
+    "sourceCodePath": "./crates",
+    "outputDirectory": "./docs",
+    "cleanBuild": false,
+    "format": "mdx"
+  },
+  "sidebar": {
+    "Get started": [
+      "getting-started/overview.mdx",
+      "getting-started/installation.mdx",
+      "getting-started/quickstart.mdx",
+      "getting-started/configuration.mdx",
+      "getting-started/first-hash.mdx"
+    ],
+    "Architecture": [
+      "architecture/overview.mdx",
+      "architecture/engine.mdx",
+      "architecture/graph.mdx",
+      "architecture/format.mdx",
+      "architecture/scheduler.mdx",
+      "architecture/ffi.mdx"
+    ],
+    "Guides": [
+      "guides/password-hashing.mdx",
+      "guides/verification.mdx",
+      "guides/rehash-policy.mdx",
+      "guides/custom-config.mdx",
+      "guides/thread-safety.mdx",
+      "guides/async.mdx",
+      "guides/security.mdx"
+    ],
+    "SDKs": [
+      "sdk/overview.mdx",
+      "sdk/rust.mdx",
+      "sdk/c-cpp.mdx",
+      "sdk/python.mdx",
+      "sdk/node.mdx",
+      "sdk/go.mdx",
+      "sdk/java-kotlin.mdx",
+      "sdk/dotnet.mdx",
+      "sdk/swift.mdx",
+      "sdk/conformance.mdx"
+    ],
+    "CLI": [
+      "cli/commands.mdx"
+    ],
+    "Reference": [
+      "reference/api.mdx",
+      "reference/ffi-abi.mdx",
+      "reference/configuration-reference.mdx",
+      "reference/errors.mdx",
+      "reference/hash-format.mdx"
+    ],
+    "Developer": [
+      "developer/contributing.mdx",
+      "developer/testing.mdx",
+      "developer/releasing.mdx",
+      "developer/research-boundary.mdx"
+    ]
+  }
+}

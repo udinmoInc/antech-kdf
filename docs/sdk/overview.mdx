@@ -1,0 +1,35 @@
+---
+title: "SDK overview"
+sidebarTitle: "Overview"
+description: "Cross-language Antech SDKs share one FFI and one conformance suite."
+order: 30
+---
+
+Every language package is a thin wrapper over `antech-kdf-ffi`. No language contains its own cryptographic implementation.
+
+## Uniform operations
+
+| Operation | Purpose |
+|---|---|
+| `hash` | Default profile |
+| `hash_with_config` | Explicit config |
+| `verify` | Check password |
+| `needs_rehash` | Default policy |
+| `needs_rehash_with_policy` | Custom policy |
+| `hash_with_config_and_salt` | KATs / interop |
+
+## Version authority
+
+Root `VERSION` is authoritative. Sync manifests with:
+
+```bash
+python sdk/scripts/sync-versions.py
+```
+
+## Native artifacts
+
+```bash
+./sdk/scripts/build-native.sh   # or .ps1 on Windows
+```
+
+See [Platforms](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/PLATFORMS.md) notes for Android/iOS/server distribution.

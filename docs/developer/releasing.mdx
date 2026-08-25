@@ -1,0 +1,16 @@
+---
+title: "Releasing SDKs"
+sidebarTitle: "Releasing"
+description: "Synchronize VERSION, build native artifacts, and publish language packages."
+order: 62
+---
+
+1. Bump root `VERSION`
+2. `python sdk/scripts/sync-versions.py`
+3. Update `CHANGELOG.md`
+4. Tag `vX.Y.Z` — `release-sdk.yml` uploads per-OS native artifacts
+5. Publish crates / npm / PyPI / NuGet as applicable with matching version
+
+<Tip>
+Never hand-edit version strings across manifests — keep `VERSION` authoritative.
+</Tip>

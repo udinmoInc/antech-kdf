@@ -1,0 +1,14 @@
+---
+title: "Thread safety"
+sidebarTitle: "Thread safety"
+description: "Use Antech APIs concurrently; understand the global resource scheduler."
+order: 24
+---
+
+All public hash/verify entry points and FFI functions are **thread-safe** and **stateless** from the caller’s perspective.
+
+Concurrent derives share `BoundedResourceScheduler`. If the host ceiling is exhausted, calls fail with a resource error rather than over-allocating.
+
+<Note>
+Language SDKs that wrap the same `cdylib` inherit these guarantees — no per-call global locks are required in wrappers.
+</Note>

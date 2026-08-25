@@ -1,0 +1,40 @@
+---
+title: "Architecture overview"
+sidebarTitle: "Overview"
+description: "See how production crates, FFI, and research stay separated around one canonical engine."
+order: 10
+---
+
+Antech keeps a strict dependency direction: research and SDKs depend on production; production never depends on research.
+
+## Crate graph
+
+<Mermaid>
+flowchart TD
+  API[antech-kdf]
+  CORE[antech-kdf-core]
+  FMT[antech-kdf-format]
+  TYPES[antech-kdf-types]
+  FFI[antech-kdf-ffi]
+  CLI[antech-kdf-cli]
+  SDK[Language SDKs]
+  API --> CORE
+  CORE --> FMT
+  CORE --> TYPES
+  FFI --> API
+  CLI --> API
+  SDK --> FFI
+</Mermaid>
+
+| Crate | Role |
+|---|---|
+| `antech-kdf` | Public API |
+| `antech-kdf-core` | `AntechEngine`, scheduler |
+| `antech-kdf-format` | Encode / parse `$antech$v2$` |
+| `antech-kdf-types` | Config, errors, graph kinds |
+| `antech-kdf-ffi` | C ABI for all SDKs |
+| `antech-kdf-cli` | CLI `hash` / `verify` |
+
+<Note>
+Research code lives under `research/code/` in a **separate** Cargo workspace and imports core only.
+</Note>

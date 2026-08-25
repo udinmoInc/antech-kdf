@@ -1,0 +1,23 @@
+---
+title: "Java and Kotlin SDKs"
+sidebarTitle: "Java / Kotlin"
+description: "Use the JNA AntechKdf class or the Kotlin Antech façade over the same native library."
+order: 36
+---
+
+## Java
+
+```java
+String stored = AntechKdf.hash("password");
+boolean ok = AntechKdf.verify("password", stored);
+```
+
+Maven project: `bindings/java`. Place `antech_kdf_ffi` on the native library path.
+
+## Kotlin
+
+```kotlin
+val stored = Antech.hash("password")
+```
+
+Façade in `bindings/kotlin` reuses the Java JNA binding — no second crypto path.

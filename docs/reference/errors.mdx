@@ -1,0 +1,27 @@
+---
+title: "Errors"
+sidebarTitle: "Errors"
+description: "Map Rust KdfError / ConfigError and FFI status codes across SDKs."
+order: 53
+---
+
+## Rust
+
+`antech_kdf::Error` aliases `KdfError`:
+
+- `Config(ConfigError)` — validation
+- `Encoding(String)` — parse / encode
+- `Derivation(String)` — engine
+- `ResourceExhausted(String)` — scheduler
+
+## FFI mapping
+
+| Rust-ish cause | FFI |
+|---|---|
+| Bad pointers / UTF-8 | `INVALID_INPUT` |
+| Parse / encoding | `INVALID_HASH` |
+| Config validate | `INVALID_CONFIG` |
+| Panic / other | `INTERNAL_ERROR` |
+| Password mismatch | `VERIFICATION_FAILED` (not an Err in Rust `verify`) |
+
+Language SDKs should preserve this mapping so conformance and ops tooling stay aligned.

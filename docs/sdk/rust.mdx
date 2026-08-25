@@ -1,0 +1,19 @@
+---
+title: "Rust SDK"
+sidebarTitle: "Rust"
+description: "Use the canonical antech-kdf crate as the primary Antech API."
+order: 31
+---
+
+```toml
+[dependencies]
+antech-kdf = "0.1"
+```
+
+```rust
+use antech_kdf::{hash, verify, needs_rehash};
+let h = hash("secret")?;
+assert!(verify("secret", &h)?);
+```
+
+Rust is the source of truth. Other SDKs mirror this surface through FFI.

@@ -1,0 +1,55 @@
+---
+title: "Antech KDF overview"
+sidebarTitle: "Overview"
+description: "Learn what Antech KDF is, how the compute-memory construction works, and when to use it."
+order: 1
+---
+
+Antech KDF is an experimental password hashing library built around a **compute-memory** construction. The default profile uses **16 MiB** of working memory and a **combined-frontier** dependency graph. Work is derived from `memory / block_size` — there is no separate iteration-count knob.
+
+<Warning>
+Antech has not completed independent cryptographic review. Prefer Argon2id for production password storage until review conclusions are published. Treat benchmarks as comparative evidence, not a security proof.
+</Warning>
+
+## What you get
+
+- Stable Rust API: `hash`, `verify`, `needs_rehash`, `hash_with_config`, and rehash policies
+- Self-describing `$antech$v2$…` stored hashes
+- Thin SDKs for C/C++, Go, Python, Node, Java/Kotlin, Swift, and .NET over one FFI
+- Shared conformance vectors so every language matches the same digests
+
+## How hashing flows
+
+<Flow
+  nodesJSON='[
+    {"id": "1", "data": {"label": "Password + salt", "icon": "🔑"}},
+    {"id": "2", "data": {"label": "Bind seed", "icon": "🧬"}},
+    {"id": "3", "data": {"label": "DAG walk (combined-frontier)", "icon": "🕸️", "valid": true}},
+    {"id": "4", "data": {"label": "Finalize digest", "icon": "📦"}},
+    {"id": "5", "data": {"label": "$antech$v2$ encode", "icon": "💾", "valid": true}}
+  ]'
+  edgesJSON='[
+    {"id": "e1-2", "source": "1", "target": "2", "animated": true},
+    {"id": "e2-3", "source": "2", "target": "3", "animated": true},
+    {"id": "e3-4", "source": "3", "target": "4", "animated": true},
+    {"id": "e4-5", "source": "4", "target": "5", "animated": true}
+  ]'
+/>
+
+## Single source of truth
+
+Cryptography lives only in `antech-kdf-core`. Language packages call `antech-kdf-ffi` and never reimplement the engine.
+
+<Tip>
+Start with [Installation](/getting-started/installation) then [Quickstart](/getting-started/quickstart) for a five-minute hash/verify loop in Rust.
+</Tip>
+
+## Status
+
+| Item | Value |
+|---|---|
+| Version | `0.1.0` (see repo `VERSION`) |
+| Status | Experimental / under review |
+| Default memory | 16 MiB |
+| Default graph | CombinedFrontier (`g=3`) |
+| Encoding | `$antech$v2$…` only (`v1` rejected) |

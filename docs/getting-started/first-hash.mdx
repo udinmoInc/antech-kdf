@@ -1,0 +1,64 @@
+---
+title: "Your first production-shaped flow"
+sidebarTitle: "First hash"
+description: "Register a password, verify on login, and upgrade parameters with a rehash policy."
+order: 5
+---
+
+A typical application path: hash on registration, verify on login, rehash when policy says parameters are outdated.
+
+## Sequence
+
+<Mermaid>
+sequenceDiagram
+    participant App
+    participant Antech
+    participant DB
+    App->>Antech: hash(password)
+    Antech-->>App: $antech$v2$…
+    App->>DB: store encoded hash
+    App->>DB: load encoded hash
+    App->>Antech: verify(password, hash)
+    Antech-->>App: true / false
+    App->>Antech: needs_rehash_with_policy(hash, policy)
+    alt needs upgrade
+        App->>Antech: hash_with_config(password, new_config)
+        App->>DB: replace encoded hash
+    end
+</Mermaid>
+
+## Registration
+
+```rust
+let stored = antech_kdf::hash(password)?;
+// persist `stored` only — never the password
+```
+
+## Login + optional upgrade
+
+```rust
+use antech_kdf::{hash_with_config, needs_rehash_with_policy, verify, AntechConfig, RehashPolicy};
+
+if !verify(password, &stored)? {
+    return Err(/* auth failure */);
+}
+
+let policy = RehashPolicy::builder()
+    .minimum_memory_mib(16)
+    .preferred_memory_mib(32)
+    .build();
+
+if needs_rehash_with_policy(&stored, &policy)? {
+    let stronger = AntechConfig::builder().memory_mib(32).build()?;
+    let upgraded = hash_with_config(password, &stronger)?;
+    // replace stored hash in DB
+}
+```
+
+<Tip>
+Rehash only after a successful verify so attackers cannot force expensive upgrades with wrong passwords.
+</Tip>
+
+<Warning>
+Antech is still experimental. Do not migrate production Argon2id stores to Antech without a published security review and an explicit risk acceptance.
+</Warning>

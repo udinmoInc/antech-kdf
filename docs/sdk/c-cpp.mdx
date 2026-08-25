@@ -1,0 +1,32 @@
+---
+title: "C and C++ SDKs"
+sidebarTitle: "C / C++"
+description: "Link libantech_kdf_ffi with antech_kdf.h or the C++ header wrapper."
+order: 32
+---
+
+## C
+
+Include `bindings/c/antech_kdf.h` and link the release `cdylib`.
+
+```c
+char *out = NULL;
+if (antech_hash("password", &out) == ANTECH_OK) {
+  /* use out */
+  antech_free(out);
+}
+```
+
+## C++
+
+```cpp
+#include "antech_kdf.hpp"
+auto h = antech::hash("password");
+assert(antech::verify("password", h));
+```
+
+Header-only wrapper: `bindings/cpp/antech_kdf.hpp`.
+
+<Tip>
+Free strings with `antech_free` in C. The C++ helpers free automatically.
+</Tip>

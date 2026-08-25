@@ -1,0 +1,13 @@
+---
+title: "CLI commands"
+sidebarTitle: "Commands"
+description: "Hash and verify passwords from the antech-kdf-cli binary."
+order: 40
+---
+
+```bash
+cargo run -p antech-kdf-cli -- hash "password"
+cargo run -p antech-kdf-cli -- verify "password" "$HASH"
+```
+
+Uses the same production defaults as the library API.

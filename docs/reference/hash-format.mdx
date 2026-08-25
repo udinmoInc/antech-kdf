@@ -1,0 +1,17 @@
+---
+title: "Hash format reference"
+sidebarTitle: "Hash format"
+description: "Normative $antech$v2$ parameter grammar and rejection rules."
+order: 54
+---
+
+```text
+$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
+```
+
+- Parameter section is comma-separated `key=value`
+- Duplicate keys rejected
+- Salt/digest are lowercase hex
+- `v1` rejected outright
+
+Implemented in `antech-kdf-format`.

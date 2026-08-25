@@ -1,0 +1,31 @@
+---
+title: "Rehash policies"
+sidebarTitle: "Rehash policy"
+description: "Detect outdated stored parameters and upgrade hashes after successful login."
+order: 22
+---
+
+```rust
+use antech_kdf::{needs_rehash, needs_rehash_with_policy, RehashPolicy};
+
+if needs_rehash(&stored)? {
+    // default policy (16 MiB targets)
+}
+
+let policy = RehashPolicy::builder()
+    .minimum_memory_mib(16)
+    .preferred_memory_mib(32)
+    .preferred_fan_in(2)
+    .preferred_output_length(32)
+    .build();
+
+if needs_rehash_with_policy(&stored, &policy)? {
+    // upgrade
+}
+```
+
+A rehash is needed when stored memory, fan-in, or output length falls below policy targets.
+
+<Tip>
+Always verify successfully before spending CPU on an upgrade hash.
+</Tip>

@@ -1,0 +1,21 @@
+---
+title: "Custom configuration"
+sidebarTitle: "Custom config"
+description: "Choose memory and structural parameters without changing the cryptographic construction."
+order: 23
+---
+
+Raise memory for harder offline attacks; keep block size and graph stable unless you know why you are changing them.
+
+```rust
+let cfg = antech_kdf::AntechConfig::builder()
+    .memory_mib(32)
+    .salt_length(16)
+    .fan_in(2)
+    .graph(antech_kdf::GraphKind::CombinedFrontier)
+    .build()?;
+```
+
+Invalid combinations fail at `build()` / FFI `ANTECH_INVALID_CONFIG` with the same bounds as Rust.
+
+See [Configuration reference](/reference/configuration-reference).

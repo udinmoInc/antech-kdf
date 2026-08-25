@@ -1,0 +1,43 @@
+---
+title: "FFI ABI reference"
+sidebarTitle: "FFI ABI"
+description: "C status codes, config POD layout, and exported symbols for antech-kdf-ffi."
+order: 51
+---
+
+Header: `bindings/c/antech_kdf.h`.
+
+## Status codes
+
+| Code | Name |
+|---|---|
+| `0` | `ANTECH_OK` |
+| `1` | `ANTECH_VERIFICATION_FAILED` |
+| `-1` | `ANTECH_INVALID_INPUT` |
+| `-2` | `ANTECH_INVALID_HASH` |
+| `-3` | `ANTECH_INTERNAL_ERROR` |
+| `-4` | `ANTECH_INVALID_CONFIG` |
+
+## Structs
+
+```c
+typedef struct AntechConfig {
+    uint32_t memory_kib;
+    uint32_t salt_length;
+    uint32_t block_size;
+    uint32_t fan_in;
+    uint32_t graph;
+    uint32_t output_length;
+} AntechConfig;
+
+typedef struct AntechRehashPolicy {
+    uint32_t minimum_memory_kib;
+    uint32_t preferred_memory_kib;
+    uint32_t preferred_fan_in;
+    uint32_t preferred_output_length;
+} AntechRehashPolicy;
+```
+
+## Ownership
+
+Strings from hash helpers: free with `antech_free`. Null `antech_free` is a no-op.

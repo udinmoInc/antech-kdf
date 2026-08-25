@@ -1,0 +1,25 @@
+---
+title: "Security guidance"
+sidebarTitle: "Security"
+description: "Operational security notes for deploying Antech while review is ongoing."
+order: 26
+---
+
+<Warning>
+Antech is experimental and under independent cryptanalysis. Do not treat passing benchmarks or SDK packaging as a security endorsement.
+</Warning>
+
+## Do
+
+- Prefer Argon2id for production until review results are published
+- Store only `$antech$v2$` strings
+- Use TLS and constant-time auth responses
+- Keep SDKs on the published FFI — no reimplemented crypto
+
+## Don’t
+
+- Ship custom graphs as “compatible” without new vectors
+- Log passwords or salts in cleartext
+- Disable verification errors as soft failures
+
+Review package: `research/security-review/`.

@@ -1,0 +1,58 @@
+---
+title: "Configuration basics"
+sidebarTitle: "Configuration"
+description: "Configure memory, block size, fan-in, graph, salt length, and output length for Antech hashing."
+order: 4
+---
+
+All structural knobs live on `AntechConfig`. Validation is identical in Rust and via the FFI POD used by SDKs.
+
+## Builder example
+
+```rust
+use antech_kdf::{hash_with_config, AntechConfig, GraphKind};
+
+let config = AntechConfig::builder()
+    .memory_mib(16)
+    .salt_length(16)
+    .block_size(32)
+    .fan_in(2)
+    .graph(GraphKind::CombinedFrontier)
+    .output_length(32)
+    .build()?;
+
+let stored = hash_with_config("password", &config)?;
+```
+
+## Parameter summary
+
+| Field | Default | Constraints |
+|---|---|---|
+| Memory | 16 MiB (`16384` KiB) | 1024…1048576 KiB |
+| Salt length | 16 B | 8…256 |
+| Block size | 32 B | power of two, ≥ 16 |
+| Fan-in | 2 | 2…8 |
+| Graph | CombinedFrontier | tags `1`, `2`, `3` |
+| Output length | 32 B | 8…128 |
+
+Work equals `memory_bytes / block_size` nodes (must yield at least 64 blocks).
+
+<Note>
+There is no iteration-count or dependency-depth security knob. Changing memory or block size changes work.
+</Note>
+
+## Graph tags
+
+| Tag | Name | Role |
+|---|---|---|
+| `1` | ReducedCriticalPath | Research / non-default |
+| `2` | CacheLocality | Research / non-default |
+| `3` | CombinedFrontier | **Production default** |
+
+<Tip>
+Keep `CombinedFrontier` unless you are deliberately studying alternatives. Production guidance and review materials assume `g=3`.
+</Tip>
+
+## Full reference
+
+See [Configuration reference](/reference/configuration-reference) for bounds, builders, and FFI field names.

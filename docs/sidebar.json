@@ -1,0 +1,54 @@
+{
+  "Get started": [
+    "getting-started/overview",
+    "getting-started/installation",
+    "getting-started/quickstart",
+    "getting-started/configuration",
+    "getting-started/first-hash"
+  ],
+  "Architecture": [
+    "architecture/overview",
+    "architecture/engine",
+    "architecture/graph",
+    "architecture/format",
+    "architecture/scheduler",
+    "architecture/ffi"
+  ],
+  "Guides": [
+    "guides/password-hashing",
+    "guides/verification",
+    "guides/rehash-policy",
+    "guides/custom-config",
+    "guides/thread-safety",
+    "guides/async",
+    "guides/security"
+  ],
+  "SDKs": [
+    "sdk/overview",
+    "sdk/rust",
+    "sdk/c-cpp",
+    "sdk/python",
+    "sdk/node",
+    "sdk/go",
+    "sdk/java-kotlin",
+    "sdk/dotnet",
+    "sdk/swift",
+    "sdk/conformance"
+  ],
+  "CLI": [
+    "cli/commands"
+  ],
+  "Reference": [
+    "reference/api",
+    "reference/ffi-abi",
+    "reference/configuration-reference",
+    "reference/errors",
+    "reference/hash-format"
+  ],
+  "Developer": [
+    "developer/contributing",
+    "developer/testing",
+    "developer/releasing",
+    "developer/research-boundary"
+  ]
+}

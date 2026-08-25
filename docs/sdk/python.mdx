@@ -1,0 +1,32 @@
+---
+title: "Python SDK"
+sidebarTitle: "Python"
+description: "Install the ctypes antech_kdf package and call hash, verify, and rehash helpers."
+order: 33
+---
+
+```bash
+./sdk/scripts/build-native.sh
+pip install -e bindings/python
+```
+
+```python
+import antech_kdf
+
+stored = antech_kdf.hash("correct_horse_battery_staple")
+assert antech_kdf.verify("correct_horse_battery_staple", stored)
+
+cfg = antech_kdf.Config.default()
+cfg.memory_kib = 1024
+custom = antech_kdf.hash_with_config("pw", cfg)
+```
+
+<Note>
+The package discovers `sdk/native` by walking up to the repo `VERSION`, or uses `ANTECH_KDF_LIB`.
+</Note>
+
+Conformance:
+
+```bash
+python sdk/conformance/run_python.py
+```

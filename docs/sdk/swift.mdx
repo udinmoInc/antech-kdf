@@ -1,0 +1,17 @@
+---
+title: "Swift SDK"
+sidebarTitle: "Swift"
+description: "SwiftPM package wrapping the C ABI for macOS and iOS targets."
+order: 38
+---
+
+Package: `bindings/swift`. Link `antech_kdf_ffi` and ensure header search paths resolve `antech_kdf.h`.
+
+```swift
+let stored = try AntechKdf.hash("password")
+let ok = try AntechKdf.verify("password", encodedHash: stored)
+```
+
+<Note>
+iOS distribution typically uses an XCFramework built from the Rust staticlib/cdylib. See `sdk/PLATFORMS.md`.
+</Note>

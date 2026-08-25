@@ -1,0 +1,28 @@
+---
+title: "Dependency graph"
+sidebarTitle: "Graph"
+description: "Learn how CombinedFrontier parents, frontier width, and tiles shape compute-memory work."
+order: 12
+---
+
+Antech’s cost profile comes from a password-dependent DAG over memory blocks. Production defaults to **CombinedFrontier**.
+
+## CombinedFrontier (default)
+
+Parents mix recent local frontier nodes with far/scatter edges so reduced-memory attackers cannot cheaply drop large regions of the address space while remaining correct.
+
+| Constant | Value |
+|---|---|
+| Frontier width | 64 |
+| Tile blocks | 512 |
+| Mix rounds | 4 |
+
+<Tip>
+Graph kind is mixed into the seed and stored as `g=` in the encoded hash. Changing graph changes digests.
+</Tip>
+
+## Other kinds
+
+`ReducedCriticalPath` and `CacheLocality` remain available for research contrast. They are not the review target default.
+
+See research security-review materials for attacker measurements against CombinedFrontier.

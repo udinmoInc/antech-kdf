@@ -1,0 +1,35 @@
+---
+title: "Canonical engine"
+sidebarTitle: "Engine"
+description: "Understand AntechEngine: seed binding, DAG walk, mixing, and finalization."
+order: 11
+---
+
+`AntechEngine` in `antech-kdf-core` is the only production derivation implementation. SDKs must not fork this logic.
+
+## Pipeline
+
+<Flow
+  nodesJSON='[
+    {"id": "1", "data": {"label": "validate config", "icon": "✅", "valid": true}},
+    {"id": "2", "data": {"label": "acquire scheduler permit", "icon": "🎟️"}},
+    {"id": "3", "data": {"label": "derive(password, salt, config)", "icon": "⚙️", "valid": true}},
+    {"id": "4", "data": {"label": "encode_hash", "icon": "🔤"}},
+    {"id": "5", "data": {"label": "release permit", "icon": "🔓"}}
+  ]'
+  edgesJSON='[
+    {"id": "e1-2", "source": "1", "target": "2", "animated": true},
+    {"id": "e2-3", "source": "2", "target": "3", "animated": true},
+    {"id": "e3-4", "source": "3", "target": "4", "animated": true},
+    {"id": "e4-5", "source": "4", "target": "5", "animated": true}
+  ]'
+/>
+
+## Public helpers
+
+- `hash` / `hash_with_config` — random salt, encoded string
+- `hash_with_config_and_salt` — fixed salt for KATs / interop (not the default production path)
+- `verify` — parse → derive with stored salt → constant-time compare
+- `needs_rehash*` — compare stored params to policy
+
+Construction version and domain separation constants are fixed in core; do not change them casually — digests and review vectors depend on them.

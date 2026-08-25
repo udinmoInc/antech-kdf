@@ -1,0 +1,24 @@
+---
+title: "Node.js and TypeScript SDK"
+sidebarTitle: "Node / TS"
+description: "Use the antech-kdf npm package powered by koffi over the native FFI."
+order: 34
+---
+
+```bash
+./sdk/scripts/build-native.sh
+cd bindings/node && npm install && npm run build
+```
+
+```ts
+import { hash, verify, hashWithConfig, defaultConfig } from "antech-kdf";
+
+const stored = hash("password");
+verify("password", stored);
+
+const cfg = defaultConfig();
+cfg.memory_kib = 1024;
+hashWithConfig("pw", cfg);
+```
+
+API uses camelCase (`needsRehash`, `hashWithConfig`) while preserving semantics.

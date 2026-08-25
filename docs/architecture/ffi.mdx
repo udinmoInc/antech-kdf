@@ -1,0 +1,27 @@
+---
+title: "FFI boundary"
+sidebarTitle: "FFI"
+description: "How antech-kdf-ffi exposes a thread-safe C ABI for every language SDK."
+order: 15
+---
+
+`antech-kdf-ffi` is the only supported bridge into native ecosystems. Header: `bindings/c/antech_kdf.h`.
+
+## Guarantees
+
+- Thread-safe, stateless entry points
+- Panics caught at the boundary → `ANTECH_INTERNAL_ERROR`
+- Hash strings heap-allocated; free with `antech_free`
+- Prefer `*_bytes` APIs for binary passwords (NUL-safe)
+
+## Core operations
+
+| C API | Maps to |
+|---|---|
+| `antech_hash` / `_bytes` | `hash` |
+| `antech_hash_with_config*` | `hash_with_config` |
+| `antech_hash_with_config_and_salt` | KAT / interop |
+| `antech_verify*` | `verify` |
+| `antech_needs_rehash*` | rehash checks |
+
+See [FFI ABI reference](/reference/ffi-abi) for structs and status codes.
