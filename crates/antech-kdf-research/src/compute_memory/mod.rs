@@ -1,7 +1,7 @@
-//! Compute/Memory hardness research module (12–32 MiB working sets).
+//! Compute/Memory hardness research module v2 (12–32 MiB).
 //!
-//! Cost model: sequential state dependency + cryptographic mixing +
-//! recomputation under TMTO — not giant empty loops or DRAM saturation.
+//! Work is derived from the memory-sized dependency DAG — not an exposed
+//! depth/iteration parameter.
 
 pub mod attacker;
 pub mod benchmarks;
@@ -40,9 +40,9 @@ mod tests {
 
     fn small_params() -> ResearchParams {
         ResearchParams {
-            memory_kib: 1024, // 1 MiB — fast tests
-            dependency_depth: 64,
-            passes: 1,
+            memory_kib: 1024, // 1 MiB → 32768 DAG nodes
+            dependency_depth: 0, // ignored by v2
+            passes: 0,           // ignored by v2
             block_size: 32,
         }
     }
@@ -52,14 +52,20 @@ mod tests {
     }
 
     #[test]
+    fn work_equals_num_blocks() {
+        let cfg = ComputeMemoryConfig::default().memory_mib(1);
+        assert_eq!(cfg.num_blocks(), 1024 * 1024 / 32);
+        // No depth/passes fields on the structural config.
+        let _ = cfg.fan_in;
+    }
+
+    #[test]
     fn reference_matches_optimized() {
         let params = small_params();
-        let reference = ReferenceEngine::new();
-        let optimized = OptimizedEngine::new();
-        let a = reference
+        let a = ReferenceEngine::new()
             .derive(b"pwd", b"salt_16_bytes!!", &params)
             .unwrap();
-        let b = optimized
+        let b = OptimizedEngine::new()
             .derive(b"pwd", b"salt_16_bytes!!", &params)
             .unwrap();
         assert_eq!(a, b);
@@ -67,86 +73,95 @@ mod tests {
     }
 
     #[test]
-    fn deterministic_derivation() {
+    fn deterministic_and_binding() {
         let params = small_params();
         let eng = OptimizedEngine::new();
         let a = eng.derive(b"pwd", b"salt_16_bytes!!", &params).unwrap();
         let b = eng.derive(b"pwd", b"salt_16_bytes!!", &params).unwrap();
         assert_eq!(a, b);
-    }
-
-    #[test]
-    fn password_and_salt_binding() {
-        let params = small_params();
-        let eng = OptimizedEngine::new();
-        let a = eng.derive(b"pwd1", b"salt_16_bytes!!", &params).unwrap();
-        let b = eng.derive(b"pwd2", b"salt_16_bytes!!", &params).unwrap();
-        let c = eng.derive(b"pwd1", b"salt_16_BYTES!!", &params).unwrap();
-        assert_ne!(a, b);
+        let c = eng.derive(b"pwd2", b"salt_16_bytes!!", &params).unwrap();
+        let d = eng.derive(b"pwd", b"salt_16_BYTES!!", &params).unwrap();
         assert_ne!(a, c);
+        assert_ne!(a, d);
     }
 
     #[test]
-    fn tmto_reduced_memory_matches_full() {
+    fn depth_param_ignored() {
+        let eng = OptimizedEngine::new();
+        let mut p1 = small_params();
+        let mut p2 = small_params();
+        p1.dependency_depth = 10;
+        p2.dependency_depth = 999_999;
+        p1.passes = 1;
+        p2.passes = 99;
+        let a = eng.derive(b"pwd", b"salt_16_bytes!!", &p1).unwrap();
+        let b = eng.derive(b"pwd", b"salt_16_bytes!!", &p2).unwrap();
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn tmto_matches_full() {
         let params = small_params();
         let eng = OptimizedEngine::new();
         let full = eng.derive(b"tmto", b"salt_16_bytes!!", &params).unwrap();
-        let sparse = eng
-            .derive_tmto(b"tmto", b"salt_16_bytes!!", &params, 1.0)
-            .unwrap();
-        assert_eq!(full, sparse);
-
-        let half = eng
-            .derive_tmto(b"tmto", b"salt_16_bytes!!", &params, 0.5)
-            .unwrap();
-        assert_eq!(full, half);
-
-        let eighth = eng
-            .derive_tmto(b"tmto", b"salt_16_bytes!!", &params, 0.125)
-            .unwrap();
-        assert_eq!(full, eighth);
+        assert_eq!(
+            full,
+            eng.derive_tmto(b"tmto", b"salt_16_bytes!!", &params, 1.0)
+                .unwrap()
+        );
+        assert_eq!(
+            full,
+            eng.derive_tmto(b"tmto", b"salt_16_bytes!!", &params, 0.5)
+                .unwrap()
+        );
+        assert_eq!(
+            full,
+            eng.derive_tmto(b"tmto", b"salt_16_bytes!!", &params, 0.125)
+                .unwrap()
+        );
     }
 
     #[test]
-    fn config_from_antech_config() {
+    fn config_from_antech_ignores_depth() {
         let antech = AntechConfig::builder()
             .memory_mib(16)
-            .dependency_depth(128)
-            .passes(1)
+            .dependency_depth(650000)
+            .passes(7)
             .block_size(32)
             .build()
             .unwrap();
         let cfg = ComputeMemoryConfig::from_antech_config(&antech);
         assert_eq!(cfg.memory_kib, 16 * 1024);
-        assert_eq!(cfg.dependency_depth, 128);
+        assert_eq!(cfg.block_size, 32);
+        assert_eq!(cfg.num_blocks(), 16 * 1024 * 1024 / 32);
     }
 
     #[test]
-    fn variant_d_matches_optimized_defaults() {
+    fn variant_d_matches_optimized() {
         let params = small_params();
-        let d = VariantD::new();
-        let o = OptimizedEngine::new();
-        let a = d.derive(b"pwd", b"salt_16_bytes!!", &params).unwrap();
-        let b = o.derive(b"pwd", b"salt_16_bytes!!", &params).unwrap();
+        let a = VariantD::new()
+            .derive(b"pwd", b"salt_16_bytes!!", &params)
+            .unwrap();
+        let b = OptimizedEngine::new()
+            .derive(b"pwd", b"salt_16_bytes!!", &params)
+            .unwrap();
         assert_eq!(a, b);
     }
 
     #[test]
-    fn frozen_test_vector_v1() {
-        // KAT: memory=1024 KiB, depth=64, passes=1, block=32, mix_rounds=4, segment=1024
+    fn frozen_test_vector_v2() {
         let params = ResearchParams {
             memory_kib: 1024,
-            dependency_depth: 64,
-            passes: 1,
+            dependency_depth: 0,
+            passes: 0,
             block_size: 32,
         };
-        let eng = OptimizedEngine::new();
-        let out = eng
+        let out = OptimizedEngine::new()
             .derive(b"antech-kat-password", b"antech-kat-salt!", &params)
             .unwrap();
         assert_eq!(
             to_hex(&out),
-            "22bc254b5312ffd0cd57f3ebf5074a831f5b843cfb4d68c06a884cd0d0993f85"
+            "d2675d5422a98993886e9014728bcf4d72f8d587ffb57131321851c19d09ba63"
         );
     }
 }

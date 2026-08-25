@@ -1,41 +1,50 @@
-//! Sequential dependency graph: each step's addresses are derived from prior state.
+//! Dependency graph generated from structural config + live state.
+//!
+//! For DAG node `i`, parents are chosen among already-computed nodes `[0, i)`.
+//! Fan-in is structural; the first parent is always the sequential predecessor
+//! when `i > 0`, so the chain cannot be parallelized away.
 
-/// Parent / destination addresses for one state transition.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct GraphAddresses {
-    pub parent1: usize,
-    pub parent2: usize,
-    pub dest: usize,
+/// Parent indices for one DAG node (empty only when handled as node-0 phantoms).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParentSet {
+    pub indices: Vec<usize>,
 }
 
-/// Pebble-style dual-parent graph with a logarithmic back-reference.
+const GOLDEN: u64 = 0x9E3779B97F4A7C15;
+
+/// Compute parent addresses for block `i` from the current state and fan-in.
 ///
-/// Both parents and the destination depend on the current state, so an attacker
-/// cannot schedule independent steps or drop memory without recomputation.
-pub fn addresses(state: &[u64; 4], step: u32, pass: u32, num_blocks: usize) -> GraphAddresses {
-    debug_assert!(num_blocks > 0);
-    let n = num_blocks;
-
-    let parent1 = ((state[0] ^ (step as u64).wrapping_mul(0x9E3779B97F4A7C15)) as usize) % n;
-
-    // Logarithmic back-pointer distance — forces pebbling / recomputation under TMTO.
-    let log_span = ((n as u64).next_power_of_two().trailing_zeros().max(1)) as u64;
-    let back = (((state[1] >> 3) % log_span) + 1) << ((state[2] as usize) % (log_span as usize).max(1));
-    let back = (back as usize % (n / 2).max(1)) + 1;
-    let parent2 = (parent1 + n - back) % n;
-
-    let dest = ((state[3] ^ ((pass as u64) << 32) ^ (step as u64).rotate_left(11)) as usize) % n;
-
-    // Ensure dest is not identical to both parents when n is large enough.
-    let dest = if dest == parent1 || dest == parent2 {
-        (dest + 1 + ((state[0] as usize) % 3)) % n
-    } else {
-        dest
-    };
-
-    GraphAddresses {
-        parent1,
-        parent2,
-        dest,
+/// - `i == 0`: returns empty (callers use seed phantoms).
+/// - `i > 0`: parent[0] = `i - 1` (sequential); remaining parents are
+///   state-dependent indices in `[0, i)`.
+pub fn parents_for_node(state: &[u64; 4], i: usize, fan_in: u32) -> ParentSet {
+    if i == 0 {
+        return ParentSet {
+            indices: Vec::new(),
+        };
     }
+
+    let fan = fan_in.max(1) as usize;
+    let mut indices = Vec::with_capacity(fan);
+    indices.push(i - 1);
+
+    for p in 1..fan {
+        let mix = state[p % 4]
+            ^ (i as u64).wrapping_mul(GOLDEN)
+            ^ (p as u64).wrapping_mul(0xBF58476D1CE4E5B9)
+            ^ state[(p + 1) % 4].rotate_left((p as u32 * 11) % 63 + 1);
+        let mut addr = (mix as usize) % i;
+        // Prefer diversity vs the sequential parent when possible.
+        if addr == i - 1 && i > 1 {
+            addr = (addr + 1 + (state[0] as usize % (i - 1))) % i;
+        }
+        indices.push(addr);
+    }
+
+    ParentSet { indices }
+}
+
+/// Logarithmic back-reference distance used in documentation / analysis.
+pub fn graph_log_span(num_blocks: usize) -> u32 {
+    (num_blocks as u64).next_power_of_two().trailing_zeros().max(1)
 }

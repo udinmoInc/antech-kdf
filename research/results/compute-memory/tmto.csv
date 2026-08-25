@@ -1,7 +1,7 @@
 variant,memory_pct,allocated_memory_mib,recomputation_factor,cpu_work_mult,dram_traffic_mult,guesses_per_sec,digest_matches_full
-compute-memory-optimized,100.00,16.00,0.9815,0.9815,1.0000,54.0663,true
-compute-memory-optimized,75.00,12.00,15.0683,15.0683,1.1375,3.5215,true
-compute-memory-optimized,50.00,8.00,14.4264,14.4264,1.2750,3.6782,true
-compute-memory-optimized,25.00,4.00,14.3905,14.3905,1.4125,3.6874,true
-compute-memory-optimized,12.50,2.00,14.3992,14.3992,1.4813,3.6852,true
-compute-memory-optimized,6.25,1.00,14.4709,14.4709,1.5156,3.6669,true
+compute-memory-optimized,100.00,16.00,0.8663,0.8663,1.0000,8.4244,true
+compute-memory-optimized,75.00,12.00,6.7653,6.7653,1.1375,1.0788,true
+compute-memory-optimized,50.00,8.00,10.1221,10.1221,1.2750,0.7210,true
+compute-memory-optimized,25.00,4.00,7.8138,7.8138,1.4125,0.9340,true
+compute-memory-optimized,12.50,2.00,5.7055,5.7055,1.4813,1.2792,true
+compute-memory-optimized,6.25,1.00,5.0292,5.0292,1.5156,1.4512,true

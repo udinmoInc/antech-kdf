@@ -1,4 +1,4 @@
-//! Variant C — pebble-graph default (same core graph, baseline mix rounds).
+//! Variant C — fan-in 4 denser recomputation graph.
 
 use super::config::ComputeMemoryConfig;
 use super::core::derive_optimized;
@@ -11,7 +11,7 @@ pub struct VariantC {
 impl VariantC {
     pub fn new() -> Self {
         Self {
-            defaults: ComputeMemoryConfig::default().mix_rounds(3),
+            defaults: ComputeMemoryConfig::default().fan_in(4),
         }
     }
 }

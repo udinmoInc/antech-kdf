@@ -1,77 +1,91 @@
-//! Single state transition: prior state + state-derived memory → new state + writeback.
+//! Per-node state transition along the memory-sized dependency DAG.
 
-use super::crypto_mixing::mix_state;
-use super::dependency_graph::{self, GraphAddresses};
+use super::crypto_mixing::{mix_parents, node0_material, state_to_block};
+use super::dependency_graph;
 
-/// Execute one sequential transition against an in-memory block buffer.
+/// Compute DAG node `i`: read parents → mix into state → write block `i`.
+///
+/// This is the only per-node work unit; the outer loop runs exactly `num_blocks`
+/// times (structure-derived).
 #[inline(always)]
-pub fn transition(
+pub fn compute_node(
     state: &mut [u64; 4],
     buffer: &mut [u8],
+    seed: &[u8; 32],
+    i: usize,
     block_size: usize,
-    num_blocks: usize,
-    step: u32,
-    pass: u32,
-    mix_rounds: u32,
-) -> GraphAddresses {
-    let addrs = dependency_graph::addresses(state, step, pass, num_blocks);
-    let bs = block_size;
+    fan_in: u32,
+) {
+    let parents = dependency_graph::parents_for_node(state, i, fan_in);
+    let mut parent_blocks: Vec<Vec<u8>> = Vec::with_capacity(fan_in as usize);
 
-    let mut b1 = vec![0u8; bs];
-    let mut b2 = vec![0u8; bs];
-    b1.copy_from_slice(&buffer[addrs.parent1 * bs..(addrs.parent1 + 1) * bs]);
-    b2.copy_from_slice(&buffer[addrs.parent2 * bs..(addrs.parent2 + 1) * bs]);
-
-    mix_state(state, &b1, &b2, mix_rounds);
-
-    // XOR writeback — dest contents depend on the new state.
-    let dest_start = addrs.dest * bs;
-    for (i, word) in state.iter().enumerate() {
-        let bytes = word.to_le_bytes();
-        for (j, b) in bytes.iter().enumerate() {
-            let idx = dest_start + i * 8 + j;
-            if idx < dest_start + bs && idx < buffer.len() {
-                buffer[idx] ^= b;
-            }
+    if i == 0 {
+        for slot in 0..fan_in {
+            parent_blocks.push(node0_material(seed, slot, block_size));
+        }
+    } else {
+        for &idx in &parents.indices {
+            let start = idx * block_size;
+            parent_blocks.push(buffer[start..start + block_size].to_vec());
         }
     }
 
-    addrs
+    mix_parents(state, &parent_blocks);
+
+    let dest = i * block_size;
+    state_to_block(state, &mut buffer[dest..dest + block_size]);
 }
 
-/// Optimized transition that avoids per-step heap allocation of parent blocks.
+/// Optimized path: stack parents for the common fan_in=2 / block_size=32 case.
 #[inline(always)]
-pub fn transition_inplace(
+pub fn compute_node_inplace(
     state: &mut [u64; 4],
     buffer: &mut [u8],
+    seed: &[u8; 32],
+    i: usize,
     block_size: usize,
-    num_blocks: usize,
-    step: u32,
-    pass: u32,
-    mix_rounds: u32,
-) -> GraphAddresses {
-    let addrs = dependency_graph::addresses(state, step, pass, num_blocks);
-    let bs = block_size;
+    fan_in: u32,
+) {
+    use super::crypto_mixing::{mix_pair, mix_parents};
 
-    // Copy parents into stack buffers (block_size is typically 32).
-    let mut b1 = [0u8; 64];
-    let mut b2 = [0u8; 64];
-    let len = bs.min(64);
-    b1[..len].copy_from_slice(&buffer[addrs.parent1 * bs..addrs.parent1 * bs + len]);
-    b2[..len].copy_from_slice(&buffer[addrs.parent2 * bs..addrs.parent2 * bs + len]);
-
-    mix_state(state, &b1[..len], &b2[..len], mix_rounds);
-
-    let dest_start = addrs.dest * bs;
-    for (i, word) in state.iter().enumerate() {
-        let bytes = word.to_le_bytes();
-        for (j, b) in bytes.iter().enumerate() {
-            let idx = i * 8 + j;
-            if idx < bs {
-                buffer[dest_start + idx] ^= b;
+    if i == 0 {
+        let p0 = node0_material(seed, 0, block_size);
+        let p1 = node0_material(seed, 1.min(fan_in.saturating_sub(1)), block_size);
+        mix_pair(state, &p0, &p1);
+        if fan_in > 2 {
+            let mut extras = Vec::new();
+            for slot in 2..fan_in {
+                extras.push(node0_material(seed, slot, block_size));
             }
+            mix_parents(state, &extras);
+        }
+    } else {
+        let parents = dependency_graph::parents_for_node(state, i, fan_in);
+        if parents.indices.len() >= 2 && block_size <= 64 {
+            let mut b0 = [0u8; 64];
+            let mut b1 = [0u8; 64];
+            let len = block_size;
+            let i0 = parents.indices[0];
+            let i1 = parents.indices[1];
+            b0[..len].copy_from_slice(&buffer[i0 * block_size..i0 * block_size + len]);
+            b1[..len].copy_from_slice(&buffer[i1 * block_size..i1 * block_size + len]);
+            mix_pair(state, &b0[..len], &b1[..len]);
+            if parents.indices.len() > 2 {
+                let mut extras = Vec::new();
+                for &idx in &parents.indices[2..] {
+                    extras.push(buffer[idx * block_size..idx * block_size + block_size].to_vec());
+                }
+                mix_parents(state, &extras);
+            }
+        } else {
+            let mut parent_blocks = Vec::with_capacity(parents.indices.len());
+            for &idx in &parents.indices {
+                parent_blocks.push(buffer[idx * block_size..idx * block_size + block_size].to_vec());
+            }
+            mix_parents(state, &parent_blocks);
         }
     }
 
-    addrs
+    let dest = i * block_size;
+    state_to_block(state, &mut buffer[dest..dest + block_size]);
 }

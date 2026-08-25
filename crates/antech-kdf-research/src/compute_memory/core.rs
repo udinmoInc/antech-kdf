@@ -1,30 +1,25 @@
-//! Shared derive pipeline for reference and optimized engines.
+//! Shared derive pipeline: work = traverse all DAG nodes (num_blocks).
 
 use super::config::ComputeMemoryConfig;
 use super::crypto_mixing::{
-    bind_seed, fill_buffer, finalize, fold_buffer, mix_block, mix_state, recompute_block,
-    state_from_seed,
+    bind_seed, finalize, mix_parents, node0_material, state_from_seed, state_to_block,
 };
 use super::dependency_graph;
-use super::state_transition::{transition, transition_inplace};
+use super::state_transition::{compute_node, compute_node_inplace};
 use crate::candidates::cand_004::ResearchError;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
 fn bind(cfg: &ComputeMemoryConfig, password: &[u8], salt: &[u8]) -> [u8; 32] {
     bind_seed(
         password,
         salt,
         cfg.memory_kib,
-        cfg.dependency_depth,
-        cfg.passes,
         cfg.block_size,
-        cfg.mix_rounds,
-        cfg.segment_bytes,
-        cfg.fold_stride,
+        cfg.fan_in, 
     )
 }
 
-/// Reference (clarity-first) derive — identical digests to the optimized path.
+/// Reference derive — clarity-first traversal of the memory-sized DAG.
 pub fn derive_reference(
     password: &[u8],
     salt: &[u8],
@@ -34,40 +29,20 @@ pub fn derive_reference(
         .map_err(ResearchError::InvalidParameters)?;
 
     let seed = bind(cfg, password, salt);
-    let total = cfg.total_bytes();
     let block_size = cfg.block_size as usize;
     let num_blocks = cfg.num_blocks();
-    let mut buffer = vec![0u8; total];
-    fill_buffer(&seed, &mut buffer, cfg.segment_bytes as usize);
-
+    let mut buffer = vec![0u8; cfg.total_bytes()];
     let mut state = state_from_seed(&seed);
-    for pass in 0..cfg.passes {
-        for step in 0..cfg.dependency_depth {
-            transition(
-                &mut state,
-                &mut buffer,
-                block_size,
-                num_blocks,
-                step,
-                pass,
-                cfg.mix_rounds,
-            );
-        }
+
+    for i in 0..num_blocks {
+        compute_node(&mut state, &mut buffer, &seed, i, block_size, cfg.fan_in);
     }
 
-    fold_buffer(
-        &mut state,
-        &buffer,
-        block_size,
-        cfg.fold_stride as usize,
-        cfg.mix_rounds,
-    );
-
-    let head_len = block_size.min(buffer.len());
-    Ok(finalize(&seed, &state, &buffer[..head_len]))
+    let last = &buffer[(num_blocks - 1) * block_size..num_blocks * block_size];
+    Ok(finalize(&seed, &state, last))
 }
 
-/// Optimized derive — same math, fewer allocations in the hot loop.
+/// Optimized derive — identical digests, tighter inner path.
 pub fn derive_optimized(
     password: &[u8],
     salt: &[u8],
@@ -77,48 +52,140 @@ pub fn derive_optimized(
         .map_err(ResearchError::InvalidParameters)?;
 
     let seed = bind(cfg, password, salt);
-    let total = cfg.total_bytes();
     let block_size = cfg.block_size as usize;
     let num_blocks = cfg.num_blocks();
-    let mut buffer = vec![0u8; total];
-    fill_buffer(&seed, &mut buffer, cfg.segment_bytes as usize);
-
+    let mut buffer = vec![0u8; cfg.total_bytes()];
     let mut state = state_from_seed(&seed);
-    for pass in 0..cfg.passes {
-        for step in 0..cfg.dependency_depth {
-            transition_inplace(
-                &mut state,
-                &mut buffer,
-                block_size,
-                num_blocks,
-                step,
-                pass,
-                cfg.mix_rounds,
-            );
+
+    for i in 0..num_blocks {
+        compute_node_inplace(&mut state, &mut buffer, &seed, i, block_size, cfg.fan_in);
+    }
+
+    let last = &buffer[(num_blocks - 1) * block_size..num_blocks * block_size];
+    Ok(finalize(&seed, &state, last))
+}
+
+/// Checkpoint TMTO store: keep stride-aligned blocks + recent window.
+struct CheckpointStore {
+    seed: [u8; 32],
+    block_size: usize,
+    fan_in: u32,
+    stride: usize,
+    blocks: HashMap<usize, Vec<u8>>,
+    state_before: HashMap<usize, [u64; 4]>,
+}
+
+impl CheckpointStore {
+    fn new(seed: [u8; 32], block_size: usize, fan_in: u32, stride: usize) -> Self {
+        let mut state_before = HashMap::new();
+        state_before.insert(0, state_from_seed(&seed));
+        Self {
+            seed,
+            block_size,
+            fan_in,
+            stride: stride.max(1),
+            blocks: HashMap::new(),
+            state_before,
         }
     }
 
-    fold_buffer(
-        &mut state,
-        &buffer,
-        block_size,
-        cfg.fold_stride as usize,
-        cfg.mix_rounds,
-    );
+    fn get_block(&mut self, idx: usize) -> Vec<u8> {
+        if let Some(b) = self.blocks.get(&idx) {
+            return b.clone();
+        }
+        self.recompute_through(idx);
+        self.blocks
+            .get(&idx)
+            .cloned()
+            .expect("block must exist after recompute")
+    }
 
-    let head_len = block_size.min(buffer.len());
-    Ok(finalize(&seed, &state, &buffer[..head_len]))
+    fn recompute_through(&mut self, idx: usize) {
+        let base = (idx / self.stride) * self.stride;
+        if !self.state_before.contains_key(&base) {
+            if base == 0 {
+                self.state_before.insert(0, state_from_seed(&self.seed));
+            } else {
+                // Establish prior checkpoint by recomputing through base-1.
+                self.recompute_through(base - 1);
+            }
+        }
+
+        let mut state = self.state_before[&base];
+        for j in base..=idx {
+            let parents = dependency_graph::parents_for_node(&state, j, self.fan_in);
+            let mut parent_blocks = Vec::with_capacity(self.fan_in as usize);
+            if j == 0 {
+                for slot in 0..self.fan_in {
+                    parent_blocks.push(node0_material(&self.seed, slot, self.block_size));
+                }
+            } else {
+                for &p in &parents.indices {
+                    if p < base {
+                        parent_blocks.push(self.get_block(p));
+                    } else if let Some(b) = self.blocks.get(&p) {
+                        parent_blocks.push(b.clone());
+                    } else {
+                        // Parent in [base, j) must already have been written in this loop.
+                        parent_blocks.push(
+                            self.blocks
+                                .get(&p)
+                                .cloned()
+                                .expect("in-range parent missing"),
+                        );
+                    }
+                }
+            }
+            mix_parents(&mut state, &parent_blocks);
+            let mut block = vec![0u8; self.block_size];
+            state_to_block(&state, &mut block);
+            self.blocks.insert(j, block);
+            if (j + 1) % self.stride == 0 {
+                self.state_before.insert(j + 1, state);
+            }
+        }
+    }
+
+    fn run(&mut self, num_blocks: usize) -> ([u64; 4], Vec<u8>) {
+        let mut state = state_from_seed(&self.seed);
+        self.state_before.insert(0, state);
+
+        for i in 0..num_blocks {
+            let parents = dependency_graph::parents_for_node(&state, i, self.fan_in);
+            let mut parent_blocks = Vec::with_capacity(self.fan_in as usize);
+            if i == 0 {
+                for slot in 0..self.fan_in {
+                    parent_blocks.push(node0_material(&self.seed, slot, self.block_size));
+                }
+            } else {
+                for &p in &parents.indices {
+                    parent_blocks.push(self.get_block(p));
+                }
+            }
+            mix_parents(&mut state, &parent_blocks);
+            let mut block = vec![0u8; self.block_size];
+            state_to_block(&state, &mut block);
+            self.blocks.insert(i, block);
+
+            if (i + 1) % self.stride == 0 {
+                self.state_before.insert(i + 1, state);
+            }
+
+            // Bound memory: drop non-checkpoint blocks outside the recent window.
+            if i >= self.stride {
+                let old = i - self.stride;
+                if old % self.stride != 0 {
+                    self.blocks.remove(&old);
+                }
+            }
+        }
+
+        let last = self.blocks.get(&(num_blocks - 1)).cloned().unwrap();
+        (state, last)
+    }
 }
 
-#[derive(Clone)]
-struct WriteEvent {
-    dest: usize,
-    payload: Vec<u8>,
-}
-
-/// Correct sparse/TMTO derive: resident set limited to `memory_fraction` of blocks.
-/// Evicted dirty blocks are reconstructed from the seed fill + write-log replay.
-/// The coverage fold still visits every stride-th block, forcing recomputation.
+/// Sparse/TMTO derive: reduced checkpoints → parent misses recompute up to `stride` nodes.
 pub fn derive_sparse(
     password: &[u8],
     salt: &[u8],
@@ -136,81 +203,9 @@ pub fn derive_sparse(
     let seed = bind(cfg, password, salt);
     let block_size = cfg.block_size as usize;
     let num_blocks = cfg.num_blocks();
-    let capacity = ((num_blocks as f64) * frac).ceil() as usize;
-    let capacity = capacity.max(2).min(num_blocks);
-    let segment_bytes = cfg.segment_bytes as usize;
+    let stride = ((1.0 / frac).round() as usize).max(2);
 
-    let mut resident: HashMap<usize, Vec<u8>> = HashMap::with_capacity(capacity);
-    let mut lru: VecDeque<usize> = VecDeque::with_capacity(capacity);
-    let mut write_log: Vec<WriteEvent> = Vec::with_capacity(cfg.dependency_depth as usize);
-
-    let materialize = |resident: &mut HashMap<usize, Vec<u8>>,
-                       lru: &mut VecDeque<usize>,
-                       write_log: &[WriteEvent],
-                       idx: usize|
-     -> Vec<u8> {
-        if let Some(block) = resident.get(&idx) {
-            return block.clone();
-        }
-        let mut block = recompute_block(&seed, idx, block_size, segment_bytes);
-        for event in write_log {
-            if event.dest == idx {
-                for (a, b) in block.iter_mut().zip(event.payload.iter()) {
-                    *a ^= b;
-                }
-            }
-        }
-        if resident.len() >= capacity {
-            if let Some(evict) = lru.pop_front() {
-                resident.remove(&evict);
-            }
-        }
-        resident.insert(idx, block.clone());
-        lru.push_back(idx);
-        block
-    };
-
-    let mut state = state_from_seed(&seed);
-
-    for pass in 0..cfg.passes {
-        for step in 0..cfg.dependency_depth {
-            let addrs = dependency_graph::addresses(&state, step, pass, num_blocks);
-            let b1 = materialize(&mut resident, &mut lru, &write_log, addrs.parent1);
-            let b2 = materialize(&mut resident, &mut lru, &write_log, addrs.parent2);
-            mix_state(&mut state, &b1, &b2, cfg.mix_rounds);
-
-            let mut payload = vec![0u8; block_size];
-            for (i, word) in state.iter().enumerate() {
-                let bytes = word.to_le_bytes();
-                for (j, b) in bytes.iter().enumerate() {
-                    let idx = i * 8 + j;
-                    if idx < block_size {
-                        payload[idx] = *b;
-                    }
-                }
-            }
-
-            let mut dest = materialize(&mut resident, &mut lru, &write_log, addrs.dest);
-            for (a, b) in dest.iter_mut().zip(payload.iter()) {
-                *a ^= b;
-            }
-            resident.insert(addrs.dest, dest);
-            write_log.push(WriteEvent {
-                dest: addrs.dest,
-                payload,
-            });
-        }
-    }
-
-    // Coverage fold — visits stride-th blocks; sparse misses recompute via write-log.
-    let stride = (cfg.fold_stride as usize).max(1);
-    let mut idx = 0usize;
-    while idx < num_blocks {
-        let block = materialize(&mut resident, &mut lru, &write_log, idx);
-        mix_block(&mut state, &block, cfg.mix_rounds);
-        idx += stride;
-    }
-
-    let head = materialize(&mut resident, &mut lru, &write_log, 0);
-    Ok(finalize(&seed, &state, &head))
+    let mut store = CheckpointStore::new(seed, block_size, cfg.fan_in, stride);
+    let (state, last) = store.run(num_blocks);
+    Ok(finalize(&seed, &state, &last))
 }

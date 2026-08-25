@@ -1,7 +1,7 @@
 variant,threads,total_guesses,duration_secs,guesses_per_sec,scaling_efficiency
-compute-memory-optimized,1,17,0.2099,80.9986,1.0000
-compute-memory-optimized,2,30,0.2118,141.6747,0.8746
-compute-memory-optimized,4,43,0.2125,202.3266,0.6245
-compute-memory-optimized,8,58,0.2264,256.1478,0.3953
-compute-memory-optimized,16,67,0.2369,282.8587,0.2183
-compute-memory-optimized,32,123,0.5077,242.2669,0.0935
+compute-memory-optimized,1,4,0.3958,10.1073,1.0000
+compute-memory-optimized,2,6,0.3168,18.9412,0.9370
+compute-memory-optimized,4,12,0.3828,31.3519,0.7755
+compute-memory-optimized,8,20,0.4246,47.1064,0.5826
+compute-memory-optimized,16,26,0.5112,50.8592,0.3145
+compute-memory-optimized,32,32,0.7515,42.5821,0.1317

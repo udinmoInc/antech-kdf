@@ -1,4 +1,4 @@
-//! Variant B — lighter mix, same sequential state-dependent memory graph.
+//! Variant B — fan-in 2 (default graph), alternate name for suite continuity.
 
 use super::config::ComputeMemoryConfig;
 use super::core::derive_optimized;
@@ -11,7 +11,7 @@ pub struct VariantB {
 impl VariantB {
     pub fn new() -> Self {
         Self {
-            defaults: ComputeMemoryConfig::default().mix_rounds(2),
+            defaults: ComputeMemoryConfig::default().fan_in(2),
         }
     }
 }

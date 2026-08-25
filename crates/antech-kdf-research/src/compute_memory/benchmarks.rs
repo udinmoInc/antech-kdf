@@ -1,4 +1,4 @@
-//! Research benchmark suite for the 12–32 MiB compute-memory construction.
+//! Research benchmark suite for structure-derived compute-memory v2.
 
 use super::attacker::CpuAttackerEngine;
 use super::config::{
@@ -11,10 +11,9 @@ use super::optimized::OptimizedEngine;
 use super::profiling::ExecutionProfile;
 use super::reference::ReferenceEngine;
 use super::tmto::TmtoEvaluator;
-use super::variant_d::VariantD;
 
 use crate::baselines::{run_argon2id_matrix, BaselineRecord};
-use crate::candidates::cand_004::ResearchKdf;
+use crate::candidates::cand_004::{Candidate004, ResearchKdf, ResearchParams};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
@@ -23,14 +22,12 @@ use std::time::Duration;
 pub fn run_compute_memory_suite(output_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all(output_dir)?;
 
-    // Memory layout documentation (12–32 MiB grid).
     let layout = MemoryLayoutAnalysis::run();
     layout.write_markdown(output_dir)?;
     layout.write_csv(output_dir)?;
 
     let optimized = OptimizedEngine::new();
     let reference = ReferenceEngine::new();
-    let variant_d = VariantD::new();
 
     let mut profiles = Vec::new();
     let mut cpu_attacker_records = Vec::new();
@@ -41,89 +38,102 @@ pub fn run_compute_memory_suite(output_dir: &Path) -> Result<(), Box<dyn std::er
     for &mib in &MEMORY_TARGETS_MIB {
         let cfg = ComputeMemoryConfig::default().memory_mib(mib as u32);
         let params = cfg.to_research_params();
+        let samples = if mib <= 16 { 3 } else { 2 };
 
-        // Defender profiles for optimized engine across the full grid.
         let profile = ExecutionProfile::measure(
             optimized.name(),
             mib,
-            cfg.dependency_depth,
-            cfg.passes,
-            cfg.mix_rounds,
-            5,
+            cfg.num_blocks() as u64,
+            cfg.fan_in,
+            samples,
             || {
                 let _ = optimized.derive(b"research_password_123", b"research_salt_456!", &params);
             },
         );
         profiles.push(profile.clone());
 
-        let gpu_rec =
-            GpuEvaluator::evaluate_gpu(optimized.name(), mib, profile.defender_latency_ms);
-        gpu_records.push(gpu_rec);
-
-        let contention = ContentionEvaluator::evaluate_contention(&optimized, &params);
-        contention_records.extend(contention);
+        gpu_records.push(GpuEvaluator::evaluate_gpu(
+            optimized.name(),
+            mib,
+            profile.defender_latency_ms,
+        ));
     }
 
-    // Reference engine at 16 MiB (digest equivalence checked in unit tests).
+    // Reference at 16 MiB
     {
         let cfg = ComputeMemoryConfig::default().memory_mib(16);
         let params = cfg.to_research_params();
-        let profile = ExecutionProfile::measure(
+        profiles.push(ExecutionProfile::measure(
             reference.name(),
             16,
-            cfg.dependency_depth,
-            cfg.passes,
-            cfg.mix_rounds,
-            3,
+            cfg.num_blocks() as u64,
+            cfg.fan_in,
+            2,
             || {
                 let _ = reference.derive(b"research_password_123", b"research_salt_456!", &params);
             },
-        );
-        profiles.push(profile);
+        ));
     }
 
-    // Variant D at 16 MiB (combined preset == optimized defaults).
+    // Current Antech research construction (Candidate-004) at 16 MiB for comparison.
+    // Uses its own depth-based loop — the baseline this redesign replaces.
     {
-        let cfg = ComputeMemoryConfig::default().memory_mib(16);
-        let params = cfg.to_research_params();
-        let profile = ExecutionProfile::measure(
-            variant_d.name(),
+        let antech = Candidate004 {
+            memory_kib: 16 * 1024,
+            dependency_depth: 120,
+            passes: 1,
+        };
+        let params = ResearchParams {
+            memory_kib: 16 * 1024,
+            dependency_depth: 120,
+            passes: 1,
+            block_size: 32,
+        };
+        profiles.push(ExecutionProfile::measure(
+            antech.name(),
             16,
-            cfg.dependency_depth,
-            cfg.passes,
-            cfg.mix_rounds,
+            120, // Candidate-004 work bound is its depth loop, not num_blocks
+            2,
             3,
             || {
-                let _ = variant_d.derive(b"research_password_123", b"research_salt_456!", &params);
+                let _ = antech.derive(b"research_password_123", b"research_salt_456!", &params);
             },
-        );
-        profiles.push(profile);
+        ));
     }
 
-    // CPU attacker scaling at 16 MiB (1/2/4/8/16/32 workers).
+    // Contention at 16 MiB only
     {
         let params = ComputeMemoryConfig::default()
             .memory_mib(16)
             .to_research_params();
-        let cpu_scaling = CpuAttackerEngine::evaluate_scaling(
+        contention_records.extend(ContentionEvaluator::evaluate_contention(&optimized, &params));
+    }
+
+    // CPU attacker at 16 MiB
+    {
+        let params = ComputeMemoryConfig::default()
+            .memory_mib(16)
+            .to_research_params();
+        cpu_attacker_records.extend(CpuAttackerEngine::evaluate_scaling(
             &optimized,
             &params,
             &CPU_WORKER_COUNTS,
-            Duration::from_millis(200),
-        );
-        cpu_attacker_records.extend(cpu_scaling);
+            Duration::from_millis(300),
+        ));
     }
 
-    // TMTO sweep at 16 MiB.
+    // TMTO at 16 MiB
     {
         let params = ComputeMemoryConfig::default()
             .memory_mib(16)
             .to_research_params();
-        let tmto = TmtoEvaluator::evaluate_tmto(&optimized, &params, &TMTO_FRACTIONS);
-        tmto_records.extend(tmto);
+        tmto_records.extend(TmtoEvaluator::evaluate_tmto(
+            &optimized,
+            &params,
+            &TMTO_FRACTIONS,
+        ));
     }
 
-    // Real Argon2id baseline matrix (existing harness).
     let argon2_records = run_argon2id_matrix(1, 3);
 
     write_defender_csv(&output_dir.join("defender.csv"), &profiles)?;
@@ -155,14 +165,16 @@ fn write_defender_csv(
     let mut f = File::create(path)?;
     writeln!(
         f,
-        "variant,memory_mib,latency_ms,p50_ms,p95_ms,cpu_cycles,cpu_instructions,integer_ops,dependency_stalls"
+        "variant,memory_mib,num_blocks,fan_in,latency_ms,p50_ms,p95_ms,cpu_cycles,cpu_instructions,integer_ops,dependency_stalls"
     )?;
     for p in profiles {
         writeln!(
             f,
-            "{},{},{:.2},{:.2},{:.2},{},{},{},{}",
+            "{},{},{},{},{:.2},{:.2},{:.2},{},{},{},{}",
             p.variant,
             p.memory_mib,
+            p.num_blocks,
+            p.fan_in,
             p.defender_latency_ms,
             p.p50_latency_ms,
             p.p95_latency_ms,
@@ -188,12 +200,7 @@ fn write_cpu_attacker_csv(
         writeln!(
             f,
             "{},{},{},{:.4},{:.4},{:.4}",
-            r.variant,
-            r.threads,
-            r.total_guesses,
-            r.duration_secs,
-            r.guesses_per_sec,
-            r.scaling_efficiency
+            r.variant, r.threads, r.total_guesses, r.duration_secs, r.guesses_per_sec, r.scaling_efficiency
         )?;
     }
     Ok(())
@@ -338,14 +345,15 @@ fn write_pareto_csv(
     let mut f = File::create(path)?;
     writeln!(
         f,
-        "variant,memory_mib,defender_latency_ms,p50_ms,p95_ms,compute_security_efficiency,dram_bandwidth_gbps"
+        "variant,memory_mib,num_blocks,defender_latency_ms,p50_ms,p95_ms,compute_security_efficiency,dram_bandwidth_gbps"
     )?;
     for p in profiles {
         writeln!(
             f,
-            "{},{},{:.2},{:.2},{:.2},{:.4},{:.4}",
+            "{},{},{},{:.2},{:.2},{:.2},{:.4},{:.4}",
             p.variant,
             p.memory_mib,
+            p.num_blocks,
             p.defender_latency_ms,
             p.p50_latency_ms,
             p.p95_latency_ms,
@@ -380,11 +388,12 @@ fn write_report_markdown(
     tmto_records: &[super::tmto::TmtoRecord],
     argon2: &[BaselineRecord],
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let best = profiles
+    let cm = profiles
         .iter()
         .find(|p| p.variant == "compute-memory-optimized" && p.memory_mib == 16)
         .unwrap_or(&profiles[0]);
-    let best_gpu = gpu_records
+    let antech = profiles.iter().find(|p| p.variant == "candidate-004");
+    let gpu = gpu_records
         .iter()
         .find(|g| g.variant == "compute-memory-optimized" && g.memory_mib == 16)
         .unwrap_or(&gpu_records[0]);
@@ -392,7 +401,7 @@ fn write_report_markdown(
         .iter()
         .find(|c| c.threads == 1)
         .map(|c| c.guesses_per_sec)
-        .unwrap_or(best.attacker_guesses_per_sec);
+        .unwrap_or(cm.attacker_guesses_per_sec);
     let tmto50 = tmto_records
         .iter()
         .find(|t| (t.memory_percentage - 50.0).abs() < 0.1)
@@ -402,86 +411,83 @@ fn write_report_markdown(
     let argon_cmp = argon2
         .iter()
         .find(|r| r.memory_kib == 65536 && r.parameters.contains("time_cost=2"))
-        .or_else(|| argon2.iter().find(|r| r.memory_kib == 16384))
-        .or_else(|| argon2.first());
+        .or_else(|| argon2.iter().find(|r| r.memory_kib == 16384));
 
     let mut f = File::create(path)?;
-    writeln!(f, "# Antech KDF Compute/Memory Hardness Research Report\n")?;
+    writeln!(f, "# Antech KDF Compute-Memory v2 Research Report\n")?;
     writeln!(f, "## 1. Executive Summary\n")?;
     writeln!(
         f,
-        "This report evaluates the compute-memory research construction (reference + optimized) on a **12–32 MiB** working-memory grid. Attacker cost comes from sequential state dependency and recomputation, not giant empty CPU loops or DRAM bus saturation.\n"
+        "Work is **structure-derived**: one traversal of a `memory_bytes/block_size` dependency DAG with fixed fan-in. There is no exposed `dependency_depth` / iteration work knob. Compared against Candidate-004 (depth-loop Antech) and Argon2id.\n"
     )?;
 
-    writeln!(f, "## 2. Comparison against Argon2id (measured)\n")?;
-    writeln!(f, "| Metric | Argon2id | Antech compute-memory (16 MiB) |")?;
-    writeln!(f, "|---|---:|---:|")?;
-    if let Some(a) = argon_cmp {
-        writeln!(
-            f,
-            "| Working memory | {} KiB | {} MiB |",
-            a.memory_kib, best.memory_mib
-        )?;
-        writeln!(
-            f,
-            "| Defender p50 | {:.2} ms | {:.2} ms |",
-            a.p50_latency_ms, best.p50_latency_ms
-        )?;
-        writeln!(
-            f,
-            "| Defender p95 | (≈ mean) {:.2} ms | {:.2} ms |",
-            a.mean_latency_ms, best.p95_latency_ms
-        )?;
-    } else {
-        writeln!(f, "| Working memory | n/a | {} MiB |", best.memory_mib)?;
-        writeln!(f, "| Defender p50 | n/a | {:.2} ms |", best.p50_latency_ms)?;
-    }
+    writeln!(f, "## 2. Measured Comparison (16 MiB band)\n")?;
     writeln!(
         f,
-        "| CPU cycles/guess (est.) | — | {:.2e} |",
-        best.cpu_cycles as f64
+        "| Metric | Argon2id | Candidate-004 (Antech) | Compute-memory v2 |"
     )?;
-    writeln!(f, "| CPU attacker g/s (1 thread) | — | {:.4} |", cpu1)?;
+    writeln!(f, "|---|---:|---:|---:|")?;
+    let a_p50 = argon_cmp.map(|a| a.p50_latency_ms).unwrap_or(0.0);
+    let a_mem = argon_cmp.map(|a| a.memory_kib).unwrap_or(0);
+    let c_p50 = antech.map(|p| p.p50_latency_ms).unwrap_or(0.0);
     writeln!(
         f,
-        "| GPU attacker g/s | — | {:.4} ({}) |",
-        best_gpu.actual_guesses_per_sec, best_gpu.status
+        "| Working memory | {} KiB | 16 MiB | {} MiB |",
+        a_mem, cm.memory_mib
     )?;
     writeln!(
         f,
-        "| DRAM bytes/guess (est.) | — | {:.2} MiB |",
-        best.dram_bytes_per_guess as f64 / (1024.0 * 1024.0)
+        "| Defender p50 | {:.2} ms | {:.2} ms | {:.2} ms |",
+        a_p50, c_p50, cm.p50_latency_ms
     )?;
     writeln!(
         f,
-        "| DRAM bandwidth (est.) | — | {:.3} GB/s |",
-        best.dram_bandwidth_gbps
+        "| DAG nodes / work bound | (Argon2 lanes×blocks) | depth={} loop | **{} nodes** |",
+        120,
+        cm.num_blocks
     )?;
-    writeln!(f, "| L3 cache misses (est.) | — | {} |", best.l3_cache_misses)?;
-    writeln!(f, "| TMTO @50% recompute | — | {:.2}× |\n", tmto50)?;
+    writeln!(
+        f,
+        "| CPU cycles/guess (est.) | — | {:.2e} | {:.2e} |",
+        antech.map(|p| p.cpu_cycles as f64).unwrap_or(0.0),
+        cm.cpu_cycles as f64
+    )?;
+    writeln!(f, "| CPU attacker g/s (1t) | — | — | {:.4} |", cpu1)?;
+    writeln!(
+        f,
+        "| GPU g/s | — | — | {:.4} ({}) |",
+        gpu.actual_guesses_per_sec, gpu.status
+    )?;
+    writeln!(
+        f,
+        "| DRAM bandwidth (est.) | — | {:.3} GB/s | {:.3} GB/s |",
+        antech.map(|p| p.dram_bandwidth_gbps).unwrap_or(0.0),
+        cm.dram_bandwidth_gbps
+    )?;
+    writeln!(f, "| TMTO @50% recompute | — | — | {:.2}× |\n", tmto50)?;
 
-    writeln!(f, "## 3. Design Notes\n")?;
+    writeln!(f, "## 3. Construction\n")?;
     writeln!(
         f,
-        "- **Password & salt binding**: SHA-256 domain-separated seed over password, salt, and all tunables."
+        "- **Determinism**: SHA-256 seed over password, salt, version, memory, block size, fan-in."
     )?;
     writeln!(
         f,
-        "- **Init**: segmented SHA-256 keys + ARX expand (moderate DRAM, no per-block SHA-256 storm)."
+        "- **Work**: `for i in 0..num_blocks` only — bounds equal the memory layout."
     )?;
     writeln!(
         f,
-        "- **Transitions**: dual state-derived parents, multi-round ARX mix, XOR writeback."
+        "- **Graph**: sequential parent `i-1` + state-dependent parents in `[0,i)` (fan-in)."
     )?;
     writeln!(
         f,
-        "- **TMTO**: real reduced-resident derive with write-log replay (digests match at every fraction).\n"
+        "- **TMTO**: stride checkpoints; parent misses recompute up to `stride` nodes (not extra iterations).\n"
     )?;
 
     writeln!(f, "## 4. Verdict\n")?;
     writeln!(
         f,
-        "Research construction is ready for comparative evaluation in the 12–32 MiB band. Public `hash` / `verify` / `needs_rehash` APIs are unchanged; this module is research-only."
+        "Compute-memory v2 removes depth/passes as security parameters. Public `hash` / `verify` / `needs_rehash` are unchanged; this module remains research-only."
     )?;
 
     Ok(())

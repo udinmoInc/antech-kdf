@@ -1,4 +1,4 @@
-//! Variant D — combined preset (default mix rounds; primary comparison target).
+//! Variant D — default fan-in 2 combined construction (matches OptimizedEngine).
 
 use super::config::ComputeMemoryConfig;
 use super::core::derive_optimized;
@@ -34,7 +34,6 @@ impl ResearchKdf for VariantD {
         params: &ResearchParams,
     ) -> Result<Vec<u8>, ResearchError> {
         let cfg = ComputeMemoryConfig::resolve(&self.defaults, params);
-        // Combined = same core as optimized defaults (graph + mix + writeback).
         derive_optimized(password, salt, &cfg)
     }
 }

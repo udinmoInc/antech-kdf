@@ -1,4 +1,4 @@
-//! Variant A — compute-heavy preset (extra mix rounds).
+//! Variant A — fan-in 3 graph preset.
 
 use super::config::ComputeMemoryConfig;
 use super::core::derive_optimized;
@@ -11,7 +11,7 @@ pub struct VariantA {
 impl VariantA {
     pub fn new() -> Self {
         Self {
-            defaults: ComputeMemoryConfig::default().mix_rounds(6),
+            defaults: ComputeMemoryConfig::default().fan_in(3),
         }
     }
 }

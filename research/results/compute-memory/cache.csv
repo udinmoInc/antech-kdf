@@ -1,9 +1,9 @@
 variant,memory_mib,l2_cache_misses,l3_cache_misses,memory_ops
-compute-memory-optimized,12,1228,245,12288
-compute-memory-optimized,16,1228,245,12288
-compute-memory-optimized,20,1228,614,12288
-compute-memory-optimized,24,1228,614,12288
-compute-memory-optimized,28,1228,614,12288
-compute-memory-optimized,32,1228,614,12288
-compute-memory-reference,16,1228,245,12288
-variant-d-combined,16,1228,245,12288
+compute-memory-optimized,12,94371,17694,1179648
+compute-memory-optimized,16,125829,23592,1572864
+compute-memory-optimized,20,157286,78643,1966080
+compute-memory-optimized,24,188743,94371,2359296
+compute-memory-optimized,28,220200,110100,2752512
+compute-memory-optimized,32,251658,125829,3145728
+compute-memory-reference,16,125829,23592,1572864
+candidate-004,16,28,5,360

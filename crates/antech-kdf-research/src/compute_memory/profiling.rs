@@ -1,4 +1,4 @@
-//! Defender execution profiling with multi-sample latency percentiles.
+//! Defender execution profiling with structure-derived work estimates.
 
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
@@ -25,18 +25,17 @@ pub struct ExecutionProfile {
     pub dram_bytes_per_guess: u64,
     pub attacker_guesses_per_sec: f64,
     pub compute_security_efficiency: f64,
+    pub num_blocks: u64,
+    pub fan_in: u32,
 }
 
 impl ExecutionProfile {
-    /// Measure `samples` timed runs of `f` and estimate secondary metrics from the
-    /// known algorithmic structure (depth/passes/block touches). Cycle/cache
-    /// counters are structural estimates when HW PMUs are unavailable.
+    /// Measure timed runs; secondary metrics derived from DAG size (`num_blocks` × `fan_in`).
     pub fn measure<F>(
         variant_name: &str,
         memory_mib: usize,
-        depth: u32,
-        passes: u32,
-        mix_rounds: u32,
+        num_blocks: u64,
+        fan_in: u32,
         samples: usize,
         mut f: F,
     ) -> Self
@@ -55,35 +54,27 @@ impl ExecutionProfile {
         let p50_latency_ms = percentile(&latencies_ms, 0.50);
         let p95_latency_ms = percentile(&latencies_ms, 0.95);
 
-        let total_bytes_allocated = (memory_mib as u64) * 1024 * 1024;
-        // Dual parent read + dest write per step.
-        let memory_ops = (depth as u64) * (passes as u64) * 3;
-        let bytes_read = (depth as u64) * (passes as u64) * 2 * 32;
-        let bytes_written = (depth as u64) * (passes as u64) * 32;
-
-        let integer_ops = (depth as u64) * (passes as u64) * (mix_rounds as u64) * 12;
-        // Segment fill: ~1 SHA-256 per 1 KiB + ARX expand, plus transition work.
-        let fill_segments = total_bytes_allocated / 1024;
-        let cpu_instructions = fill_segments * 80 + integer_ops + memory_ops * 4;
+        let total_bytes = (memory_mib as u64) * 1024 * 1024;
+        let memory_ops = num_blocks * (fan_in as u64 + 1); // parent reads + write
+        let bytes_read = num_blocks * (fan_in as u64) * 32;
+        let bytes_written = num_blocks * 32;
+        let integer_ops = num_blocks * (fan_in as u64) * 12;
+        let cpu_instructions = integer_ops + memory_ops * 4 + num_blocks * 20;
         let cpu_cycles = (cpu_instructions as f64 * 1.12) as u64;
-        let dependency_stalls = (depth as u64) * (passes as u64) * 2;
+        let dependency_stalls = num_blocks * 2;
 
-        let l2_cache_misses = (memory_ops as f64 * 0.10) as u64;
+        let l2_cache_misses = (memory_ops as f64 * 0.08) as u64;
         let l3_cache_misses = if memory_mib <= 16 {
-            (memory_ops as f64 * 0.02) as u64
+            (memory_ops as f64 * 0.015) as u64
         } else {
-            (memory_ops as f64 * 0.05) as u64
+            (memory_ops as f64 * 0.04) as u64
         };
 
-        // Moderate DRAM: one pass over the buffer at fill + sparse misses in the walk.
-        let dram_bytes_moved = total_bytes_allocated + (l3_cache_misses * 64);
+        // One sequential write pass + sparse parent reads (moderate DRAM).
+        let dram_bytes_moved = total_bytes + (l3_cache_misses * 64);
         let elapsed_secs = (defender_latency_ms / 1000.0).max(1e-6);
         let dram_bandwidth_gbps =
             (dram_bytes_moved as f64 / (1024.0 * 1024.0 * 1024.0)) / elapsed_secs;
-
-        let cpu_guesses_per_sec = 1.0 / elapsed_secs;
-        let compute_security_efficiency =
-            (cpu_cycles as f64) / (total_bytes_allocated as f64 / 1024.0);
 
         Self {
             variant: variant_name.to_string(),
@@ -104,8 +95,11 @@ impl ExecutionProfile {
             dram_bandwidth_gbps,
             cpu_cycles_per_guess: cpu_cycles,
             dram_bytes_per_guess: dram_bytes_moved,
-            attacker_guesses_per_sec: cpu_guesses_per_sec,
-            compute_security_efficiency,
+            attacker_guesses_per_sec: 1.0 / elapsed_secs,
+            compute_security_efficiency: (cpu_cycles as f64)
+                / (total_bytes as f64 / 1024.0),
+            num_blocks,
+            fan_in,
         }
     }
 }
