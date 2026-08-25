@@ -1,0 +1,13 @@
+memory_frac,scatters_logged,scatter_dest_misses,parent_misses,est_nodes_recomputed,parent_miss_rate,source
+1,65406,0,0,0,0.0000,measured
+0.75,65406,2189,815,10014720,0.0067,probe_lower_bound
+0.5,65406,10075,3703,30334976,0.0303,probe_lower_bound
+0.375,65406,16984,6281,38590464,0.0514,probe_lower_bound
+0.25,65406,26632,9940,40714240,0.0814,probe_lower_bound
+0.1875,65406,32782,12278,37718016,0.1006,probe_lower_bound
+0.125,65406,40373,15111,30947328,0.1238,probe_lower_bound
+0.09375,65406,45060,16776,25767936,0.1374,probe_lower_bound
+0.0625,65406,50308,18785,19235840,0.1538,probe_lower_bound
+0.03125,65406,56696,21144,10825728,0.1732,probe_lower_bound
+0.015625,65406,60702,22682,5806592,0.1858,probe_lower_bound
+floor_16mib,1048576,0,0,0,0,compact_index_bytes=4194304

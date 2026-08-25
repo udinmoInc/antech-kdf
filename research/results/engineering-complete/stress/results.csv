@@ -1,0 +1,3 @@
+duration_secs,concurrency,memory_kib,hashes,verifies,errors,gps,active_permits,queue_depth,idle,kind,notes
+10,1,1024,957,957,0,95.6848,0,0,true,MEASURED,"1 MiB cfg for density; set ANTECH_STRESS_SECS / ANTECH_STRESS_CONC for full matrix"
+10,4,1024,3545,3545,0,354.1561,0,0,true,MEASURED,"1 MiB cfg for density; set ANTECH_STRESS_SECS / ANTECH_STRESS_CONC for full matrix"

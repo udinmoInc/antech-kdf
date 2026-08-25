@@ -550,8 +550,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // GPU
     println!("=== CUDA compile / bench ===");
-    let src =
-        PathBuf::from("crates/antech-kdf-research/src/compute_memory_v4/cuda/v4c_gpu_attacker.cu");
+    let src = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src/compute_memory_v4/cuda/v4c_gpu_attacker.cu");
     let bin = PathBuf::from("target/cuda/v4c_gpu_attacker.exe");
     let mut gpu_baseline_gps = 0.0;
     let mut gpu_opt_gps = 0.0;
@@ -685,9 +685,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Argon2 GPU re-run
     let mut argon_gpu_gps = 0.0;
     let argon_bin_candidates = [
-        PathBuf::from(
-            "crates/antech-kdf-research/src/compute_memory_v4/cuda/argon2id_gpu_attacker.exe",
-        ),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/compute_memory_v4/cuda/argon2id_gpu_attacker.exe"),
         PathBuf::from("target/cuda/argon2id_gpu_attacker.exe"),
     ];
     for p in argon_bin_candidates {

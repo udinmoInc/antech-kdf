@@ -1,0 +1,16 @@
+[
+  {
+    "harness": "parser_random_ascii",
+    "cases": 5000,
+    "failures": 0,
+    "kind": "MEASURED",
+    "notes": "No panic expected; invalid strings return Err"
+  },
+  {
+    "harness": "config_validation_boundaries",
+    "cases": 200,
+    "failures": 0,
+    "kind": "MEASURED",
+    "notes": "Reject memory < 1024 KiB"
+  }
+]

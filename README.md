@@ -2,7 +2,13 @@
 
 Password hashing library built around a compute-memory construction. The default profile uses 16 MiB of working memory and a combined-frontier dependency graph. Work is derived from `memory / block_size`; there is no separate iteration-count knob.
 
-This is experimental software. Benchmarks are useful for comparing attacker cost under fixed conditions. They are not a substitute for cryptographic review. Prefer Argon2id for production password storage until Antech has been independently audited.
+This is experimental software. Benchmarks are useful for comparing attacker cost under fixed conditions. They are not a substitute for cryptographic review. Prefer Argon2id for production password storage until Antech has undergone independent cryptographic review and any resulting conclusions are published.
+
+## Security Review
+
+Antech is an experimental password KDF currently **submitted for independent cryptanalysis**. The repository includes the formal construction, test vectors, threat model, and prior attack results for review.
+
+See [`research/security-review/`](./research/security-review/).
 
 ## Install
 
@@ -79,25 +85,29 @@ Per-hash memory comes from `AntechConfig`. Server-wide admission control is sepa
 | `antech-kdf-types` | Config and errors |
 | `antech-kdf-cli` | `hash` / `verify` CLI |
 | `antech-kdf-ffi` | C ABI |
-| `antech-kdf-research` | Attackers, CUDA, historical variants |
 
-Dependency rule: research imports core; production never imports research.
+Research (attackers, CUDA, TMTO, cryptanalysis) lives under [`research/code/`](research/code/) in a **separate** Cargo workspace. Dependency rule: research imports core; production never imports research.
 
 ## Research highlights
 
-At 16 MiB on an RTX 3050 (measured), optimized Antech GPU attacker throughput was about **33 g/s** versus Argon2id at about **436 g/s**. Details and methodology live under [`research/`](research/README.md).
+Attacker-oriented measurements (CPU/GPU/TMTO) are summarized under [`research/security-review/evidence.md`](research/security-review/evidence.md). Runners:
 
 ```bash
-cargo run --release -p antech-kdf-research --example compute_memory_v4_runner
+cargo run --manifest-path research/code/Cargo.toml --release -p antech-kdf-research --example cryptanalysis_runner
 ```
 
 ## Build
 
 ```bash
+# Production (default workspace)
 cargo fmt --all
-cargo check -p antech-kdf -p antech-kdf-core
-cargo test -p antech-kdf -p antech-kdf-core -p antech-kdf-format
-cargo clippy -p antech-kdf -p antech-kdf-core --all-targets
+cargo check --workspace
+cargo test --workspace
+cargo clippy -p antech-kdf --all-targets
+
+# Research (separate workspace)
+cargo check --manifest-path research/code/Cargo.toml --workspace
+cargo test  --manifest-path research/code/Cargo.toml --workspace
 ```
 
 More detail: [`docs/`](docs/api.md). License: MIT OR Apache-2.0.

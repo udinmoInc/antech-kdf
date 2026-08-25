@@ -1,0 +1,8 @@
+metric,value,notes
+num_blocks_1mib,32768,influence BFS on 1 MiB CombinedFrontier
+gather_reachable,32768,BFS from last via parents+scatter writers
+gather_skippable_if_state_ignored,0,NOT valid — state chain requires all
+state_chain_requires_all,true,every node updates rolling 256-bit state
+skip_attack_correct,false,A1 every-other-node digest mismatch
+num_blocks_16mib,524288,production config
+a1_notes,"gather_reachable=32768/32768 (100.0%); state_chain_requires_all=true; skip every-other INCORRECT"

@@ -16,3 +16,9 @@ jobs:
         run: cargo install cargo-fuzz
       - name: Run Fuzz Target (parser)
         run: cargo fuzz run hash_parser -- -runs=10000
+      - name: Run Fuzz Target (verify)
+        run: cargo fuzz run verify_input -- -runs=5000
+      - name: Run Fuzz Target (config)
+        run: cargo fuzz run config_builder -- -runs=5000
+      - name: Run Fuzz Target (malformed v2)
+        run: cargo fuzz run malformed_v2 -- -runs=5000

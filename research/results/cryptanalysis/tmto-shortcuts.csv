@@ -1,0 +1,7 @@
+attack_id,memory_fraction,correct,work_ratio,measured_gps,baseline_gps,notes
+A4a_tmto_naive_frac_0.5,0.5,INCORRECT,1.0000,0.0000,9.3999,"Measured on 1 MiB; dual scatter mutates past blocks so eviction without scatter log breaks digests (same graph as 16 MiB)."
+A4b_tmto_scatterlog_frac_0.5,3,INCORRECT,inf,0.0000,9.3999,"1 MiB prototype; correct=false; no correct cheaper reduced-memory attack found for CombinedFrontier"
+A4a_tmto_naive_frac_0.25,0.25,INCORRECT,1.0000,0.0000,9.3999,"Measured on 1 MiB; dual scatter mutates past blocks so eviction without scatter log breaks digests (same graph as 16 MiB)."
+A4b_tmto_scatterlog_frac_0.25,2.75,INCORRECT,inf,0.0000,9.3999,"1 MiB prototype; correct=false; no correct cheaper reduced-memory attack found for CombinedFrontier"
+A4a_tmto_naive_frac_0.125,0.125,INCORRECT,1.0000,0.0000,9.3999,"Measured on 1 MiB; dual scatter mutates past blocks so eviction without scatter log breaks digests (same graph as 16 MiB)."
+A4b_tmto_scatterlog_frac_0.125,2.625,INCORRECT,inf,0.0000,9.3999,"1 MiB prototype; correct=false; no correct cheaper reduced-memory attack found for CombinedFrontier"

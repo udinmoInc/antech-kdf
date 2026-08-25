@@ -1,0 +1,6 @@
+item,value,notes
+scatter_log_raw_state_16mib_mib,36.000,dest+u32+state32
+scatter_index_compact_16mib_mib,4.000,2xu32_per_node
+scatter_index_compact_1mib_mib,0.250,2xu32_per_node
+lossless_state_delta,not_effective,ARX outputs look high-entropy
+pristine_packed_u64,1.0x,already 32B/block; no further lossless shrink

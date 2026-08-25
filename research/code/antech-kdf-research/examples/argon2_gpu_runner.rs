@@ -24,11 +24,15 @@ fn argon2_params() -> argon2::Params {
 }
 
 fn find_bin() -> PathBuf {
-    let p = PathBuf::from(
-        "crates/antech-kdf-research/src/compute_memory_v4/cuda/argon2id_gpu_attacker.exe",
-    );
-    if p.exists() {
-        return p;
+    let candidates = [
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/compute_memory_v4/cuda/argon2id_gpu_attacker.exe"),
+        PathBuf::from("target/cuda/argon2id_gpu_attacker.exe"),
+    ];
+    for p in candidates {
+        if p.exists() {
+            return p;
+        }
     }
     panic!("argon2id_gpu_attacker.exe not found — compile CUDA binary first");
 }

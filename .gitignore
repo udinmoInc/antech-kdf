@@ -1,7 +1,8 @@
 # Cargo build output
 /target/
 **/target/
-Cargo.lock
+/Cargo.lock
+/research/code/Cargo.lock
 
 # Executables & Binaries
 *.exe

@@ -1,0 +1,10 @@
+{
+  "os": "windows",
+  "arch": "x86_64",
+  "cpu_brand": "x86_64",
+  "logical_cpus": 12,
+  "hostname_hash": "af63ac4c86019afc",
+  "cuda_available": true,
+  "gpu_name": "NVIDIA GeForce RTX 3050",
+  "notes": "Collected by antech-kdf-research::engineering::hardware"
+}

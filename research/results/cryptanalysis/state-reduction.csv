@@ -1,0 +1,6 @@
+probe,result,detail
+mix_linear_over_xor,false,ARX not linear
+mix_zero_identity,false,zero blocks still rotate/add constants
+mix_collisions,0/256,sample injectivity probe
+parent_predict_partial_state,0.0001,fraction exact match with state[1..]=0
+state_words_required,4,256-bit state; no reduction found that preserves digest

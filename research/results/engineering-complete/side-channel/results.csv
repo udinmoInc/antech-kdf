@@ -1,0 +1,6 @@
+test_id,finding,severity,kind,notes
+SC1_verify_correct_vs_wrong_timing,"SIMILAR_MEDIANS correct_ms=3.314 wrong_ms=3.316 ratio=0.999",info,MEASURED,"Wrong password still runs full Derive; digest compared with ConstantTimeEq. Not a formal CT proof."
+SC2_malformed_hash_fast_fail,"avg_us_per_call=0.100",info,MEASURED,"Parse failure expected; should not allocate full 16MiB working set."
+SC3_parser_no_panic_fuzzish,"panics=0",info,MEASURED,"Deterministic malformed v2 strings."
+SC4_secret_dependent_memory,"Parent/scatter addresses depend on rolling state derived from password; access pattern is secret-dependent by design (memory-hard KDF).",accepted_design,MODELED,"Not claimed constant-time w.r.t. password. Offline attacker already knows salt/hash."
+SC5_digest_compare,"verify uses subtle::ConstantTimeEq on digests after full derive.",info,MEASURED,"Source: antech-kdf-core core_verify."

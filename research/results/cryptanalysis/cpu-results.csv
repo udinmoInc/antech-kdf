@@ -1,0 +1,7 @@
+attack,threads,gps,latency_ms,work_ratio_vs_full_1t,correct
+full_eval,1,9.4364,105.972,0.9782,true
+packed_prefetch,1,17.9741,55.636,0.5135,true
+full_eval,16,41.9922,381.023,3.5171,true
+packed_prefetch,16,68.3390,234.127,2.1611,true
+full_eval,32,38.9270,822.052,7.5880,true
+packed_prefetch,32,63.3657,505.005,4.6615,true

@@ -1,0 +1,3 @@
+mode,gps,status,notes
+packed_t32_b256_prior_campaign,100.5301,PRIOR_CORRECT,"From attacker-optimization; full CombinedFrontier DAG; 100/100 digest match on RTX 3050 class device"
+packed_t32_b256_live_parse,0,SKIPPED,"Live bench stdout parse ambiguous (thread count vs gps); use prior campaign figure"

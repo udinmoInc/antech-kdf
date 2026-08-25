@@ -7,6 +7,8 @@ pub mod candidates;
 pub mod compute_memory;
 pub mod compute_memory_v3;
 pub mod compute_memory_v4;
+pub mod cryptanalysis;
+pub mod engineering;
 pub mod multitarget;
 pub mod resource_controller;
 pub mod tmto;

@@ -5,6 +5,8 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = false
+description = "Research-only attackers, CUDA, TMTO, cryptanalysis, and historical variants (not production)"
 
 [features]
 default = []
@@ -14,6 +16,9 @@ cuda = []
 [dependencies]
 antech-kdf-core = { workspace = true }
 antech-kdf-types = { workspace = true }
+antech-kdf = { workspace = true }
+antech-kdf-format = { workspace = true }
+antech-kdf-reference = { path = "../reference" }
 argon2 = { workspace = true }
 scrypt = { workspace = true }
 bcrypt = { workspace = true }

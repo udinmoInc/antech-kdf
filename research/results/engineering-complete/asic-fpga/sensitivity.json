@@ -1,0 +1,37 @@
+[
+  {
+    "param": "cycles_x0.5",
+    "value": 0.5,
+    "relative_throughput": 2.0,
+    "kind": "MODELED",
+    "notes": "baseline_cycles=18706592; sequential state chain limits ILP"
+  },
+  {
+    "param": "cycles_x1.0",
+    "value": 1.0,
+    "relative_throughput": 1.0,
+    "kind": "MODELED",
+    "notes": "baseline_cycles=18706592; sequential state chain limits ILP"
+  },
+  {
+    "param": "cycles_x2.0",
+    "value": 2.0,
+    "relative_throughput": 0.5,
+    "kind": "MODELED",
+    "notes": "baseline_cycles=18706592; sequential state chain limits ILP"
+  },
+  {
+    "param": "cycles_x4.0",
+    "value": 4.0,
+    "relative_throughput": 0.25,
+    "kind": "MODELED",
+    "notes": "baseline_cycles=18706592; sequential state chain limits ILP"
+  },
+  {
+    "param": "mem_ports_2x_throughput",
+    "value": 0.7,
+    "relative_throughput": 1.4285714285714286,
+    "kind": "MODELED",
+    "notes": "baseline_cycles=18706592; sequential state chain limits ILP"
+  }
+]

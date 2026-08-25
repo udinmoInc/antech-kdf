@@ -1,0 +1,5 @@
+attack,intra_dag_parallel,cross_guess_parallel,work_ratio,notes
+full_eval,false,true,1.0,nodes sequential due to rolling state
+packed_prefetch,false,true,0.512,same sequential DAG; better constants
+dual_walk,false,true(2),1.0,latency hiding across guesses only
+mitm_split,false,false,1.0,halves not independent for one password

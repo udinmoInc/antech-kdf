@@ -1,0 +1,9 @@
+targets,memory_mib,strategy,total_secs,sec_per_hash,gps,shared_dag,kind,notes
+1,16,packed_prefetch,0.074817,0.074817,13.3659,false,MEASURED,"Independent password+salt per target; buffer reuse only"
+1,16,production_engine,0.132335,0.132335,7.5566,false,MEASURED,"Independent password+salt per target; buffer reuse only"
+10,16,packed_prefetch,0.630566,0.063057,15.8588,false,MEASURED,"Independent password+salt per target; buffer reuse only"
+10,16,production_engine,1.082636,0.108264,9.2367,false,MEASURED,"Independent password+salt per target; buffer reuse only"
+100,1,production_engine,0.335999,0.003360,297.6197,false,MEASURED,"1 MiB probe for large N; strategy=production_engine"
+1000,1,production_engine,3.291538,0.003292,303.8094,false,MEASURED,"1 MiB probe for large N; strategy=production_engine"
+100000,1,production_engine,329.153790,0.003292,303.8094,false,MODELED,"Linear extrapolation; seed binds password+salt — no cross-target DAG reuse observed at smaller N"
+1000000,1,production_engine,3291.537900,0.003292,303.8094,false,MODELED,"Linear extrapolation; seed binds password+salt — no cross-target DAG reuse observed at smaller N"

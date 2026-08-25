@@ -19,3 +19,11 @@ path = "fuzz_targets/hash_parser.rs"
 [[bin]]
 name = "verify_input"
 path = "fuzz_targets/verify_input.rs"
+
+[[bin]]
+name = "config_builder"
+path = "fuzz_targets/config_builder.rs"
+
+[[bin]]
+name = "malformed_v2"
+path = "fuzz_targets/malformed_v2.rs"

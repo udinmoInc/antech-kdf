@@ -1,0 +1,30 @@
+[
+  {
+    "duration_secs": 10,
+    "concurrency": 1,
+    "memory_kib": 1024,
+    "hashes": 957,
+    "verifies": 957,
+    "errors": 0,
+    "gps": 95.68483012703166,
+    "final_active_permits": 0,
+    "final_queue_depth": 0,
+    "scheduler_idle": true,
+    "kind": "MEASURED",
+    "notes": "1 MiB cfg for density; set ANTECH_STRESS_SECS / ANTECH_STRESS_CONC for full matrix"
+  },
+  {
+    "duration_secs": 10,
+    "concurrency": 4,
+    "memory_kib": 1024,
+    "hashes": 3545,
+    "verifies": 3545,
+    "errors": 0,
+    "gps": 354.15607549352745,
+    "final_active_permits": 0,
+    "final_queue_depth": 0,
+    "scheduler_idle": true,
+    "kind": "MEASURED",
+    "notes": "1 MiB cfg for density; set ANTECH_STRESS_SECS / ANTECH_STRESS_CONC for full matrix"
+  }
+]

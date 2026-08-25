@@ -7,6 +7,6 @@ Defaults: 16 MiB, 32 B blocks, fan-in 2 → 524 288 nodes. Frozen KAT (1 MiB, 
 `d2675d5422a98993886e9014728bcf4d72f8d587ffb57131321851c19d09ba63`
 
 ```bash
-cargo test -p antech-kdf-research compute_memory
-cargo run --release -p antech-kdf-research --example compute_memory_runner
+cargo test --manifest-path research/code/Cargo.toml -p antech-kdf-research compute_memory
+cargo run  --manifest-path research/code/Cargo.toml --release -p antech-kdf-research --example compute_memory_runner
 ```

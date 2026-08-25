@@ -1,0 +1,19 @@
+[package]
+name = "antech-kdf-reference"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Readable reference implementation of Antech KDF for independent review (not production)"
+publish = false
+
+[dependencies]
+sha2 = { workspace = true }
+hex = "0.4"
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+
+[dev-dependencies]
+antech-kdf-core = { workspace = true }
+antech-kdf-types = { workspace = true }

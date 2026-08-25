@@ -155,8 +155,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn find_cuda_bin() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let crate_cuda = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src/compute_memory_v4/cuda/v4c_gpu_attacker.exe");
     let candidates = [
-        PathBuf::from("crates/antech-kdf-research/src/compute_memory_v4/cuda/v4c_gpu_attacker.exe"),
+        crate_cuda,
         PathBuf::from("target/cuda/v4c_gpu_attacker.exe"),
         PathBuf::from("v4c_gpu_attacker.exe"),
     ];

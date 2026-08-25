@@ -1,0 +1,272 @@
+[
+  {
+    "strategy": "production_engine",
+    "memory_mib": 16,
+    "threads": 1,
+    "gps": 10.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_ring",
+    "memory_mib": 16,
+    "threads": 1,
+    "gps": 14.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_noring",
+    "memory_mib": 16,
+    "threads": 1,
+    "gps": 15.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_prefetch",
+    "memory_mib": 16,
+    "threads": 1,
+    "gps": 18.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_dual",
+    "memory_mib": 16,
+    "threads": 1,
+    "gps": 14.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "production_engine",
+    "memory_mib": 16,
+    "threads": 2,
+    "gps": 18.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_ring",
+    "memory_mib": 16,
+    "threads": 2,
+    "gps": 22.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_noring",
+    "memory_mib": 16,
+    "threads": 2,
+    "gps": 22.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_prefetch",
+    "memory_mib": 16,
+    "threads": 2,
+    "gps": 32.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_dual",
+    "memory_mib": 16,
+    "threads": 2,
+    "gps": 24.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "production_engine",
+    "memory_mib": 16,
+    "threads": 4,
+    "gps": 29.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_ring",
+    "memory_mib": 16,
+    "threads": 4,
+    "gps": 36.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_noring",
+    "memory_mib": 16,
+    "threads": 4,
+    "gps": 38.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_prefetch",
+    "memory_mib": 16,
+    "threads": 4,
+    "gps": 39.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_dual",
+    "memory_mib": 16,
+    "threads": 4,
+    "gps": 32.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "production_engine",
+    "memory_mib": 16,
+    "threads": 8,
+    "gps": 40.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_ring",
+    "memory_mib": 16,
+    "threads": 8,
+    "gps": 55.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_noring",
+    "memory_mib": 16,
+    "threads": 8,
+    "gps": 56.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_prefetch",
+    "memory_mib": 16,
+    "threads": 8,
+    "gps": 64.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_dual",
+    "memory_mib": 16,
+    "threads": 8,
+    "gps": 64.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "production_engine",
+    "memory_mib": 16,
+    "threads": 16,
+    "gps": 47.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_ring",
+    "memory_mib": 16,
+    "threads": 16,
+    "gps": 62.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_noring",
+    "memory_mib": 16,
+    "threads": 16,
+    "gps": 66.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_prefetch",
+    "memory_mib": 16,
+    "threads": 16,
+    "gps": 75.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_dual",
+    "memory_mib": 16,
+    "threads": 16,
+    "gps": 64.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "production_engine",
+    "memory_mib": 16,
+    "threads": 32,
+    "gps": 66.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_ring",
+    "memory_mib": 16,
+    "threads": 32,
+    "gps": 81.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_noring",
+    "memory_mib": 16,
+    "threads": 32,
+    "gps": 88.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_prefetch",
+    "memory_mib": 16,
+    "threads": 32,
+    "gps": 75.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  },
+  {
+    "strategy": "packed_dual",
+    "memory_mib": 16,
+    "threads": 32,
+    "gps": 76.0,
+    "correct": true,
+    "kind": "MEASURED",
+    "notes": "avx2_compile_or_runtime=true; packed uses u64 layout+prefetch; dual=2walks"
+  }
+]

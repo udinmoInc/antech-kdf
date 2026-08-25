@@ -1,0 +1,6 @@
+item,reusable,bytes,notes
+seed_sha256,false,0,binds password length and bytes
+phantom_blocks,false,0,derived from seed
+parent_index_tables,false,0,state-dependent addresses
+graph_formulas,true,0,public code only; no password work saved
+summary,false,0,"Seed binds password+salt; parent indices bind rolling state; no cross-guess DAG reuse."

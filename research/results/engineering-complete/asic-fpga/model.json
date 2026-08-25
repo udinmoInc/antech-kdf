@@ -1,0 +1,17 @@
+{
+  "kind": "MODELED",
+  "memory_mib": 16,
+  "num_blocks": 524288,
+  "state_bits": 256,
+  "block_bytes": 32,
+  "mix_rounds": 4,
+  "fan_in": 2,
+  "scatters_per_node_nominal": 2.0,
+  "estimated_mix_pairs": 1169162,
+  "estimated_parent_gathers": 1955594,
+  "estimated_scatters": 1048576,
+  "sequential_dependency": true,
+  "on_chip_mem_bytes": 16777216,
+  "cycles_per_guess_assumption": 18706592,
+  "notes": "Derived from CombinedFrontier structure + prior MEASURED op counts; NOT silicon measurement."
+}

@@ -15,7 +15,3 @@ antech-kdf-core = { workspace = true }
 antech-kdf-format = { workspace = true }
 antech-kdf-types = { workspace = true }
 rand = { workspace = true }
-
-[[example]]
-name = "reliability_runner"
-path = "examples/reliability_runner.rs"

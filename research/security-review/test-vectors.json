@@ -1,0 +1,589 @@
+{
+  "boundary_1mib": [
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 8,
+        "tile_len": 512
+      },
+      "digest_hex": "2fde9d6e90260deb133d167d8bc411c27768bbcbb8eaf5a980853cbda8898d35",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-fan2-salt8",
+      "notes": "fan_in=2, salt_length=8",
+      "password_hex": "626f756e64617279",
+      "password_utf8": "boundary",
+      "salt_hex": "73616c7473616c74"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 4,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 32,
+        "tile_len": 512
+      },
+      "digest_hex": "b4807491301968f77e19279ab5340666a509137c217158d5352a0069a93d9d15",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-fan4-salt32",
+      "notes": "fan_in=4, salt_length=32",
+      "password_hex": "626f756e64617279",
+      "password_utf8": "boundary",
+      "salt_hex": "3031323334353637383961626364656630313233343536373839616263646566"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "b650eba7297f198b0d58210fca6539c85923ff2bb83a0cc55ef6112a93ddfb89",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-empty-password",
+      "notes": "empty password",
+      "password_hex": "",
+      "password_utf8": "",
+      "salt_hex": "73616c745f31365f62797465735f2121"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "d4e6c67d1c74fdcd9c1ea4e6ad40dfa03c35a655c45d929572887e78f8e050d5",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-null-bytes-password",
+      "notes": "binary password with embedded NUL bytes",
+      "password_hex": "707265006d696400706f7374",
+      "password_utf8": "pre\u0000mid\u0000post",
+      "salt_hex": "73616c745f31365f62797465735f2121"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "f168ad12e3909c11db4a5bdc32f9cf4cdd9b03188167ab5690f34a92dd6fbc27",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-long-password",
+      "notes": "long password (200 bytes cycling A-Z)",
+      "password_hex": "4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152",
+      "password_utf8": "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQR",
+      "salt_hex": "73616c745f31365f62797465735f2121"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 32,
+        "tile_len": 512
+      },
+      "digest_hex": "8a299cbe2eb8f1fb375bae99ac8f4c2404618e136f3bb9c08c41aa2c1d5154f9",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-fan2-salt32",
+      "notes": "fan_in=2, salt_length=32",
+      "password_hex": "626f756e64617279",
+      "password_utf8": "boundary",
+      "salt_hex": "6665646362613938373635343332313066656463626139383736353433323130"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 4,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 8,
+        "tile_len": 512
+      },
+      "digest_hex": "fd9805a0de05640c7c7397c7acb5005941ffa86eec39db39d03a3c1045e9b750",
+      "digest_source": "AntechEngine::derive",
+      "id": "boundary-1mib-fan4-salt8",
+      "notes": "fan_in=4, salt_length=8",
+      "password_hex": "626f756e64617279",
+      "password_utf8": "boundary",
+      "salt_hex": "6162636465666768"
+    }
+  ],
+  "canonical_default_16mib": [
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 16384,
+        "mix_rounds": 4,
+        "num_blocks": 524288,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "a29e8caff6c2854ea84e74f0794a27a2b92451624c7e8ec0786466c76465b87d",
+      "digest_source": "AntechEngine::derive",
+      "id": "default-16mib-pwd1",
+      "notes": "canonical default config; ASCII password",
+      "password_hex": "70617373776f7264",
+      "password_utf8": "password",
+      "salt_hex": "73616c745f31365f62797465735f2121"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 16384,
+        "mix_rounds": 4,
+        "num_blocks": 524288,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "aeffecb7b9f6cb8354799f20c7a99c96bcfa3e3f527b7f1f408858134c7b42e4",
+      "digest_source": "AntechEngine::derive",
+      "id": "default-16mib-pwd2",
+      "notes": "canonical default config; passphrase",
+      "password_hex": "636f727265637420686f727365206261747465727920737461706c65",
+      "password_utf8": "correct horse battery staple",
+      "salt_hex": "30313233343536373839616263646566"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 16384,
+        "mix_rounds": 4,
+        "num_blocks": 524288,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "0aa26dca8eadeff4a053cb93a7a2866cbbc346ef807469ea3069f5bb95815d97",
+      "digest_source": "AntechEngine::derive",
+      "id": "default-16mib-pwd3",
+      "notes": "canonical default config; binary salt",
+      "password_hex": "416e746563685265766965772332303236",
+      "password_utf8": "AntechReview#2026",
+      "salt_hex": "000102030405060708090a0b0c0d0e0f"
+    }
+  ],
+  "construction": "antech-compute-memory-v4",
+  "construction_version": 4,
+  "generator": "antech-kdf-research/examples/gen_security_review_vectors.rs",
+  "notes": "All digests produced by antech_kdf_core::AntechEngine::derive. Intermediates use the same public core primitives as the production engine loop.",
+  "schema_version": 1,
+  "small_1mib_with_intermediates": [
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "c9ceed5f65a2ec7915e35228de5c7271b6ce8c6862ba73b1d08707c41ed65eb4",
+      "digest_source": "AntechEngine::derive",
+      "id": "small-1mib-intermediates-a",
+      "initial_state": [
+        "e231abdfea755e67",
+        "f0e6260d772af2a5",
+        "24fdfccee87d2283",
+        "5d81d534f6ea2825"
+      ],
+      "nodes": [
+        {
+          "block_after_write_hex": "39849456425c6469761ba088f9e9be29fa89bf6dd04736c6c75dddcdc1aa56d7",
+          "i": 0,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "69645c4256948439",
+            "29bee9f988a01b76",
+            "c63647d06dbf89fa",
+            "d756aac1cddd5dc7"
+          ]
+        },
+        {
+          "block_after_write_hex": "9ebb7ce7c08b9315c86032c75050cb6ed0f1d6eab793f842ee10da31589d3a93",
+          "i": 1,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            0
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "15938bc0e77cbb9e",
+            "6ecb5050c73260c8",
+            "42f893b7ead6f1d0",
+            "933a9d5831da10ee"
+          ]
+        },
+        {
+          "block_after_write_hex": "017b8a6b06c0d223f261f73e8342c6f43e02ca4dc38a1ff5ecdff4474d73fe49",
+          "i": 2,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            1,
+            0
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "23d2c0066b8a7b01",
+            "f4c642833ef761f2",
+            "f51f8ac34dca023e",
+            "49fe734d47f4dfec"
+          ]
+        },
+        {
+          "block_after_write_hex": "401fc243f02574bc14e85c3765e9db15a28924cb745ace1b6a07d86b074e68db",
+          "i": 3,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            2,
+            0
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "bc7425f043c21f40",
+            "15dbe965375ce814",
+            "1bce5a74cb2489a2",
+            "db684e076bd8076a"
+          ]
+        },
+        {
+          "block_after_write_hex": "66c0b5c861acad79c0b1c9e2f8f92745f4412aae7a58b540d301ba87fb2e5da8",
+          "i": 10,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            9,
+            4
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "79adac61c8b5c066",
+            "4527f9f8e2c9b1c0",
+            "40b5587aae2a41f4",
+            "a85d2efb87ba01d3"
+          ]
+        },
+        {
+          "block_after_write_hex": "49625ce690db6bffabbcbc90c70ec648e308072e280548b4496828b98854234b",
+          "i": 100,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            99,
+            54,
+            33,
+            12
+          ],
+          "scatter_dest": 24,
+          "scatter_dest2": 2,
+          "scatter_dest2_applied": 2,
+          "scatter_dest_applied": 24,
+          "state_after_mix": [
+            "ff6bdb90e65c6249",
+            "48c60ec790bcbcab",
+            "b44805282e0708e3",
+            "4b235488b9286849"
+          ]
+        },
+        {
+          "block_after_write_hex": "d175d488ac4a7c73712b244c824575e867d4705b290f40fafd1213e508c454f4",
+          "i": 1000,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            999,
+            978,
+            780,
+            602,
+            656
+          ],
+          "scatter_dest": 652,
+          "scatter_dest2": 68,
+          "scatter_dest2_applied": 68,
+          "scatter_dest_applied": 652,
+          "state_after_mix": [
+            "737c4aac88d475d1",
+            "e87545824c242b71",
+            "fa400f295b70d467",
+            "f454c408e51312fd"
+          ]
+        }
+      ],
+      "notes": "1 MiB CombinedFrontier with node intermediates; digest from AntechEngine::derive",
+      "password_hex": "766563746f722d696e7465722d61",
+      "password_utf8": "vector-inter-a",
+      "salt_hex": "73616c745f31365f62797465735f2121",
+      "seed_hex": "675e75eadfab31e2a5f22a770d26e6f083227de8cefcfd242528eaf634d5815d"
+    },
+    {
+      "config": {
+        "algorithm": "antech",
+        "block_size": 32,
+        "construction_version": 4,
+        "critical_period": 4,
+        "fan_in": 2,
+        "frontier_width": 64,
+        "graph": "combined-frontier",
+        "memory_kib": 1024,
+        "mix_rounds": 4,
+        "num_blocks": 32768,
+        "output_length": 32,
+        "salt_length": 16,
+        "tile_len": 512
+      },
+      "digest_hex": "29157982e5188dfaf3b19f43a6b6a8a3fae4482ad09610a6b580b6347e7e370d",
+      "digest_source": "AntechEngine::derive",
+      "id": "small-1mib-intermediates-b",
+      "initial_state": [
+        "36c2fb0bbac9cd0e",
+        "cd9c277cc2b30a8f",
+        "b76782ff4f0f6944",
+        "081a2ae945196b07"
+      ],
+      "nodes": [
+        {
+          "block_after_write_hex": "288d964252a6a86ab1afbd7ace3eeb4b6752a20c50a1c089e83be61fc86e44a0",
+          "i": 0,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "6aa8a65242968d28",
+            "4beb3ece7abdafb1",
+            "89c0a1500ca25267",
+            "a0446ec81fe63be8"
+          ]
+        },
+        {
+          "block_after_write_hex": "86ab3b277f45b6666f1d6a0e87ff28abed15f7ba4b307fcf2cf8e4ab23db8d27",
+          "i": 1,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            0
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "66b6457f273bab86",
+            "ab28ff870e6a1d6f",
+            "cf7f304bbaf715ed",
+            "278ddb23abe4f82c"
+          ]
+        },
+        {
+          "block_after_write_hex": "e64fcf0b0595c9b5ec979c593a4fea25867c69245e8f25cd2357504c6a44548d",
+          "i": 2,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            1,
+            0
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "b5c995050bcf4fe6",
+            "25ea4f3a599c97ec",
+            "cd258f5e24697c86",
+            "8d54446a4c505723"
+          ]
+        },
+        {
+          "block_after_write_hex": "6be2cd968529ccb4639c80e85617adb374675f8834190dca1550a0a233b1285f",
+          "i": 3,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            2,
+            1
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "b4cc298596cde26b",
+            "b3ad1756e8809c63",
+            "ca0d1934885f6774",
+            "5f28b133a2a05015"
+          ]
+        },
+        {
+          "block_after_write_hex": "62bdaed20878d0317744870f07aded75e5596b2bd14d5e89cd0fd729a8e6e8ba",
+          "i": 10,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            9,
+            5,
+            6
+          ],
+          "scatter_dest": null,
+          "scatter_dest2": null,
+          "scatter_dest2_applied": null,
+          "scatter_dest_applied": null,
+          "state_after_mix": [
+            "31d07808d2aebd62",
+            "75edad070f874477",
+            "895e4dd12b6b59e5",
+            "bae8e6a829d70fcd"
+          ]
+        },
+        {
+          "block_after_write_hex": "7fbac368c1744bb24c4025f7720a8ff420a21d2a7a133b24f768765b139e8054",
+          "i": 100,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            99,
+            80,
+            26,
+            16,
+            22
+          ],
+          "scatter_dest": 27,
+          "scatter_dest2": 9,
+          "scatter_dest2_applied": 9,
+          "scatter_dest_applied": 27,
+          "state_after_mix": [
+            "b24b74c168c3ba7f",
+            "f48f0a72f725404c",
+            "243b137a2a1da220",
+            "54809e135b7668f7"
+          ]
+        },
+        {
+          "block_after_write_hex": "11ed9150e51e3e792bf6ae628fb68ea80d8c2fd9f64869a4bf3a51fedaa6543d",
+          "i": 1000,
+          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "parents": [
+            999,
+            958,
+            642,
+            439,
+            36
+          ],
+          "scatter_dest": 492,
+          "scatter_dest2": 102,
+          "scatter_dest2_applied": 102,
+          "scatter_dest_applied": 492,
+          "state_after_mix": [
+            "793e1ee55091ed11",
+            "a88eb68f62aef62b",
+            "a46948f6d92f8c0d",
+            "3d54a6dafe513abf"
+          ]
+        }
+      ],
+      "notes": "1 MiB CombinedFrontier; password contains embedded NUL; digest from AntechEngine::derive",
+      "password_hex": "766563746f722d696e7465722d62007461696c",
+      "password_utf8": "vector-inter-b\u0000tail",
+      "salt_hex": "61626364656630313233343536373839",
+      "seed_hex": "0ecdc9ba0bfbc2368f0ab3c27c279ccd44690f4fff8267b7076b1945e92a1a08"
+    }
+  ]
+}

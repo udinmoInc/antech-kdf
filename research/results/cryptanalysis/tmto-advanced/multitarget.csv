@@ -1,0 +1,7 @@
+strategy,targets,gps,sec_per_hash,shared_dag
+full_packed,1,398.4381,0.002510,false
+full_packed,10,436.7709,0.002290,false
+full_packed,100,446.7868,0.002238,false
+full_packed,1000,447.9205,0.002233,false
+note,100000+,skipped,seed_binds_password_no_shared_DAG_across_guesses
+amortization,layout_only,buffer_reuse_across_guesses_no_crypto_work_sharing

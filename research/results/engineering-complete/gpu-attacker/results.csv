@@ -1,0 +1,3 @@
+mode,gps,correct,kind,notes
+packed_t32_b256,100.53,true,MEASURED_PRIOR,"RTX 3050 prior cryptanalysis campaign; digests matched CPU"
+v4c_gpu_attacker_binary,NA,unknown,ENVIRONMENT,"binary present at target/cuda/v4c_gpu_attacker.exe; re-run attacker_optimization_runner for fresh MEASURED"
