@@ -1,11 +1,28 @@
 ---
 title: "SDK overview"
 sidebarTitle: "Overview"
-description: "Language packages share one FFI, one version file, and one conformance suite."
+description: "Language packages share one FFI, one version line, and one conformance suite."
 order: 30
 ---
 
-Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation, and encoding come from the Rust core — not from a second implementation in the binding. That is the whole point of the multi-language surface: one construction, many call sites.
+Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation, and encoding come from the Rust core — not from a second implementation in the binding language.
+
+## Current version
+
+All published packages track release **0.1.0**. Verify the version in your dependency manager before deploying.
+
+| Language | Package | Install |
+|---|---|---|
+| Rust | `antech-kdf` | `cargo add antech-kdf@0.1` |
+| Python | `antech-kdf` | `pip install antech-kdf==0.1.0` |
+| Node / TypeScript | `antech-kdf` | `npm install antech-kdf@0.1.0` |
+| .NET | `Antech.Kdf` | `dotnet add package Antech.Kdf --version 0.1.0` |
+| Go | module under `bindings/go` | see [Go SDK](./go) |
+| Java / Kotlin | JNA binding | see [Java / Kotlin SDK](./java-kotlin) |
+| Swift | SwiftPM package | see [Swift SDK](./swift) |
+| C / C++ | headers + native library | see [C / C++ SDK](./c-cpp) |
+
+Changelog: [CHANGELOG.md](https://github.com/udinmoInc/antech-kdf/blob/main/CHANGELOG.md).
 
 ## Shared operations
 
@@ -16,6 +33,10 @@ Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation,
 | `verify` | Constant-time check |
 | `needs_rehash` / `needs_rehash_with_policy` | Upgrade detection |
 | `hash_with_config_and_salt` | Deterministic KATs only |
+
+## Native library
+
+FFI-based SDKs load `antech_kdf_ffi` at runtime. If automatic discovery fails, set `ANTECH_KDF_LIB` to the directory containing the library for your platform. Platform notes: [`sdk/PLATFORMS.md`](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/PLATFORMS.md) in the repository.
 
 ## Choose a language
 
@@ -30,41 +51,14 @@ Every non-Rust SDK is a thin wrapper over `antech-kdf-ffi`. Digests, validation,
   <FeatureCard icon="device-phone-mobile" title="Swift" description="SwiftPM over the C ABI." href="./swift" />
 </FeatureGrid>
 
-## Version and native artifacts
-
-Root `VERSION` is authoritative:
-
-```bash
-python sdk/scripts/sync-versions.py
-./sdk/scripts/build-native.sh   # or build-native.ps1
-```
-
-CI uploads per-OS natives on `v*` tags. Platform notes live in `sdk/PLATFORMS.md` in the repository.
-
 <StatsRow>
   <Stat value="1" label="Crypto implementation" />
   <Stat value="12" label="Conformance KAT cases" />
   <Stat value="9+" label="Language packages" />
 </StatsRow>
 
-## Layout
-
-<FileTree>
-  <Folder name="bindings">
-    <File name="c" />
-    <File name="cpp" />
-    <File name="python" />
-    <File name="node" />
-    <File name="go" />
-  </Folder>
-  <Folder name="sdk">
-    <File name="native" />
-    <File name="conformance" />
-    <File name="scripts" />
-  </Folder>
-</FileTree>
-
 <NextSteps links={[
   { href: './conformance', title: 'Run the conformance suite' },
-  { href: './python', title: 'Python install and examples' }
+  { href: './python', title: 'Python install and examples' },
+  { href: '../security-review/overview', title: 'Security & review' }
 ]} />

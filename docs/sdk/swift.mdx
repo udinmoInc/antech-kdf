@@ -5,7 +5,7 @@ description: "SwiftPM package wrapping the C ABI for macOS and iOS targets."
 order: 38
 ---
 
-Package: `bindings/swift`. Link `antech_kdf_ffi` and ensure header search paths resolve `antech_kdf.h`.
+Package: `bindings/swift` in the [repository](https://github.com/udinmoInc/antech-kdf/tree/main/bindings/swift). Link `antech_kdf_ffi` and ensure header search paths resolve `antech_kdf.h`.
 
 ```swift
 let stored = try AntechKdf.hash("password")
@@ -16,14 +16,10 @@ let ok = try AntechKdf.verify("password", encodedHash: stored)
 
 | Target | Guidance |
 |---|---|
-| macOS | Dynamic library from `build-native` is usually enough |
-| iOS | Prefer an XCFramework built from the Rust staticlib/cdylib |
+| macOS | Link the platform native library; set `ANTECH_KDF_LIB` if needed |
+| iOS | Ship an XCFramework built from the Rust staticlib |
 
-See `sdk/PLATFORMS.md` in the repository for packaging details.
-
-<Note>
-iOS App Store distribution needs a signed XCFramework workflow. Do not ship unsigned debug natives.
-</Note>
+See [`sdk/PLATFORMS.md`](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/PLATFORMS.md) for packaging notes.
 
 <Related links={[
   { href: './overview', title: 'SDK overview' },

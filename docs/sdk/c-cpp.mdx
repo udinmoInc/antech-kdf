@@ -5,11 +5,9 @@ description: "Link libantech_kdf_ffi with antech_kdf.h or the C++ header wrapper
 order: 32
 ---
 
-Build the release shared library first (`sdk/scripts/build-native.*`), then include the C header and link `antech_kdf_ffi`.
+Include `bindings/c/antech_kdf.h` and link `antech_kdf_ffi`. Headers and examples are in the [repository](https://github.com/udinmoInc/antech-kdf/tree/main/bindings/c).
 
 ## C
-
-Include `bindings/c/antech_kdf.h`.
 
 ```c
 char *out = NULL;
@@ -30,6 +28,8 @@ assert(antech::verify("password", h));
 ```
 
 Header-only wrapper: `bindings/cpp/antech_kdf.hpp`.
+
+Obtain the native library for your platform through the published SDK distribution or set `ANTECH_KDF_LIB` / linker paths accordingly. Platform notes: [`sdk/PLATFORMS.md`](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/PLATFORMS.md).
 
 <Tip>
 Free strings with `antech_free` in C. The C++ helpers free automatically.

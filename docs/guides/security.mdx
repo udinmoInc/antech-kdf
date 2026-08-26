@@ -1,45 +1,48 @@
 ---
 title: "Security guidance"
 sidebarTitle: "Security"
-description: "Experimental status, what Antech is for today, and operational habits that matter."
+description: "Experimental status, integration habits, and where review evidence lives."
 order: 26
 ---
 
-Antech is published as experimental software. Benchmarks and SDK packaging help you integrate and compare; they do **not** replace cryptographic review.
+Antech KDF is **experimental** software. It has not completed independent cryptographic review. Benchmarks help compare attacker cost under fixed conditions; they do not replace cryptanalysis.
+
+For production password storage on the public internet, **prefer Argon2id** until you have read the [Security & review](../security-review/overview) materials and accepted the residual risk.
 
 ## Intended use today
 
-- Research and attacker-cost comparison against Argon2-class baselines
-- Early product experiments behind explicit risk acceptance
-- Conformance and interoperability work across language bindings
+- Integration testing and interoperability across language SDKs
+- Attacker-cost comparison against Argon2-class baselines
+- Early experiments behind explicit, written risk acceptance
 
-For production password storage on the public internet, **prefer Argon2id** until independent review concludes and you decide the residual risk is acceptable.
+## Integration habits
 
-## Practices that still apply
-
-- Store only `$antech$v2$` strings
-- Never log passwords or cleartext salts
-- Keep crypto in the Rust core — do not “simplify” the DAG in an application language
-- Upgrade parameters only after successful verify
+- Store only `$antech$v2$` strings — never passwords or cleartext salts
+- Never log passwords or derived digests in application logs
+- Keep cryptography in the Rust core; do not reimplement the DAG in application code
+- Upgrade parameters only after a successful `verify`
 - Treat malformed stored hashes as operational failures, not user typos
+- Rate-limit and lock out online guessing — KDF cost alone is not enough
 
 ## Threat-model reminders
 
 | Attacker | Defender posture |
 |---|---|
-| Online guessing | Rate-limit and lockout still required — KDF cost alone is not enough |
+| Online guessing | Rate-limit and lockout still required |
 | Offline dump | Memory + graph cost raise cracking expense; defaults target modest hosts |
-| Implementation fork | Using a second crypto path voids conformance guarantees |
+| Implementation fork | A second crypto path voids conformance guarantees |
 
-## Where to read evidence
+## Review materials
 
-| Material | Location |
-|---|---|
-| Review package | `research/security-review/` |
-| Narrative chapters | `research/docs/` |
-| Conformance KATs | `sdk/conformance/vectors.json` |
+Specification, test vectors, evidence, limitations, and reproduction steps:
+
+[Security & review](../security-review/overview)
+
+Conformance KATs for SDK verification: [Cross-language conformance](../sdk/conformance).
+
+Report vulnerabilities and cryptanalysis findings via [SECURITY.md](https://github.com/udinmoInc/antech-kdf/blob/main/SECURITY.md).
 
 <Related links={[
-  { href: '../developer/research-boundary', title: 'Production vs research boundary' },
+  { href: '../security-review/overview', title: 'Security & review' },
   { href: '../sdk/conformance', title: 'Conformance suite' }
 ]} />

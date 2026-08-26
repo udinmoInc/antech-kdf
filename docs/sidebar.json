@@ -1,6 +1,6 @@
 {
   "Get started": [
-    "getting-started",
+    "index",
     "getting-started/quickstart",
     "getting-started/configuration",
     "getting-started/first-hash"
@@ -34,6 +34,9 @@
     "sdk/swift",
     "sdk/conformance"
   ],
+  "Security & review": [
+    "security-review/overview"
+  ],
   "CLI": [
     "cli/commands"
   ],
@@ -44,10 +47,8 @@
     "reference/errors",
     "reference/hash-format"
   ],
-  "Developer": [
+  "Contributing": [
     "developer/contributing",
-    "developer/testing",
-    "developer/releasing",
-    "developer/research-boundary"
+    "developer/testing"
   ]
 }

@@ -5,7 +5,9 @@ description: "Build, format, lint, and test production crates without breaking t
 order: 60
 ---
 
-Production work lands under `crates/`, `bindings/`, and `sdk/`. Experiments stay under `research/`. Keep that split intact when reviewing patches.
+Production code lives under `crates/`, `bindings/`, and `sdk/`. Experiments stay under `research/`. Keep that split intact when reviewing patches.
+
+See also [CONTRIBUTING.md](https://github.com/udinmoInc/antech-kdf/blob/main/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](https://github.com/udinmoInc/antech-kdf/blob/main/CODE_OF_CONDUCT.md) in the repository.
 
 ## Production checks
 
@@ -27,7 +29,7 @@ cargo check --manifest-path research/code/Cargo.toml --workspace
 - Prefer small, reviewable PRs with clear crypto/API impact notes
 - Update conformance vectors when digests intentionally change
 - Do not add production → research Cargo dependencies
-- Keep MDX docs free of repository-process boilerplate — document the product, not the docs toolchain
+- Keep public docs focused on the product and review materials, not internal workflow
 
 <Note>
 Do not change digest behavior, v2 encoding, or public API semantics unless the change is intentional, versioned, and covered by updated vectors.
@@ -35,6 +37,5 @@ Do not change digest behavior, v2 encoding, or public API semantics unless the c
 
 <NextSteps links={[
   { href: './testing', title: 'Testing and conformance' },
-  { href: './releasing', title: 'Release checklist' },
-  { href: './research-boundary', title: 'Research boundary' }
+  { href: '../security-review/overview', title: 'Security & review' }
 ]} />

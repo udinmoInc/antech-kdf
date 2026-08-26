@@ -6,9 +6,10 @@ order: 34
 ---
 
 ```bash
-./sdk/scripts/build-native.sh
-cd bindings/node && npm install && npm run build
+npm install antech-kdf@0.1.0
 ```
+
+Confirm with `npm list antech-kdf`.
 
 ```typescript
 import {
@@ -33,7 +34,7 @@ policy.preferred_memory_kib = 32768;
 needsRehashWithPolicy(custom, policy);
 ```
 
-Naming is camelCase in TypeScript; semantics match Rust and Python. Keep hashing off the event loop — see the async guide.
+Naming is camelCase in TypeScript; semantics match Rust and Python. Set `ANTECH_KDF_LIB` if the native library is not found automatically.
 
 <Warning>
 Do not call `hash` / `verify` on the main Node event-loop tick under load. Offload to a worker thread.

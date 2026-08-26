@@ -1,0 +1,131 @@
+---
+title: "Security & review"
+sidebarTitle: "Overview"
+description: "Where to find the specification, production code, test vectors, evidence, and limitations for independent review."
+order: 50
+sectionOrder: 5
+---
+
+Antech KDF is **experimental** software. Benchmarks and packaging help you integrate and compare attacker cost; they are not a substitute for cryptographic review. Independent review is in progress; nothing here claims the algorithm is audited, proven, or production-safe.
+
+This page maps the public review materials in the [GitHub repository](https://github.com/udinmoInc/antech-kdf). Follow links there rather than relying on copies in downstream docs.
+
+## Review package
+
+Start with [`research/security-review/REQUEST_FOR_REVIEW.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/REQUEST_FOR_REVIEW.md).
+
+| Material | Location | What it contains |
+|---|---|---|
+| Formal specification | [`specification.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/specification.md) | Normative CombinedFrontier construction, v2 encoding, construction version 4 |
+| Threat model | [`threat-model.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/threat-model.md) | Attacker capabilities and assumptions |
+| Review questions | [`review-questions.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/review-questions.md) | Attack-oriented prompts for reviewers |
+| Prior evidence | [`evidence.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/evidence.md) | MEASURED / MODELED / UNKNOWN results from prior campaigns |
+| Known limitations | [`known-limitations.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/known-limitations.md) | What has **not** been established |
+| Test vectors | [`test-vectors.json`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/test-vectors.json) | Published digests (+ intermediates on 1 MiB probes) |
+| Reference implementation | [`research/code/reference/`](https://github.com/udinmoInc/antech-kdf/tree/main/research/code/reference) | Readable reimplementation for cross-checking |
+| Reproduction guide | [`reproduce.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/reproduce.md) | Build and run instructions |
+| Reviewer checklist | [`checklist.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/checklist.md) | Structured review tasks |
+
+Report findings via the repository [security policy](https://github.com/udinmoInc/antech-kdf/blob/main/SECURITY.md) or the [cryptanalysis issue template](https://github.com/udinmoInc/antech-kdf/blob/main/.github/ISSUE_TEMPLATE/cryptanalysis.md).
+
+## Production implementation
+
+The shipping library lives under `crates/` in the repository. Reviewers should treat these as the canonical production paths:
+
+| Component | Path | Role |
+|---|---|---|
+| Public API | [`crates/antech-kdf`](https://github.com/udinmoInc/antech-kdf/tree/main/crates/antech-kdf) | `hash`, `verify`, rehash policy |
+| Engine | [`crates/antech-kdf-core`](https://github.com/udinmoInc/antech-kdf/tree/main/crates/antech-kdf-core) | `AntechEngine::derive`, resource scheduler |
+| Encoding | [`crates/antech-kdf-format`](https://github.com/udinmoInc/antech-kdf/tree/main/crates/antech-kdf-format) | `$antech$v2$` parse and encode |
+| Types | [`crates/antech-kdf-types`](https://github.com/udinmoInc/antech-kdf/tree/main/crates/antech-kdf-types) | Config validation, graph kinds |
+| C ABI | [`crates/antech-kdf-ffi`](https://github.com/udinmoInc/antech-kdf/tree/main/crates/antech-kdf-ffi) | Shared entry points for language SDKs |
+
+Attacker models, CUDA kernels, and TMTO explorers live under [`research/code/`](https://github.com/udinmoInc/antech-kdf/tree/main/research/code) in a **separate Cargo workspace**. Production crates never depend on research crates.
+
+## Hash format
+
+Stored digests use the v2 self-describing format documented in [Hash format](../reference/hash-format):
+
+```text
+$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
+```
+
+Compare field names, bounds, and graph tags in [`specification.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/specification.md) with the parser in `antech-kdf-format` and the validation in `antech-kdf-types`.
+
+## Reproduce test vectors
+
+1. Clone the repository and install Rust 1.70+.
+2. Run production tests:
+
+```bash
+cargo test -p antech-kdf -p antech-kdf-core -p antech-kdf-format --release
+```
+
+3. Run the readable reference against [`test-vectors.json`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/test-vectors.json):
+
+```bash
+cargo test --manifest-path research/code/Cargo.toml -p antech-kdf-reference --release
+```
+
+4. Hash and verify through the CLI:
+
+```bash
+cargo run -p antech-kdf-cli -- hash "password"
+cargo run -p antech-kdf-cli -- verify "password" "$HASH"
+```
+
+Full steps and optional heavy cryptanalysis campaigns: [`reproduce.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/reproduce.md).
+
+## Conformance suite
+
+Cross-language SDKs must match the same digests. Shared cases live in [`sdk/conformance/vectors.json`](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/conformance/vectors.json) (derived from the security-review vectors).
+
+```bash
+cargo test -p antech-kdf conformance -- --nocapture
+python sdk/conformance/run_python.py
+```
+
+Details: [Cross-language conformance](../sdk/conformance).
+
+## Benchmark and cryptanalysis evidence
+
+| Topic | Location |
+|---|---|
+| Evidence summary (MEASURED / MODELED / UNKNOWN) | [`research/security-review/evidence.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/evidence.md) |
+| Cryptanalysis campaigns | [`research/results/cryptanalysis/`](https://github.com/udinmoInc/antech-kdf/tree/main/research/results/cryptanalysis) |
+| Advanced TMTO results | [`research/results/cryptanalysis/tmto-advanced/`](https://github.com/udinmoInc/antech-kdf/tree/main/research/results/cryptanalysis/tmto-advanced) |
+| Compute–memory studies | [`research/results/compute-memory-v4/`](https://github.com/udinmoInc/antech-kdf/tree/main/research/results/compute-memory-v4) |
+| Design narrative | [`research/docs/`](https://github.com/udinmoInc/antech-kdf/tree/main/research/docs) |
+| Benchmark methodology | [`research/docs/benchmark-methodology.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/docs/benchmark-methodology.md) |
+| Configuration audit | [`research/docs/configuration-audit.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/docs/configuration-audit.md) |
+
+When reading evidence, note the label on each claim. **MEASURED** means an instrumented run on stated hardware. **MODELED** means extrapolation or a lower bound. **UNKNOWN** means not established. Absence of a found attack is not a security proof.
+
+## Limitations
+
+[`known-limitations.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/known-limitations.md) lists open gaps: ASIC/FPGA cost models, exhaustive TMTO search, formal reductions, side-channel proofs, and parameter agility outside the default 16 MiB CombinedFrontier profile.
+
+[`research/docs/06-limitations.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/docs/06-limitations.md) expands the design-level caveats.
+
+## Compare configuration with code
+
+1. Read default and bounded parameters in [Configuration reference](../reference/configuration-reference).
+2. Cross-check validation in `antech-kdf-types` and the builder in the public API.
+3. Confirm the default profile in review materials (16 MiB, block 32, fan-in 2, CombinedFrontier) matches `AntechConfig::default()` and the `hash()` entry point.
+4. Encode a hash with known inputs and verify the `$antech$v2$` fields against [Hash format](../reference/hash-format).
+
+## Review workflow
+
+Use [`checklist.md`](https://github.com/udinmoInc/antech-kdf/blob/main/research/security-review/checklist.md) as a structured starting point:
+
+1. Match an independent implementation (or the reference crate) against `test-vectors.json`.
+2. Verify graph construction, state transitions, and parent selection against `specification.md`.
+3. Attempt DAG reduction, TMTO, multi-target, and parallelization shortcuts.
+4. Compare measured attacker campaigns in `evidence.md` with your own runs where hardware permits.
+5. Document any reduced-work attack with a reproducible path.
+
+<Related links={[
+  { href: '../guides/security', title: 'Integration security guidance' },
+  { href: '../sdk/conformance', title: 'Conformance suite' },
+  { href: '../architecture/overview', title: 'Architecture overview' }
+]} />

@@ -1,26 +1,30 @@
 ---
 title: "Quickstart"
 sidebarTitle: "Quickstart"
-description: "Install Antech and hash, verify, and check rehash in a few minutes."
+description: "Install Antech KDF and hash, verify, and check rehash in a few minutes."
 order: 1
 ---
 
-Install the Rust crate, hash a password, and verify it. Language SDKs expose the same operations after you build the native library.
-
 ## Install
+
+**Rust** (1.70+):
 
 ```toml
 [dependencies]
 antech-kdf = "0.1"
 ```
 
-For Python, Node, Go, and other bindings, build the release FFI library first:
+**Python**, **Node**, and **.NET** packages are published at version **0.1.0**:
 
 ```bash
-./sdk/scripts/build-native.sh   # or build-native.ps1 on Windows
+pip install antech-kdf==0.1.0
+npm install antech-kdf@0.1.0
+dotnet add package Antech.Kdf --version 0.1.0
 ```
 
-Then install the language package under `bindings/` (see [SDK overview](/antech-kdf/sdk/overview)).
+Confirm the installed version before you ship (`pip show antech-kdf`, `npm list antech-kdf`, or your project file). Other languages: [SDK overview](./sdk/overview).
+
+Non-Rust SDKs load a native `antech_kdf_ffi` library. Set `ANTECH_KDF_LIB` if the loader cannot find it on your system.
 
 ## Hash and verify
 
@@ -78,5 +82,5 @@ Passwords are bytes in the Rust API. Prefer `*_bytes` FFI helpers when secrets m
 <NextSteps links={[
   { href: './configuration', title: 'Configuration knobs' },
   { href: './first-hash', title: 'Registration and login flow' },
-  { href: './sdk/overview', title: 'Language SDKs' }
+  { href: '../sdk/overview', title: 'Language SDKs' }
 ]} />

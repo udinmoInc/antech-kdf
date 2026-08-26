@@ -5,7 +5,7 @@ description: "Shared KATs that every SDK must match for digests, verify, and err
 order: 39
 ---
 
-Canonical cases live in `sdk/conformance/vectors.json` (derived from the security-review test vectors). Every language package that claims Antech compatibility must match these digests bit-for-bit.
+Canonical cases live in [`sdk/conformance/vectors.json`](https://github.com/udinmoInc/antech-kdf/blob/main/sdk/conformance/vectors.json) (derived from the security-review test vectors). Every language package that claims Antech compatibility must match these digests bit-for-bit.
 
 ## What each package must prove
 
@@ -16,33 +16,25 @@ Canonical cases live in `sdk/conformance/vectors.json` (derived from the securit
 
 ## Runners
 
+From a repository checkout:
+
 ```bash
 cargo test -p antech-kdf conformance -- --nocapture
 python sdk/conformance/run_python.py
 ```
 
-CI workflow `.github/workflows/sdk.yml` runs Rust and Python conformance across OSes after building natives.
+Reviewers validating a published SDK should confirm release **0.1.0** and run these tests against the installed native library.
 
 <StatsRow>
   <Stat value="12" label="KAT cases in vectors.json" />
   <Stat value="1" label="Digest source of truth" />
 </StatsRow>
 
-<FileTree>
-  <Folder name="sdk">
-    <Folder name="conformance">
-      <File name="vectors.json" />
-      <File name="run_python.py" />
-      <File name="README.md" />
-    </Folder>
-  </Folder>
-</FileTree>
-
 <Warning>
-If a binding reimplements mixing “for speed,” it will fail conformance. Thin wrappers only.
+If a binding reimplements mixing "for speed," it will fail conformance. Thin wrappers only.
 </Warning>
 
 <NextSteps links={[
   { href: './overview', title: 'SDK overview' },
-  { href: '../developer/testing', title: 'Full test matrix' }
+  { href: '../security-review/overview', title: 'Security & review' }
 ]} />

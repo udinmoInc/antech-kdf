@@ -1,47 +1,52 @@
 ---
 title: "Antech KDF"
 sidebarTitle: "Overview"
-description: "Open-source compute-memory password hashing with a combined-frontier graph, v2 encoding, and multi-language SDKs over one Rust core."
+description: "Compute-memory password hashing with a combined-frontier graph, v2 encoding, and multi-language SDKs over one Rust core."
 order: 0
 sectionOrder: 0
 ---
 
-Antech is an open-source password key-derivation function for hosts that cannot dedicate large Argon2-style working sets, but still want offline attack cost that holds up when defender memory is modest. The shipping profile walks a **combined-frontier** graph in roughly **16 MiB**. Work is `memory / block_size` — there is no separate iteration-count knob.
+Antech KDF is a password key-derivation function built around a compute-memory construction. The default profile walks a **combined-frontier** dependency graph in roughly **16 MiB** of working memory. Work scales with `memory / block_size`; there is no separate iteration-count knob.
 
-<HeroFeatureCard
-  title="Antech KDF (Open Source)"
-  description="One Rust engine, thin language SDKs over a shared FFI, and portable $antech$v2$ digests. Experimental today — prefer Argon2id for public production auth until review concludes."
-  buttonText="Hash your first password"
-  href="./first-hash"
-/>
+Stored hashes are self-describing `$antech$v2$` strings. One Rust engine implements the cryptography; language SDKs are thin wrappers over a shared C ABI.
+
+<Warning>
+Antech KDF is **experimental**. It has not completed independent cryptographic review. Prefer **Argon2id** for production password storage until you have read the review materials and accepted the residual risk.
+</Warning>
+
+## Current release
+
+| | |
+|---|---|
+| Version | **0.1.0** |
+| Status | Experimental |
+| Hash encoding | `$antech$v2$` (legacy `v1` rejected) |
+| Changelog | [CHANGELOG.md](https://github.com/udinmoInc/antech-kdf/blob/main/CHANGELOG.md) |
+| Repository | [github.com/udinmoInc/antech-kdf](https://github.com/udinmoInc/antech-kdf) |
 
 ## Install
 
-Rust services link the API crate directly:
+**Rust** — add the crate directly:
 
 ```toml
 [dependencies]
 antech-kdf = "0.1"
 ```
 
-Other languages need a release build of the native library first:
+Requires Rust 1.70+.
 
-<FrameworkTabs frameworks={['Unix', 'Windows']}>
-  <FrameworkContent framework="Unix">
-    ```bash
-    ./sdk/scripts/build-native.sh
-    pip install -e bindings/python   # or npm / go / etc.
-    ```
-  </FrameworkContent>
-  <FrameworkContent framework="Windows">
-    ```powershell
-    ./sdk/scripts/build-native.ps1
-    pip install -e bindings/python
-    ```
-  </FrameworkContent>
-</FrameworkTabs>
+**Other languages** — install the published package for your platform, then confirm the version matches **0.1.0**:
 
-Set `ANTECH_KDF_LIB` if the loader cannot find `sdk/native`. Full per-language notes live under [SDKs](./sdk/overview).
+| Language | Install | Verify version |
+|---|---|---|
+| Python | `pip install antech-kdf==0.1.0` | `pip show antech-kdf` |
+| Node / TypeScript | `npm install antech-kdf@0.1.0` | `npm list antech-kdf` |
+| .NET | `dotnet add package Antech.Kdf --version 0.1.0` | check the package reference in your project |
+| Rust | `cargo add antech-kdf@0.1` | `cargo tree -p antech-kdf` |
+
+Go, Java, Kotlin, Swift, and C/C++ packages follow the same API through the FFI. See [SDK overview](./sdk/overview) for per-language notes.
+
+Non-Rust SDKs load a native `antech_kdf_ffi` library. If your runtime cannot find it, set `ANTECH_KDF_LIB` to the directory that contains the library for your OS.
 
 ## Hash and verify
 
@@ -53,7 +58,7 @@ assert!(verify("correct_horse_battery_staple", &stored)?);
 assert!(!needs_rehash(&stored)?);
 ```
 
-Defaults: **16 MiB**, block size **32**, fan-in **2**, CombinedFrontier (`g=3`), random 16-byte salt, 32-byte digest. Persist the returned `$antech$v2$…` string only.
+Persist the returned string as-is. `verify` parses parameters, salt, and digest from the encoding and compares in constant time.
 
 <FrameworkTabs frameworks={['Python', 'TypeScript']}>
   <FrameworkContent framework="Python">
@@ -72,25 +77,9 @@ Defaults: **16 MiB**, block size **32**, fan-in **2**, CombinedFrontier (`g=3`),
   </FrameworkContent>
 </FrameworkTabs>
 
-## How hashing works
+## Default parameters
 
-1. Bind password and salt into a domain-separated seed.
-2. Walk the CombinedFrontier dependency graph over `memory / block_size` blocks.
-3. Finalize a digest of the configured output length.
-4. Encode parameters, salt, and digest as `$antech$v2$…`.
-
-`verify` parses that string, rebuilds config, re-derives with the embedded salt, and compares digests in constant time.
-
-## At a glance
-
-<StatsRow>
-  <Stat value="16 MiB" label="Default working set" />
-  <Stat value="v2" label="Self-describing hash encoding" />
-  <Stat value="1" label="Cryptographic implementation" />
-  <Stat value="9+" label="Language surfaces via FFI" />
-</StatsRow>
-
-| Knob | Default |
+| Parameter | Default |
 |---|---|
 | Memory | 16 MiB |
 | Block size | 32 bytes |
@@ -103,41 +92,35 @@ Defaults: **16 MiB**, block size **32**, fan-in **2**, CombinedFrontier (`g=3`),
 $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
 ```
 
-## Explore further
+Custom profiles use `hash_with_config`. After a successful login, `needs_rehash_with_policy` can detect when stored parameters fall behind your policy.
 
-<FeatureGrid>
-  <FeatureCard
-    icon="lock-closed"
-    title="Registration and login"
-    description="Store hashes on signup, verify on login, upgrade parameters after a successful match."
-    href="./first-hash"
-  />
-  <FeatureCard
-    icon="cog-6-tooth"
-    title="Configuration"
-    description="Memory, block size, fan-in, graph, salt and output length — same bounds in every SDK."
-    href="./configuration"
-  />
-  <FeatureCard
-    icon="code-bracket"
-    title="Language SDKs"
-    description="C ABI plus thin wrappers. Digests match across languages via shared KATs."
-    href="./sdk/overview"
-  />
-  <FeatureCard
-    icon="shield-exclamation"
-    title="Security posture"
-    description="Experimental status, operational habits, and where review evidence lives."
-    href="./guides/security"
-  />
-</FeatureGrid>
+## API surface
 
-<Warning>
-Antech is experimental open-source software. Prefer Argon2id for production password storage until materials in `research/security-review/` are complete and you accept residual risk.
-</Warning>
+Every SDK exposes the same operations:
+
+| Operation | Purpose |
+|---|---|
+| `hash` | Default 16 MiB profile with random salt |
+| `hash_with_config` | Explicit structural parameters |
+| `verify` | Constant-time password check |
+| `needs_rehash` / `needs_rehash_with_policy` | Detect outdated stored parameters |
+| `hash_with_config_and_salt` | Deterministic vectors (tests only) |
+
+Full signatures: [API reference](./reference/api). Configuration bounds: [configuration reference](./reference/configuration-reference).
+
+## Security & review
+
+Antech is submitted for independent cryptanalysis. The repository ships a formal specification, production source, test vectors, conformance suite, benchmark evidence, prior attack results, and known limitations.
+
+Reviewers and integrators should start at [Security & review](./security-review/overview). That page lists where each artifact lives and how to reproduce vectors, run conformance tests, and compare measured results with the documented construction.
+
+For day-to-day integration habits (logging, rehash timing, rate limits), see [Security guidance](./guides/security).
+
+## Next steps
 
 <NextSteps links={[
-  { href: './first-hash', title: 'Registration and login flow' },
-  { href: './configuration', title: 'Configuration knobs' },
-  { href: './architecture/overview', title: 'Architecture' }
+  { href: './getting-started/quickstart', title: 'Quickstart' },
+  { href: './getting-started/first-hash', title: 'Registration and login flow' },
+  { href: './sdk/overview', title: 'Language SDKs' },
+  { href: './security-review/overview', title: 'Security & review' }
 ]} />

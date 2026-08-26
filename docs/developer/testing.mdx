@@ -24,17 +24,9 @@ cargo fuzz run hash_parser -- -runs=10000
 
 Additional targets live under `fuzz/fuzz_targets/` (including config builders and malformed v2 inputs).
 
-## CI
-
-| Workflow | Focus |
-|---|---|
-| `.github/workflows/ci.yml` | Format, clippy, unit tests |
-| `.github/workflows/fuzz.yml` | Fuzz smoke |
-| `.github/workflows/sdk.yml` | Native build + conformance |
-
-Treat a failing conformance run as a release blocker for language packages.
+A failing conformance run indicates a digest mismatch between the native library and the published vectors — treat it as a blocker before shipping SDK changes.
 
 <NextSteps links={[
   { href: '../sdk/conformance', title: 'Conformance details' },
-  { href: './releasing', title: 'Release checklist' }
+  { href: '../security-review/overview', title: 'Security & review' }
 ]} />

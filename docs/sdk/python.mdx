@@ -5,12 +5,11 @@ description: "Install antech-kdf via pip and call hash, verify, and rehash throu
 order: 33
 ---
 
-Build the native library first, then install the editable package:
-
 ```bash
-./sdk/scripts/build-native.sh
-pip install -e bindings/python
+pip install antech-kdf==0.1.0
 ```
+
+Confirm with `pip show antech-kdf`. Requires Python 3.9+.
 
 ```python
 import antech_kdf
@@ -27,22 +26,24 @@ policy.preferred_memory_kib = 32768
 needs = antech_kdf.needs_rehash_with_policy(custom, policy)
 ```
 
-The loader walks upward for a repo `VERSION` plus `sdk/native`, or honors `ANTECH_KDF_LIB`.
+The package loads `antech_kdf_ffi` at runtime. Set `ANTECH_KDF_LIB` if the native library is not on the default search path.
 
 ## Conformance
+
+After install, run the shared KAT suite from a repository checkout:
 
 ```bash
 python sdk/conformance/run_python.py
 ```
 
-Expect **12/12** when the release native library is present.
+Expect **12/12** when the native library matches release **0.1.0**.
 
 <Prerequisites items={[
   'Python 3.9+',
-  'Release build of antech-kdf-ffi in sdk/native'
+  'Native antech_kdf_ffi for your platform'
 ]} />
 
 <NextSteps links={[
   { href: './conformance', title: 'Conformance suite' },
-  { href: '../first-hash', title: 'Registration and login' }
+  { href: '../getting-started/first-hash', title: 'Registration and login' }
 ]} />

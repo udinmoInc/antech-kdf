@@ -5,10 +5,8 @@ description: "P/Invoke Antech.Kdf against antech_kdf_ffi for hash, verify, and r
 order: 37
 ---
 
-```powershell
-./sdk/scripts/build-native.ps1
-$env:PATH = "$(Resolve-Path ./sdk/native);$env:PATH"
-dotnet build bindings/dotnet/Antech.Kdf
+```bash
+dotnet add package Antech.Kdf --version 0.1.0
 ```
 
 ```csharp
@@ -23,7 +21,7 @@ cfg.MemoryKib = 16384;
 var custom = AntechKdf.HashWithConfig(Encoding.UTF8.GetBytes("password"), cfg);
 ```
 
-Package id: `Antech.Kdf`. Keep hashing off the ASP.NET request thread under load — use `Task.Run` or a dedicated queue.
+Package id: `Antech.Kdf`. Ensure `antech_kdf_ffi` is on `PATH` or set `ANTECH_KDF_LIB`. Keep hashing off the ASP.NET request thread under load — use `Task.Run` or a dedicated queue.
 
 <NextSteps links={[
   { href: './overview', title: 'SDK overview' },
