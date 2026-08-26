@@ -1,0 +1,82 @@
+---
+title: "Quickstart"
+sidebarTitle: "Quickstart"
+description: "Install Antech and hash, verify, and check rehash in a few minutes."
+order: 1
+---
+
+Install the Rust crate, hash a password, and verify it. Language SDKs expose the same operations after you build the native library.
+
+## Install
+
+```toml
+[dependencies]
+antech-kdf = "0.1"
+```
+
+For Python, Node, Go, and other bindings, build the release FFI library first:
+
+```bash
+./sdk/scripts/build-native.sh   # or build-native.ps1 on Windows
+```
+
+Then install the language package under `bindings/` (see [SDK overview](/antech-kdf/sdk/overview)).
+
+## Hash and verify
+
+```rust
+use antech_kdf::{hash, verify, needs_rehash};
+
+fn main() -> Result<(), antech_kdf::Error> {
+    let password = "correct_horse_battery_staple";
+    let stored = hash(password)?;
+
+    assert!(verify(password, &stored)?);
+    assert!(!verify("wrong_password", &stored)?);
+    assert!(!needs_rehash(&stored)?);
+
+    println!("{stored}");
+    Ok(())
+}
+```
+
+Defaults: **16 MiB** memory, block size **32**, fan-in **2**, CombinedFrontier (`g=3`), random salt, 32-byte digest. Persist the `$antech$v2$…` string as-is.
+
+## Other languages
+
+<FrameworkTabs frameworks={['Python', 'TypeScript', 'Go']}>
+  <FrameworkContent framework="Python">
+    ```python
+    import antech_kdf
+
+    stored = antech_kdf.hash("correct_horse_battery_staple")
+    assert antech_kdf.verify("correct_horse_battery_staple", stored)
+    assert not antech_kdf.needs_rehash(stored)
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="TypeScript">
+    ```typescript
+    import { hash, verify, needsRehash } from "antech-kdf";
+
+    const stored = hash("correct_horse_battery_staple");
+    verify("correct_horse_battery_staple", stored);
+    needsRehash(stored);
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="Go">
+    ```go
+    h, err := antech.Hash([]byte("correct_horse_battery_staple"))
+    ok, err := antech.Verify([]byte("correct_horse_battery_staple"), h)
+    ```
+  </FrameworkContent>
+</FrameworkTabs>
+
+<Tip>
+Passwords are bytes in the Rust API. Prefer `*_bytes` FFI helpers when secrets may contain interior NUL bytes.
+</Tip>
+
+<NextSteps links={[
+  { href: './configuration', title: 'Configuration knobs' },
+  { href: './first-hash', title: 'Registration and login flow' },
+  { href: './sdk/overview', title: 'Language SDKs' }
+]} />

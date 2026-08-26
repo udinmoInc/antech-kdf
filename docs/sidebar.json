@@ -1,5 +1,7 @@
 {
   "Get started": [
+    "getting-started",
+    "getting-started/quickstart",
     "getting-started/configuration",
     "getting-started/first-hash"
   ],
