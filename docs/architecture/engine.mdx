@@ -9,21 +9,11 @@ order: 11
 
 ## Call path
 
-<DiagramFlow
-  nodes={[
-    { id: "validate", label: "Validate config" },
-    { id: "permit", label: "Acquire permit", subtitle: "scheduler" },
-    { id: "derive", label: "Derive", subtitle: "password + salt", highlight: true },
-    { id: "encode", label: "Encode v2" },
-    { id: "release", label: "Release permit" }
-  ]}
-  edges={[
-    { from: "validate", to: "permit" },
-    { from: "permit", to: "derive" },
-    { from: "derive", to: "encode" },
-    { from: "encode", to: "release" }
-  ]}
-/>
+1. Validate config.
+2. Acquire a host scheduler permit.
+3. Derive from password, salt, and config.
+4. Encode an `$antech$v2$…` string.
+5. Release the permit.
 
 ## Stages inside derive
 

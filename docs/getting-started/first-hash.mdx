@@ -2,30 +2,16 @@
 title: "Registration and login flow"
 sidebarTitle: "First hash"
 description: "Store an Antech hash on signup, verify on login, and upgrade parameters only after a successful match."
-order: 5
+order: 2
 ---
 
 A practical auth path has three library calls: `hash` on registration, `verify` on login, and an optional rehash when your policy says the stored parameters are behind.
 
-## Sequence
+## Steps
 
-<Mermaid chart={`
-sequenceDiagram
-    participant App
-    participant Antech
-    participant DB
-    App->>Antech: hash(password)
-    Antech-->>App: antech v2 string
-    App->>DB: store encoded hash only
-    App->>DB: load encoded hash
-    App->>Antech: verify(password, hash)
-    Antech-->>App: true or false
-    App->>Antech: needs_rehash_with_policy
-    alt upgrade needed
-        App->>Antech: hash_with_config(password, stronger)
-        App->>DB: replace encoded hash
-    end
-`} />
+1. On registration, call `hash` and store the returned `$antech$v2$…` string.
+2. On login, load that string and call `verify`.
+3. After a successful match, optionally call `needs_rehash_with_policy` and replace the stored string if an upgrade is required.
 
 ## Registration
 

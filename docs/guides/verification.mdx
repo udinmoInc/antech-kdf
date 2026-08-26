@@ -13,23 +13,13 @@ let ok = antech_kdf::verify(password, &stored)?;
 
 ## Outcomes
 
-| Result | Meaning |
-|---|---|
-| `Ok(true)` | Password matches |
-| `Ok(false)` | Password does not match |
-| `Err(_)` | Malformed string or invalid embedded parameters |
+| Result | Meaning | Application action |
+|---|---|---|
+| `Ok(true)` | Password matches | Authenticate; optionally check rehash policy |
+| `Ok(false)` | Password does not match | Reject credentials |
+| `Err(_)` | Malformed string or invalid embedded parameters | Alert operators; fail closed |
 
 On the FFI, a mismatch is typically surfaced as a dedicated verification-failed status, while parse failures are invalid-hash / format errors. Language wrappers should keep those cases distinct.
-
-## Application handling
-
-<Mermaid chart={`
-flowchart TD
-  V["verify(password, stored)"]
-  V -->|Ok true| Auth["Authenticate"]
-  V -->|Ok false| Deny["Reject credentials"]
-  V -->|Err| Ops["Alert operators / fail closed"]
-`} />
 
 <Note>
 Surface `Err` / invalid-hash as an infrastructure problem to operators. Do not tell end users “wrong password” when the stored string itself is corrupt.

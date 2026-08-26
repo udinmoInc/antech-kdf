@@ -1,23 +1,87 @@
 ---
 title: "Antech KDF"
 sidebarTitle: "Overview"
-description: "Compute-memory password hashing with a combined-frontier graph, self-describing v2 hashes, and SDKs that share one Rust core."
+description: "Open-source compute-memory password hashing with a combined-frontier graph, v2 encoding, and multi-language SDKs over one Rust core."
 order: 0
 sectionOrder: 0
 ---
 
-Antech is a password key-derivation function for hosts that cannot dedicate large Argon2-style working sets, but still want offline attack cost that holds up when defender memory is modest. The shipping profile walks a **combined-frontier** graph in roughly **16 MiB**. Work is `memory / block_size` — there is no separate iteration-count knob.
+Antech is an open-source password key-derivation function for hosts that cannot dedicate large Argon2-style working sets, but still want offline attack cost that holds up when defender memory is modest. The shipping profile walks a **combined-frontier** graph in roughly **16 MiB**. Work is `memory / block_size` — there is no separate iteration-count knob.
 
 <HeroFeatureCard
-  title="Start with the Rust API"
-  description="Hash, verify, and rehash against one canonical engine. Language SDKs load the same FFI — digests match through a shared conformance suite."
-  buttonText="Get started"
-  href="./quickstart"
+  title="Antech KDF (Open Source)"
+  description="One Rust engine, thin language SDKs over a shared FFI, and portable $antech$v2$ digests. Experimental today — prefer Argon2id for public production auth until review concludes."
+  buttonText="Hash your first password"
+  href="./first-hash"
 />
 
-## What Antech does
+## Install
 
-Use Antech when you need a compute-memory password hash with a small working set, portable `$antech$v2$` strings, and thin multi-language bindings over a single Rust core. Prefer **Argon2id** for public production auth until independent review concludes.
+Rust services link the API crate directly:
+
+```toml
+[dependencies]
+antech-kdf = "0.1"
+```
+
+Other languages need a release build of the native library first:
+
+<FrameworkTabs frameworks={['Unix', 'Windows']}>
+  <FrameworkContent framework="Unix">
+    ```bash
+    ./sdk/scripts/build-native.sh
+    pip install -e bindings/python   # or npm / go / etc.
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="Windows">
+    ```powershell
+    ./sdk/scripts/build-native.ps1
+    pip install -e bindings/python
+    ```
+  </FrameworkContent>
+</FrameworkTabs>
+
+Set `ANTECH_KDF_LIB` if the loader cannot find `sdk/native`. Full per-language notes live under [SDKs](./sdk/overview).
+
+## Hash and verify
+
+```rust
+use antech_kdf::{hash, verify, needs_rehash};
+
+let stored = hash("correct_horse_battery_staple")?;
+assert!(verify("correct_horse_battery_staple", &stored)?);
+assert!(!needs_rehash(&stored)?);
+```
+
+Defaults: **16 MiB**, block size **32**, fan-in **2**, CombinedFrontier (`g=3`), random 16-byte salt, 32-byte digest. Persist the returned `$antech$v2$…` string only.
+
+<FrameworkTabs frameworks={['Python', 'TypeScript']}>
+  <FrameworkContent framework="Python">
+    ```python
+    import antech_kdf
+    stored = antech_kdf.hash("correct_horse_battery_staple")
+    assert antech_kdf.verify("correct_horse_battery_staple", stored)
+    ```
+  </FrameworkContent>
+  <FrameworkContent framework="TypeScript">
+    ```typescript
+    import { hash, verify } from "antech-kdf";
+    const stored = hash("correct_horse_battery_staple");
+    verify("correct_horse_battery_staple", stored);
+    ```
+  </FrameworkContent>
+</FrameworkTabs>
+
+## How hashing works
+
+1. Bind password and salt into a domain-separated seed.
+2. Walk the CombinedFrontier dependency graph over `memory / block_size` blocks.
+3. Finalize a digest of the configured output length.
+4. Encode parameters, salt, and digest as `$antech$v2$…`.
+
+`verify` parses that string, rebuilds config, re-derives with the embedded salt, and compares digests in constant time.
+
+## At a glance
 
 <StatsRow>
   <Stat value="16 MiB" label="Default working set" />
@@ -25,55 +89,6 @@ Use Antech when you need a compute-memory password hash with a small working set
   <Stat value="1" label="Cryptographic implementation" />
   <Stat value="9+" label="Language surfaces via FFI" />
 </StatsRow>
-
-## How a hash is built
-
-Password and salt bind into a seed, the engine walks the DAG, then the digest is packed into a portable string:
-
-<DiagramFlow
-  nodes={[
-    { id: "bind", label: "Password + salt", subtitle: "bind seed" },
-    { id: "dag", label: "CombinedFrontier", subtitle: "DAG walk", highlight: true },
-    { id: "finalize", label: "Finalize", subtitle: "digest" },
-    { id: "encode", label: "Encode", subtitle: "antech v2" }
-  ]}
-  edges={[
-    { from: "bind", to: "dag" },
-    { from: "dag", to: "finalize" },
-    { from: "finalize", to: "encode" }
-  ]}
-/>
-
-## Core capabilities
-
-<FeatureGrid>
-  <FeatureCard
-    icon="lock-closed"
-    title="Hash and verify"
-    description="Stable hash, verify, and needs_rehash with constant-time comparison on verify."
-    href="./quickstart"
-  />
-  <FeatureCard
-    icon="cog-6-tooth"
-    title="Structural knobs"
-    description="Memory, block size, fan-in, graph, salt and output length — validated the same way in every SDK."
-    href="./configuration"
-  />
-  <FeatureCard
-    icon="code-bracket"
-    title="Multi-language SDKs"
-    description="C ABI plus thin wrappers. No second crypto implementation in Python, Go, or Node."
-    href="./sdk/overview"
-  />
-  <FeatureCard
-    icon="check-badge"
-    title="Conformance vectors"
-    description="Shared KATs so FFI and language packages must match digests and error mapping."
-    href="./sdk/conformance"
-  />
-</FeatureGrid>
-
-## Defaults
 
 | Knob | Default |
 |---|---|
@@ -88,12 +103,41 @@ Password and salt bind into a seed, the engine walks the DAG, then the digest is
 $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
 ```
 
+## Explore further
+
+<FeatureGrid>
+  <FeatureCard
+    icon="lock-closed"
+    title="Registration and login"
+    description="Store hashes on signup, verify on login, upgrade parameters after a successful match."
+    href="./first-hash"
+  />
+  <FeatureCard
+    icon="cog-6-tooth"
+    title="Configuration"
+    description="Memory, block size, fan-in, graph, salt and output length — same bounds in every SDK."
+    href="./configuration"
+  />
+  <FeatureCard
+    icon="code-bracket"
+    title="Language SDKs"
+    description="C ABI plus thin wrappers. Digests match across languages via shared KATs."
+    href="./sdk/overview"
+  />
+  <FeatureCard
+    icon="shield-exclamation"
+    title="Security posture"
+    description="Experimental status, operational habits, and where review evidence lives."
+    href="./guides/security"
+  />
+</FeatureGrid>
+
 <Warning>
-Antech is experimental. Prefer Argon2id for production password storage until review materials in `research/security-review/` are complete and you accept residual risk.
+Antech is experimental open-source software. Prefer Argon2id for production password storage until materials in `research/security-review/` are complete and you accept residual risk.
 </Warning>
 
 <NextSteps links={[
-  { href: './installation', title: 'Install the crate and native library' },
-  { href: './quickstart', title: 'Hash and verify in five minutes' },
-  { href: './guides/security', title: 'Security posture' }
+  { href: './first-hash', title: 'Registration and login flow' },
+  { href: './configuration', title: 'Configuration knobs' },
+  { href: './architecture/overview', title: 'Architecture' }
 ]} />

@@ -9,26 +9,16 @@ Antech keeps a hard line between **production** code and **research**. SDKs and 
 
 ## Dependency direction
 
-Branching crate graph (research may import core; production never imports research):
+| Crate / tree | Depends on |
+|---|---|
+| `antech-kdf` | `antech-kdf-core` |
+| `antech-kdf-core` | `antech-kdf-format`, `antech-kdf-types` |
+| `antech-kdf-ffi` | `antech-kdf` |
+| `antech-kdf-cli` | `antech-kdf` |
+| Language SDKs | `antech-kdf-ffi` |
+| `research/code` | `antech-kdf-core` only |
 
-<Mermaid chart={`
-flowchart TD
-  API["antech-kdf"]
-  CORE["antech-kdf-core"]
-  FMT["antech-kdf-format"]
-  TYPES["antech-kdf-types"]
-  FFI["antech-kdf-ffi"]
-  CLI["antech-kdf-cli"]
-  SDK["Language SDKs"]
-  RES["research/code"]
-  API --> CORE
-  CORE --> FMT
-  CORE --> TYPES
-  FFI --> API
-  CLI --> API
-  SDK --> FFI
-  RES --> CORE
-`} />
+Rule: research may import core; production never imports research.
 
 ## Production crates
 
