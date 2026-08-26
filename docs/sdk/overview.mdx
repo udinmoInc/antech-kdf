@@ -44,49 +44,49 @@ FFI-based SDKs load `antech_kdf_ffi` at runtime. If automatic discovery fails, s
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/rust.svg"
     title="Rust — canonical API"
-    description="Link antech-kdf directly. This is the reference surface for hash, verify, config builders, and rehash policy; every other SDK mirrors it."
+    description="The reference library for Antech: hash passwords, verify stored digests, tune memory and graph settings, and decide when to rehash."
     href="./rust"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/c++.svg"
     title="C and C++"
-    description="Call antech_kdf_ffi through antech_kdf.h, or use the C++ header wrapper. Prefer the *_bytes entry points for binary passwords."
+    description="Native C API and C++ helpers for embedding Antech in systems code, services, and language runtimes that speak C."
     href="./c-cpp"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/python.svg"
     title="Python"
-    description="Install antech-kdf from PyPI. A ctypes wrapper loads the native library and exposes hash, verify, Config, and RehashPolicy."
+    description="Password hashing for Python apps and backends — store v2 digests, verify logins, and apply rehash policy when parameters change."
     href="./python"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/typescript.svg"
     title="Node.js and TypeScript"
-    description="npm package with TypeScript types over koffi. Same operations as Rust; keep hashing off the event-loop tick under load."
+    description="Typed Node package for hashing and verifying passwords in servers and workers, with the same digests as every other SDK."
     href="./node"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/go.svg"
     title="Go"
-    description="cgo module under bindings/go. Requires CGO and a discoverable libantech_kdf_ffi (ANTECH_KDF_LIB or linker paths)."
+    description="Go bindings for hashing, verification, and config so Go services can store Antech digests without a second crypto stack."
     href="./go"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/kotlin.svg"
     title="Java and Kotlin"
-    description="JNA AntechKdf for Java, plus a thin Kotlin façade. Both share one native library — no second crypto implementation on the JVM."
+    description="JVM-facing API for registration and login flows — hash, verify, and configure Antech from Java or Kotlin."
     href="./java-kotlin"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/c%23.svg"
     title=".NET / C#"
-    description="NuGet package Antech.Kdf uses P/Invoke against antech_kdf_ffi. Hash, verify, and config helpers match the other SDKs."
+    description="NuGet package for .NET services: hash and verify passwords, set memory profiles, and keep digests compatible across platforms."
     href="./dotnet"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/Swift.svg"
     title="Swift"
-    description="SwiftPM package for macOS and iOS over the C ABI. Link antech_kdf_ffi (XCFramework on iOS) and call hash / verify from Swift."
+    description="Swift package for macOS and iOS apps that need Antech hash and verify with the shared v2 digest format."
     href="./swift"
   />
 </FeatureGrid>
