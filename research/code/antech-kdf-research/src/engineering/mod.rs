@@ -6,6 +6,8 @@ pub mod cpu_attacker;
 pub mod hardware;
 pub mod multitarget_eng;
 pub mod property;
+pub mod production_correctness;
+pub mod production_stress;
 pub mod side_channel;
 pub mod stress;
 

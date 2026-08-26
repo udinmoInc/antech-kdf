@@ -1,12 +1,27 @@
 # 03 — Design
 
-Early research used a Candidate-004 core: bind password/salt/parameters into a seed, fill a contiguous buffer, then walk a long chain of state-dependent block reads with a fixed ARX mix. Two forks were studied in detail:
+The shipping construction is a compute-memory DAG:
 
-- **K1** — password-dependent rotation / feedback aimed at SIMD and warp divergence. Spec: [candidates/k1.md](candidates/k1.md).
-- **K2** — higher fan-in (quad parents) for a steeper TMTO curve. Spec: [candidates/k2.md](candidates/k2.md).
+1. Bind password, salt, and structural parameters into a seed (domain-separated).
+2. Allocate a contiguous buffer of `memory / block_size` nodes.
+3. Walk the graph, mixing a fixed fan-in of parents into each node with a fixed ARX mix.
+4. Finalize to a digest.
 
-Those variants used explicit depth/pass knobs. Later compute-memory work dropped those as security parameters: work is `memory / block_size` nodes, with parents chosen by a graph family.
+Work is `memory / block_size` nodes. There is no separate iteration-count or “depth” security knob in the public API.
 
-Graph families explored in v3/v4 include reduced-critical-path, cache-locality, and **combined-frontier**. Combined-frontier is what production `AntechEngine` runs today (hash format `g=3`). Domain separators in the current engine are protocol constants (`antech-compute-memory-v4-seed`, `antech-compute-memory-v4-final`, etc.).
+**Production defaults** (must match `AntechConfig::default()` and `specification.md`):
 
-See also [compute-memory/README.md](compute-memory/README.md) and [compute-memory-v3/README.md](compute-memory-v3/README.md).
+| Parameter | Value |
+|---|---|
+| Memory | 16 MiB |
+| Block size | 32 B |
+| Fan-in | 2 |
+| Graph | CombinedFrontier (`g=3` in `$antech$v2$`) |
+| Construction version | 4 |
+| Domain separators | `antech-compute-memory-v4-*` constants in core |
+
+Other graph families (reduced-critical-path, cache-locality) appear in research benchmarks for comparison. Only CombinedFrontier is the public default.
+
+Normative write-up: [`../security-review/specification.md`](../security-review/specification.md).  
+Readable reference: [`../code/reference/`](../code/reference/).  
+Production engine: `crates/antech-kdf-core`.

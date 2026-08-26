@@ -2,7 +2,15 @@
 
 use crate::traits::{ResourcePermit, ResourceScheduler};
 use antech_kdf_types::KdfError;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::sync::{Condvar, Mutex};
+
+thread_local! {
+    /// Permits held by this thread, keyed by scheduler identity (`*const Self`).
+    /// Prevents Condvar deadlock on nested acquire-while-holding on the same scheduler.
+    static HELD_BY_SCHEDULER: RefCell<HashMap<usize, usize>> = RefCell::new(HashMap::new());
+}
 
 /// Server-wide resource ceilings (independent of per-hash KDF config).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -76,6 +84,16 @@ impl BoundedResourceScheduler {
 
 impl ResourceScheduler for BoundedResourceScheduler {
     fn acquire(&self, memory_kib: usize) -> Result<ResourcePermit, KdfError> {
+        // A single job larger than the host ceiling can never admit — fail fast
+        // instead of parking forever on the wait queue.
+        if memory_kib > self.policy.max_memory_kib {
+            return Err(KdfError::ResourceExhausted(format!(
+                "requested {memory_kib} KiB exceeds host memory ceiling {} KiB",
+                self.policy.max_memory_kib
+            )));
+        }
+
+        let self_key = self as *const Self as usize;
         let mut state = self
             .state
             .lock()
@@ -85,6 +103,9 @@ impl ResourceScheduler for BoundedResourceScheduler {
             if Self::can_admit(&state, &self.policy, memory_kib) {
                 state.active_jobs += 1;
                 state.allocated_kib = state.allocated_kib.saturating_add(memory_kib);
+                HELD_BY_SCHEDULER.with(|m| {
+                    *m.borrow_mut().entry(self_key).or_insert(0) += 1;
+                });
                 return Ok(ResourcePermit { memory_kib });
             }
 
@@ -93,6 +114,15 @@ impl ResourceScheduler for BoundedResourceScheduler {
                     "resource limits reached (active {}, mem {} KiB / {} KiB); queue disabled",
                     state.active_jobs, state.allocated_kib, self.policy.max_memory_kib
                 )));
+            }
+
+            // Holding permits on this thread and then waiting for more capacity can never
+            // make progress (those permits cannot be released while blocked). Fail fast.
+            let held = HELD_BY_SCHEDULER.with(|m| m.borrow().get(&self_key).copied().unwrap_or(0));
+            if held > 0 {
+                return Err(KdfError::ResourceExhausted(
+                    "nested acquire while holding permits would deadlock; release first".into(),
+                ));
             }
 
             if state.waiting_jobs >= self.policy.queue_limit {
@@ -112,12 +142,22 @@ impl ResourceScheduler for BoundedResourceScheduler {
     }
 
     fn release(&self, permit: ResourcePermit) {
+        let self_key = self as *const Self as usize;
         let mut state = match self.state.lock() {
             Ok(g) => g,
             Err(poison) => poison.into_inner(),
         };
         state.allocated_kib = state.allocated_kib.saturating_sub(permit.memory_kib);
         state.active_jobs = state.active_jobs.saturating_sub(1);
+        HELD_BY_SCHEDULER.with(|m| {
+            let mut map = m.borrow_mut();
+            if let Some(n) = map.get_mut(&self_key) {
+                *n = n.saturating_sub(1);
+                if *n == 0 {
+                    map.remove(&self_key);
+                }
+            }
+        });
         self.available.notify_one();
     }
 }
@@ -128,6 +168,42 @@ mod tests {
     use std::sync::Arc;
     use std::thread;
     use std::time::{Duration, Instant};
+
+    #[test]
+    fn nested_acquire_while_holding_fails_instead_of_deadlock() {
+        // Fuzz finding R15: same-thread acquire while holding + queue_limit > 0
+        // previously parked forever on Condvar (nobody can release).
+        let sched = BoundedResourceScheduler::new(ResourcePolicy {
+            max_memory_kib: 16 * 1024,
+            max_active_jobs: 1,
+            queue_limit: 4,
+        });
+        let p1 = sched.acquire(16 * 1024).unwrap();
+        let start = Instant::now();
+        let err = sched.acquire(16 * 1024).expect_err("must not block");
+        assert!(start.elapsed() < Duration::from_secs(1));
+        assert!(matches!(err, KdfError::ResourceExhausted(_)));
+        assert!(
+            format!("{err}").contains("nested acquire") || format!("{err}").contains("deadlock")
+        );
+        sched.release(p1);
+        assert_eq!(sched.stats().active_jobs, 0);
+        assert_eq!(sched.stats().waiting_jobs, 0);
+    }
+
+    #[test]
+    fn request_exceeding_ceiling_fails_immediately() {
+        let sched = BoundedResourceScheduler::new(ResourcePolicy {
+            max_memory_kib: 64 * 1024,
+            max_active_jobs: 8,
+            queue_limit: 32,
+        });
+        // Must not block forever waiting for an impossible admission.
+        let err = sched.acquire(65 * 1024).expect_err("oversize");
+        assert!(matches!(err, KdfError::ResourceExhausted(_)));
+        assert_eq!(sched.stats().active_jobs, 0);
+        assert_eq!(sched.stats().waiting_jobs, 0);
+    }
 
     #[test]
     fn enforces_memory_ceiling() {

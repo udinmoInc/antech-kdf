@@ -13,6 +13,13 @@ fn hex_decode(s: &str, expected_len: usize, field: &str) -> Result<Vec<u8>, KdfE
     let expected_hex = expected_len
         .checked_mul(2)
         .ok_or_else(|| KdfError::Encoding(format!("{field} length overflow")))?;
+    // Hex must be ASCII; reject multi-byte UTF-8 before byte-indexing (avoids panics on
+    // non-char-boundary slices such as s[i..i+2]).
+    if !s.is_ascii() {
+        return Err(KdfError::Encoding(format!(
+            "{field} hex must be ASCII [0-9a-fA-F]"
+        )));
+    }
     if s.len() != expected_hex {
         return Err(KdfError::Encoding(format!(
             "{field} hex length mismatch: expected {expected_hex} chars, got {}",
@@ -22,10 +29,14 @@ fn hex_decode(s: &str, expected_len: usize, field: &str) -> Result<Vec<u8>, KdfE
     if !s.len().is_multiple_of(2) {
         return Err(KdfError::Encoding(format!("odd-length {field} hex string")));
     }
-    (0..s.len())
+    let bytes = s.as_bytes();
+    (0..bytes.len())
         .step_by(2)
         .map(|i| {
-            u8::from_str_radix(&s[i..i + 2], 16)
+            // ASCII-only: these two bytes are always valid UTF-8 char boundaries.
+            let pair = std::str::from_utf8(&bytes[i..i + 2])
+                .map_err(|_| KdfError::Encoding(format!("invalid {field} hex byte at {i}")))?;
+            u8::from_str_radix(pair, 16)
                 .map_err(|e| KdfError::Encoding(format!("invalid {field} hex byte at {i}: {e}")))
         })
         .collect()

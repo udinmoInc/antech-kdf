@@ -1,8 +1,0 @@
-ptxas info    : Compiling entry function '_Z23v4c_guess_kernel_packedPKhS0_PyS1_Phii' for 'sm_86'
-ptxas info    : Function properties for _Z23v4c_guess_kernel_packedPKhS0_PyS1_Phii
-    2432 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
-ptxas info    : Used 58 registers, used 0 barriers, 2432 bytes cumulative stack size
-ptxas info    : Compiling entry function '_Z16v4c_guess_kernelPKhS0_PhPyS1_i' for 'sm_86'
-ptxas info    : Function properties for _Z16v4c_guess_kernelPKhS0_PhPyS1_i
-    2320 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
-ptxas info    : Used 48 registers, used 0 barriers, 2320 bytes cumulative stack size

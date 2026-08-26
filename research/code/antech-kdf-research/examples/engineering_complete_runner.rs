@@ -1,4 +1,4 @@
-//! Engineering-complete campaign runner → research/results/engineering-complete/
+//! Engineering-complete campaign runner → research/archive/results/engineering-complete/
 
 use antech_kdf_core::engine::AntechEngine;
 use antech_kdf_reference::{derive, RefConfig, GRAPH_COMBINED_FRONTIER};
@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 fn out_root() -> PathBuf {
-    PathBuf::from("research/results/engineering-complete")
+    PathBuf::from("research/archive/results/engineering-complete")
 }
 
 fn write_json<T: serde::Serialize>(path: &Path, v: &T) -> std::io::Result<()> {

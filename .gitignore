@@ -1,8 +1,9 @@
 # Cargo build output
 /target/
 **/target/
-/Cargo.lock
+# Root Cargo.lock is tracked for reproducible production builds.
 /research/code/Cargo.lock
+/fuzz/harness/Cargo.lock
 
 # Executables & Binaries
 *.exe

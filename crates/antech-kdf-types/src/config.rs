@@ -83,12 +83,17 @@ impl SaltLength {
     }
 }
 
-/// Memory block size in bytes. Must be a power of two ≥ 16.
+/// Memory block size in bytes. Must be a power of two in **16..=64**
+/// (matches the production engine stack scratch limit).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BlockSize(pub usize);
 
 impl BlockSize {
+    pub const MIN_BYTES: usize = 16;
+    /// Production engine scratch arrays are sized to this limit.
+    pub const MAX_BYTES: usize = 64;
+
     pub fn bytes(size: usize) -> Self {
         Self(size)
     }
@@ -98,7 +103,7 @@ impl BlockSize {
     }
 
     pub fn validate(&self) -> Result<(), ConfigError> {
-        if self.0 < 16 || !self.0.is_power_of_two() {
+        if self.0 < Self::MIN_BYTES || self.0 > Self::MAX_BYTES || !self.0.is_power_of_two() {
             Err(ConfigError::InvalidBlockSize { size: self.0 })
         } else {
             Ok(())

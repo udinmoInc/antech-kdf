@@ -11,19 +11,48 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 antech-kdf = { path = "../crates/antech-kdf" }
 antech-kdf-format = { path = "../crates/antech-kdf-format" }
+antech-kdf-core = { path = "../crates/antech-kdf-core" }
+antech-kdf-ffi = { path = "../crates/antech-kdf-ffi" }
+antech-kdf-types = { path = "../crates/antech-kdf-types" }
 
 [[bin]]
 name = "hash_parser"
 path = "fuzz_targets/hash_parser.rs"
+test = false
+doc = false
 
 [[bin]]
 name = "verify_input"
 path = "fuzz_targets/verify_input.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "hash_verify"
+path = "fuzz_targets/hash_verify.rs"
+test = false
+doc = false
 
 [[bin]]
 name = "config_builder"
 path = "fuzz_targets/config_builder.rs"
+test = false
+doc = false
 
 [[bin]]
 name = "malformed_v2"
 path = "fuzz_targets/malformed_v2.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "ffi_api"
+path = "fuzz_targets/ffi_api.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "scheduler"
+path = "fuzz_targets/scheduler.rs"
+test = false
+doc = false

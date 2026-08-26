@@ -14,7 +14,7 @@ use crate::state::{
 use crate::traits::KdfEngine;
 use antech_kdf_types::{Algorithm, AntechConfig, KdfError};
 
-const MAX_BLOCK: usize = 64;
+const MAX_BLOCK: usize = 64; // must match antech_kdf_types::BlockSize::MAX_BYTES
 
 /// Canonical Antech compute-memory engine.
 #[derive(Debug, Clone, Default)]

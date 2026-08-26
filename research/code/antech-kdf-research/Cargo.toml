@@ -18,7 +18,9 @@ antech-kdf-core = { workspace = true }
 antech-kdf-types = { workspace = true }
 antech-kdf = { workspace = true }
 antech-kdf-format = { workspace = true }
+antech-kdf-ffi = { workspace = true }
 antech-kdf-reference = { path = "../reference" }
+libc = "0.2"
 argon2 = { workspace = true }
 scrypt = { workspace = true }
 bcrypt = { workspace = true }

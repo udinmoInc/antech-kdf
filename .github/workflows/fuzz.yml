@@ -5,20 +5,66 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: "0 4 * * 1" # weekly deeper campaign
+  workflow_dispatch:
 
 jobs:
-  fuzz:
+  fuzz-libfuzzer:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
       - name: Install cargo-fuzz
-        run: cargo install cargo-fuzz
-      - name: Run Fuzz Target (parser)
-        run: cargo fuzz run hash_parser -- -runs=10000
-      - name: Run Fuzz Target (verify)
-        run: cargo fuzz run verify_input -- -runs=5000
-      - name: Run Fuzz Target (config)
-        run: cargo fuzz run config_builder -- -runs=5000
-      - name: Run Fuzz Target (malformed v2)
-        run: cargo fuzz run malformed_v2 -- -runs=5000
+        run: cargo install cargo-fuzz --locked
+      - name: Build all fuzz targets
+        run: |
+          cargo fuzz build hash_parser
+          cargo fuzz build verify_input
+          cargo fuzz build hash_verify
+          cargo fuzz build config_builder
+          cargo fuzz build malformed_v2
+          cargo fuzz build ffi_api
+          cargo fuzz build scheduler
+      - name: Seed corpora present
+        run: find fuzz/corpus -type f | head -50
+      - name: Fuzz parser
+        run: cargo fuzz run hash_parser -- -max_total_time=${{ github.event_name == 'schedule' && '1800' || '600' }}
+      - name: Fuzz verify_input
+        run: cargo fuzz run verify_input -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
+      - name: Fuzz hash_verify
+        run: cargo fuzz run hash_verify -- -max_total_time=${{ github.event_name == 'schedule' && '1800' || '600' }}
+      - name: Fuzz config
+        run: cargo fuzz run config_builder -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
+      - name: Fuzz malformed_v2
+        run: cargo fuzz run malformed_v2 -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
+      - name: Fuzz FFI
+        run: cargo fuzz run ffi_api -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
+      - name: Fuzz scheduler
+        run: cargo fuzz run scheduler -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
+      - name: Upload crashes
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes
+          path: |
+            fuzz/artifacts
+            fuzz/corpus
+
+  fuzz-fallback:
+    # Cross-check the deterministic harness (also usable on Windows agents)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run fallback harness (2 min/target)
+        env:
+          ANTECH_FUZZ_SECS: "120"
+        run: cargo run --manifest-path fuzz/harness/Cargo.toml --release
+      - name: Upload fallback results
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-fallback-results
+          path: research/results/fuzz

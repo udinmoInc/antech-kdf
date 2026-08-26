@@ -1,10 +1,23 @@
 # Antech KDF
 
-Password hashing library built around a compute-memory construction. The default profile uses 16 MiB of working memory and a combined-frontier dependency graph. Work is derived from `memory / block_size`; there is no separate iteration-count knob.
+Antech is an experimental password-hashing library. The default profile uses **16 MiB** of working memory and a **combined-frontier** dependency graph. Work scales with `memory / block_size`; there is no separate iteration-count knob.
 
-**Status: Experimental.** Prefer Argon2id for production password storage until Antech has undergone independent cryptographic review and any resulting conclusions are published.
+**Status: Experimental.** Prefer Argon2id for production password storage until Antech has independent cryptographic review and published conclusions.
 
-Documentation: [developers.udinmo.com](https://developers.udinmo.com)
+Docs site: [developers.udinmo.com](https://developers.udinmo.com)
+
+## Repository layout
+
+```text
+crates/                 # Production library (start here)
+bindings/ + sdk/        # Language SDKs and conformance vectors
+docs/                   # End-user documentation (Mintlify)
+examples/               # Usage samples
+fuzz/                   # Production-surface fuzz targets
+research/               # Construction narrative, attackers, measured results, review package
+```
+
+Production crates never import research. Research may import production for correct digests.
 
 ## Install
 
@@ -13,7 +26,7 @@ Documentation: [developers.udinmo.com](https://developers.udinmo.com)
 antech-kdf = "0.1"
 ```
 
-Rust 1.70+. Python, Node, and .NET packages are published at version **0.1.0** — see [SDK overview](https://developers.udinmo.com/antech-kdf/sdk/overview) for install commands.
+Rust 1.70+. Other language packages pin **0.1.0** — see the [SDK overview](https://developers.udinmo.com/antech-kdf/sdk/overview).
 
 ## Usage
 
@@ -24,8 +37,6 @@ let stored = hash("correct_horse_battery_staple")?;
 assert!(verify("correct_horse_battery_staple", &stored)?);
 assert!(!needs_rehash(&stored)?);
 ```
-
-Custom parameters:
 
 ```rust
 use antech_kdf::{hash_with_config, AntechConfig, GraphKind};
@@ -42,9 +53,9 @@ let stored = hash_with_config("password", &config)?;
 | Parameter | Default | Notes |
 |---|---|---|
 | Memory | 16 MiB | Working set |
-| Block size | 32 B | DAG node size |
+| Block size | 32 B | DAG node size (16–64) |
 | Fan-in | 2 | Parents mixed per node |
-| Graph | combined-frontier | Tag `g=3` in the encoded hash |
+| Graph | combined-frontier | Encoded as `g=3` |
 | Salt length | 16 B | 8–256 |
 | Output length | 32 B | Digest size |
 
@@ -56,49 +67,45 @@ $antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<
 
 `verify` rebuilds the config from the string. Legacy `v1` encodings are rejected.
 
-## Security & review
-
-Antech is submitted for independent cryptanalysis. The repository includes the formal construction, production source, test vectors, conformance suite, benchmark evidence, and known limitations.
-
-Start at [`research/security-review/`](./research/security-review/) or the [Security & review](https://developers.udinmo.com/antech-kdf/security-review/overview) documentation page.
-
-## SDKs
-
-Thin wrappers over [`antech-kdf-ffi`](crates/antech-kdf-ffi) — same API everywhere: `hash`, `verify`, `needs_rehash`, `hash_with_config`, rehash policy, and config fields.
-
-| Language | Path |
-|---|---|
-| C / C++ | [`bindings/c`](bindings/c), [`bindings/cpp`](bindings/cpp) |
-| Go | [`bindings/go`](bindings/go) |
-| Python | [`bindings/python`](bindings/python) |
-| Node / TypeScript | [`bindings/node`](bindings/node) |
-| Java / Kotlin | [`bindings/java`](bindings/java), [`bindings/kotlin`](bindings/kotlin) |
-| Swift | [`bindings/swift`](bindings/swift) |
-| .NET / C# | [`bindings/dotnet`](bindings/dotnet) |
-
-Conformance: [`sdk/conformance/`](sdk/conformance/).
-
-## Crates
+## Production crates
 
 | Crate | Role |
 |---|---|
-| `antech-kdf` | Public API |
-| `antech-kdf-core` | Engine and resource scheduler |
+| `antech-kdf` | Public API (`hash` / `verify` / rehash) |
+| `antech-kdf-core` | `AntechEngine` + resource scheduler |
 | `antech-kdf-format` | Encode / parse |
 | `antech-kdf-types` | Config and errors |
-| `antech-kdf-cli` | `hash` / `verify` CLI |
-| `antech-kdf-ffi` | C ABI |
-
-Research (attackers, CUDA, TMTO, cryptanalysis) lives under [`research/code/`](research/code/) in a **separate** Cargo workspace. Production never imports research.
-
-## Changelog
-
-See [CHANGELOG.md](./CHANGELOG.md). Current release: **0.1.0**.
-
-## Build (from source)
+| `antech-kdf-ffi` | C ABI for SDKs |
+| `antech-kdf-cli` | CLI |
 
 ```bash
 cargo test --workspace
 ```
+
+## Security & review
+
+Independent review materials live in [`research/security-review/`](./research/security-review/). Start with [`REQUEST_FOR_REVIEW.md`](./research/security-review/REQUEST_FOR_REVIEW.md).
+
+Canonical construction: **construction version 4**, CombinedFrontier, `$antech$v2$`. Evidence is labeled **MEASURED** / **MODELED** / **BLOCKED** / **UNKNOWN** — do not mix campaigns.
+
+## Research (second)
+
+Narrative, attackers, CUDA, TMTO, and campaign outputs: [`research/`](./research/). Current measured datasets:
+
+| Dataset | Path |
+|---|---|
+| CPU / GPU compute–memory (v4-C) | [`research/results/compute-memory-v4/`](./research/results/compute-memory-v4/) |
+| Cryptanalysis + TMTO | [`research/results/cryptanalysis/`](./research/results/cryptanalysis/) |
+| Correctness | [`research/results/correctness/`](./research/results/correctness/) |
+| Stress | [`research/results/stress/`](./research/results/stress/) |
+| Fuzz | [`research/results/fuzz/`](./research/results/fuzz/) |
+
+## SDKs
+
+Thin wrappers over `antech-kdf-ffi`: C/C++, Go, Python, Node, Java/Kotlin, Swift, .NET. Conformance vectors: [`sdk/conformance/`](./sdk/conformance/).
+
+## Changelog
+
+[CHANGELOG.md](./CHANGELOG.md) — current release **0.1.0**.
 
 License: MIT OR Apache-2.0.

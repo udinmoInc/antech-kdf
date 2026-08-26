@@ -13,7 +13,7 @@ Shared validation applies in Rust builders and FFI POD structs. Invalid values f
 |---|---|---|
 | `memory` / `memory_kib` | 16384 KiB | 1024…1048576 |
 | `salt_length` | 16 | 8…256 |
-| `block_size` | 32 | ≥16, power of two |
+| `block_size` | 32 | power of two in 16..=64 |
 | `fan_in` | 2 | 2…8 |
 | `graph` | CombinedFrontier (`3`) | `1`…`3` |
 | `output_length` | 32 | 8…128 |

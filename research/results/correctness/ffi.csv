@@ -1,0 +1,9 @@
+suite,case_id,status,detail
+ffi,null_password,Pass,"InvalidInput"
+ffi,ascii_roundtrip,Pass,"$antech$v2$m=16384,s=16,b=32,f=2,g=3,l=32$a0a99b4e630b04139a1c14b55cc57033$38cdb65aa4299e6ae473529c0d240d0103907f861e98c7320fc27ef875b5a828"
+ffi,binary_nul,Pass,"v=Ok w=VerificationFailed"
+ffi,empty,Pass,"ok"
+ffi,ffi_vs_rust_digest,Pass,"rust=589171dc9d83d6ab582682b5317e5633b489b5c8af65d77689e786aee13b81ca ffi=589171dc9d83d6ab582682b5317e5633b489b5c8af65d77689e786aee13b81ca"
+ffi,invalid_hash,Pass,"InvalidHash"
+ffi,concurrent_32,Pass,"ok=32 fail=0"
+ffi,free_null,Pass,"noop checked in suite"

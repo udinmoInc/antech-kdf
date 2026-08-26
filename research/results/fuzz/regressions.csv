@@ -1,0 +1,4 @@
+id,status,notes
+R12,covered,oversize acquire fail-fast exercised via scheduler+hash_verify paths
+R14,fixed,hex_decode panicked on non-ASCII UTF-8 salt/digest; reject non-ASCII before slicing
+R15,fixed,nested acquire-while-holding with queue_limit>0 Condvar-deadlocked; fail-fast

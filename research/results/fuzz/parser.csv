@@ -1,0 +1,2 @@
+target,executions,corpus_seeds,panics,assertion_fails,elapsed_secs,status
+parser,172067934,20,0,0,180.000,PASS

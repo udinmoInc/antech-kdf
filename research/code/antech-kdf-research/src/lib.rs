@@ -1,4 +1,7 @@
 //! Antech KDF Research Crate.
+//!
+//! Current campaigns: `compute_memory_v4`, `cryptanalysis`, `engineering`.
+//! Historical engines (`compute_memory`, `compute_memory_v3`) remain for archive reproduction.
 
 pub mod attackers;
 pub mod baselines;
@@ -15,11 +18,8 @@ pub mod tmto;
 
 use std::path::Path;
 
-/// Runs the complete Antech KDF research benchmark suite.
+/// Runs the current (v4) research benchmark suite.
 pub fn run_research_suite(target_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    benchmarks::run_research_benchmark_suite(target_dir)?;
-    compute_memory::run_compute_memory_suite(&target_dir.join("compute-memory"))?;
-    compute_memory_v3::run_compute_memory_v3_suite(&target_dir.join("compute-memory-v3"))?;
     compute_memory_v4::run_compute_memory_v4_suite(&target_dir.join("compute-memory-v4"))?;
     Ok(())
 }

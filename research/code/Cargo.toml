@@ -37,3 +37,4 @@ antech-kdf = { path = "../../crates/antech-kdf" }
 antech-kdf-core = { path = "../../crates/antech-kdf-core" }
 antech-kdf-format = { path = "../../crates/antech-kdf-format" }
 antech-kdf-types = { path = "../../crates/antech-kdf-types" }
+antech-kdf-ffi = { path = "../../crates/antech-kdf-ffi" }

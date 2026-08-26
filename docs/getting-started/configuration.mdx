@@ -32,7 +32,7 @@ let stored = hash_with_config("password", &config)?;
 |---|---|---|
 | Memory | 16 MiB (`16384` KiB) | 1024…1 048 576 KiB |
 | Salt length | 16 B | 8…256 |
-| Block size | 32 B | ≥ 16, power of two |
+| Block size | 32 B | power of two in **16..=64** (engine scratch limit) |
 | Fan-in | 2 | 2…8 |
 | Graph | CombinedFrontier | tags `1`, `2`, `3` |
 | Output length | 32 B | 8…128 |

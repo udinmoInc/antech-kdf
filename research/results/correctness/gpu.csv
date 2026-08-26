@@ -1,0 +1,5 @@
+suite,case_id,status,detail
+gpu,prior_v4_gpu_csv,Pass,"imported 480 matching rows from prior campaign CSV"
+gpu,nvidia_smi,Pass,"GPU 0: NVIDIA GeForce RTX 3050 (UUID: GPU-65c0ed39-2183-e8fc-6caa-a3337dc84065)
+"
+gpu,live_cuda_compare,Blocked,"nvcc/GPU present; live CUDA attacker re-run via v4_gpu_runner separately; prior CSV imported"

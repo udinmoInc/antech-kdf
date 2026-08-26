@@ -1,3 +1,3 @@
-# Archive: phase history
+# Phase history
 
-Old phase-by-phase development notes lived here. Current narrative is the chapter set under [`research/`](../README.md) plus the result folders under `results/`. Keep this file only as a pointer so old links do not dangle.
+The old Phase A–M development notes were removed from the public tree. Historical campaign outputs and early candidate specs remain under this `archive/` directory for reproducibility. Current construction and evidence: `research/security-review/` and `research/results/`.

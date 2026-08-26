@@ -1,3 +1,0 @@
-
-'\"F:\vs\VC\Auxiliary\Build\vcvars64.bat\"' is not recognized as an internal or external command,
-operable program or batch file.

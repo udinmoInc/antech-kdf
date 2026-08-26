@@ -59,7 +59,9 @@ fn config_boundary_validation() {
     assert!(AntechConfig::builder().salt_length(8).build().is_ok());
     assert!(AntechConfig::builder().salt_length(7).build().is_err());
     assert!(AntechConfig::builder().block_size(16).build().is_ok());
+    assert!(AntechConfig::builder().block_size(64).build().is_ok());
     assert!(AntechConfig::builder().block_size(15).build().is_err());
+    assert!(AntechConfig::builder().block_size(128).build().is_err());
     assert!(AntechConfig::builder().fan_in(2).build().is_ok());
     assert!(AntechConfig::builder().fan_in(9).build().is_err());
 }

@@ -51,7 +51,9 @@ impl fmt::Display for ConfigError {
             ConfigError::InvalidBlockSize { size } => {
                 write!(
                     f,
-                    "block size {size} must be a power of two and >= 16 bytes"
+                    "block size {size} must be a power of two in {}..={} bytes",
+                    crate::config::BlockSize::MIN_BYTES,
+                    crate::config::BlockSize::MAX_BYTES
                 )
             }
             ConfigError::InvalidFanIn { fan_in } => {

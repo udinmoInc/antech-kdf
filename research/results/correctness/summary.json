@@ -1,0 +1,208 @@
+{
+  "host": "windows x86_64 cpus=12",
+  "verdict": "PASS",
+  "totals": {
+    "cases": 421,
+    "pass": 398,
+    "fail": 0,
+    "blocked": 7,
+    "not_applicable": 16,
+    "panics_caught": 0
+  },
+  "randomized_cases": 2564,
+  "boundary_cases": 83,
+  "malformed_cases": 32,
+  "concurrency_cases": 2009,
+  "cross_impl_comparisons": 923,
+  "gpu_comparisons": 480,
+  "failures": 0,
+  "bugs_fixed": 2,
+  "regression_tests_added": 3,
+  "blockers": [
+    "gpu:live_cuda_compare:nvcc/GPU present; live CUDA attacker re-run via v4_gpu_runner separately; prior CSV imported",
+    "sanitizers:miri:nightly miri not installed",
+    "sanitizers:asan:AddressSanitizer not enabled for this campaign run",
+    "sdk_cli:cli_binary:antech-kdf CLI binary not found under target/",
+    "sdk_cli:node_sdk:not executed in this Rust campaign (see sdk/conformance CI)",
+    "sdk_cli:go_sdk:not executed in this Rust campaign (see sdk/conformance CI)",
+    "sdk_cli:kotlin_sdk:not executed in this Rust campaign (see sdk/conformance CI)"
+  ],
+  "suite_totals": {
+    "block_size": {
+      "cases": 15,
+      "pass": 15,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "concurrency": {
+      "cases": 11,
+      "pass": 11,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "determinism": {
+      "cases": 6,
+      "pass": 6,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "differential": {
+      "cases": 42,
+      "pass": 42,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "fan_in": {
+      "cases": 10,
+      "pass": 10,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "ffi": {
+      "cases": 8,
+      "pass": 8,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "gpu": {
+      "cases": 3,
+      "pass": 2,
+      "fail": 0,
+      "blocked": 1,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "graph": {
+      "cases": 13,
+      "pass": 11,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 2,
+      "panics_caught": 0
+    },
+    "hash_verify": {
+      "cases": 109,
+      "pass": 109,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "legacy": {
+      "cases": 3,
+      "pass": 3,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "long_run": {
+      "cases": 1,
+      "pass": 1,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "memory": {
+      "cases": 27,
+      "pass": 23,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 4,
+      "panics_caught": 0
+    },
+    "output_length": {
+      "cases": 9,
+      "pass": 9,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "parser": {
+      "cases": 22,
+      "pass": 22,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "property": {
+      "cases": 11,
+      "pass": 11,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "rehash": {
+      "cases": 3,
+      "pass": 3,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "resource_failure": {
+      "cases": 3,
+      "pass": 3,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "salt": {
+      "cases": 68,
+      "pass": 68,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "sanitizers": {
+      "cases": 3,
+      "pass": 1,
+      "fail": 0,
+      "blocked": 2,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "sdk_cli": {
+      "cases": 6,
+      "pass": 2,
+      "fail": 0,
+      "blocked": 4,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "serialization": {
+      "cases": 27,
+      "pass": 27,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 0,
+      "panics_caught": 0
+    },
+    "small_graph": {
+      "cases": 21,
+      "pass": 11,
+      "fail": 0,
+      "blocked": 0,
+      "not_applicable": 10,
+      "panics_caught": 0
+    }
+  }
+}

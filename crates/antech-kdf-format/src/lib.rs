@@ -56,6 +56,20 @@ mod tests {
     }
 
     #[test]
+    fn rejects_non_ascii_hex_without_panic() {
+        // Multi-byte UTF-8 in the salt field used to panic in hex_decode via s[i..i+2]
+        // crossing a char boundary (fuzz finding R14).
+        // 30 ASCII hex chars + one 2-byte UTF-8 char (ß) = 32 bytes (== s=16 hex width).
+        let salt = format!("{}{}", "a".repeat(30), "ß");
+        assert_eq!(salt.len(), 32);
+        let digest = "bb".repeat(32);
+        let encoded = format!("$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32${salt}${digest}");
+        let result = std::panic::catch_unwind(|| parse_hash(&encoded));
+        assert!(result.is_ok(), "parse_hash must not panic on non-ascii hex");
+        assert!(result.unwrap().is_err(), "non-ascii hex must be rejected");
+    }
+
+    #[test]
     fn rejects_duplicate_m_param() {
         let encoded = "$antech$v2$m=16384,m=16384,s=16,b=32,f=2,g=3,l=32$0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff$0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff";
         assert!(parse_hash(encoded).is_err());

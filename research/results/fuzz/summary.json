@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "targets": 6,
+  "executions": 632029386,
+  "corpus_entries": 27,
+  "panics": 0,
+  "assertion_fails": 0,
+  "hangs": 0,
+  "bugs_found": 2,
+  "bugs_fixed": 2,
+  "bug_ids": ["R14", "R15"],
+  "regression_tests": 3,
+  "campaign_time_secs": 1080.0,
+  "secs_per_target": 180,
+  "tools_executed": ["antech-kdf-fuzz-harness"],
+  "tools_not_run": ["cargo-fuzz", "libFuzzer", "ASan", "Miri"],
+  "blockers": [
+    "cargo-fuzz install failed on Windows GNU (dlltool.exe missing)",
+    "cargo-fuzz install failed on Windows MSVC nightly (link.exe / VS Build Tools missing)",
+    "libFuzzer campaigns run on ubuntu-latest via .github/workflows/fuzz.yml"
+  ],
+  "per_target": [
+    {"name": "parser", "executions": 172067934, "corpus_seeds": 20, "panics": 0, "assertion_fails": 0, "elapsed_secs": 180.0},
+    {"name": "config", "executions": 375716310, "corpus_seeds": 2, "panics": 0, "assertion_fails": 0, "elapsed_secs": 180.0},
+    {"name": "hash_verify", "executions": 56037, "corpus_seeds": 1, "panics": 0, "assertion_fails": 0, "elapsed_secs": 180.006},
+    {"name": "ffi", "executions": 26365, "corpus_seeds": 1, "panics": 0, "assertion_fails": 0, "elapsed_secs": 180.002},
+    {"name": "scheduler", "executions": 71182122, "corpus_seeds": 1, "panics": 0, "assertion_fails": 0, "elapsed_secs": 180.0},
+    {"name": "malformed_v2", "executions": 12980618, "corpus_seeds": 2, "panics": 0, "assertion_fails": 0, "elapsed_secs": 180.0}
+  ]
+}

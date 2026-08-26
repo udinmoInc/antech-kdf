@@ -1,0 +1,17 @@
+[package]
+name = "antech-kdf-fuzz-harness"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Deterministic/random fuzz campaign fallback when cargo-fuzz/libFuzzer is unavailable"
+
+# Standalone package (not part of the production workspace / cargo-fuzz package).
+[workspace]
+
+[dependencies]
+antech-kdf = { path = "../../crates/antech-kdf" }
+antech-kdf-format = { path = "../../crates/antech-kdf-format" }
+antech-kdf-core = { path = "../../crates/antech-kdf-core" }
+antech-kdf-ffi = { path = "../../crates/antech-kdf-ffi" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

@@ -16,6 +16,13 @@ default-members = [
     "crates/antech-kdf-ffi",
     "crates/antech-kdf-cli",
 ]
+exclude = [
+    "fuzz",
+    "fuzz/harness",
+    "research",
+    "bindings",
+    "sdk",
+]
 
 [workspace.package]
 version = "0.1.0"
