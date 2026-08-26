@@ -43,50 +43,50 @@ FFI-based SDKs load `antech_kdf_ffi` at runtime. If automatic discovery fails, s
 <FeatureGrid>
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/rust.svg"
-    title="Rust"
-    description="Canonical API crate."
+    title="Rust — canonical API"
+    description="Link antech-kdf directly. This is the reference surface for hash, verify, config builders, and rehash policy; every other SDK mirrors it."
     href="./rust"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/c++.svg"
-    title="C / C++"
-    description="Header + optional C++ wrapper."
+    title="C and C++"
+    description="Call antech_kdf_ffi through antech_kdf.h, or use the C++ header wrapper. Prefer the *_bytes entry points for binary passwords."
     href="./c-cpp"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/python.svg"
     title="Python"
-    description="ctypes package over the cdylib."
+    description="Install antech-kdf from PyPI. A ctypes wrapper loads the native library and exposes hash, verify, Config, and RehashPolicy."
     href="./python"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/typescript.svg"
-    title="Node / TS"
-    description="koffi bindings with TypeScript types."
+    title="Node.js and TypeScript"
+    description="npm package with TypeScript types over koffi. Same operations as Rust; keep hashing off the event-loop tick under load."
     href="./node"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/go.svg"
     title="Go"
-    description="cgo module."
+    description="cgo module under bindings/go. Requires CGO and a discoverable libantech_kdf_ffi (ANTECH_KDF_LIB or linker paths)."
     href="./go"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/kotlin.svg"
-    title="Java / Kotlin"
-    description="JNA plus Kotlin façade."
+    title="Java and Kotlin"
+    description="JNA AntechKdf for Java, plus a thin Kotlin façade. Both share one native library — no second crypto implementation on the JVM."
     href="./java-kotlin"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/c%23.svg"
-    title=".NET"
-    description="P/Invoke Antech.Kdf."
+    title=".NET / C#"
+    description="NuGet package Antech.Kdf uses P/Invoke against antech_kdf_ffi. Hash, verify, and config helpers match the other SDKs."
     href="./dotnet"
   />
   <FeatureCard
     icon="https://appcontent.udinmo.com/os/ts/programming%20languages/Swift.svg"
     title="Swift"
-    description="SwiftPM over the C ABI."
+    description="SwiftPM package for macOS and iOS over the C ABI. Link antech_kdf_ffi (XCFramework on iOS) and call hash / verify from Swift."
     href="./swift"
   />
 </FeatureGrid>
