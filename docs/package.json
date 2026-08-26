@@ -1,6 +1,7 @@
 {
   "name": "antech-kdf",
   "title": "Antech KDF",
+  "slug": "antech-kdf",
   "version": "0.1.0",
   "status": "Experimental",
   "type": "opensource",
