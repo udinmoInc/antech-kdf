@@ -582,9 +582,98 @@ __device__ void d_mix_views_words(uint64_t state[4], uint64_t views[8][4], uint3
     if (vi < n_views) d_mix_words(state, views[vi], views[vi]);
 }
 
+__device__ __forceinline__ void d_load_block4(const uint64_t* __restrict__ src, uint64_t dst[4]) {
+    // Cached read path (__ldg) — helps when far gathers reuse cold lines across warps.
+#pragma unroll
+    for (int w = 0; w < 4; w++) dst[w] = __ldg(src + w);
+}
+
+__device__ __forceinline__ void d_prefetch_block(const uint64_t* __restrict__ src) {
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
+    asm volatile("prefetch.global.L2 [%0];" ::"l"(src));
+#else
+    (void)src;
+#endif
+}
+
+__device__ __forceinline__ void d_apply_scatters(const uint64_t state[4], uint64_t* __restrict__ buf,
+                                                uint32_t i) {
+    int s1, s2;
+    d_scatter_from_state(state, i, &s1, &s2);
+    if (s1 >= 0) {
+        uint32_t dest = (uint32_t)s1;
+        if (dest < NUM_BLOCKS && dest != i) {
+            uint64_t* d = buf + (size_t)dest * 4;
+#pragma unroll
+            for (int w = 0; w < 4; w++) d[w] ^= state[w];
+        }
+    }
+    if (s2 >= 0) {
+        uint32_t dest = (uint32_t)s2;
+        if (dest < NUM_BLOCKS && dest != i) {
+            uint64_t* d = buf + (size_t)dest * 4;
+#pragma unroll
+            for (int w = 0; w < 4; w++) d[w] ^= state[w];
+        }
+    }
+}
+
+// Fast path: no frontier ring → ~2 KiB less stack/frame than the ring walk (ptxas).
+__device__ void v4c_walk_packed_noring(const uint8_t seed[32], const uint64_t phantoms[2][4],
+                                      uint64_t* __restrict__ buf, uint64_t state_out[4],
+                                      uint64_t last_out[4]) {
+    uint64_t state[4];
+#pragma unroll
+    for (int i = 0; i < 4; i++) state[i] = d_load_u64(seed + i * 8);
+
+    for (uint32_t i = 0; i < NUM_BLOCKS; i++) {
+        uint64_t views[8][4];
+        uint32_t n_views = 0;
+        if (i == 0) {
+#pragma unroll
+            for (int w = 0; w < 4; w++) {
+                views[0][w] = phantoms[0][w];
+                views[1][w] = phantoms[1][w];
+            }
+            d_mix_views_words(state, views, FAN_IN);
+        } else {
+            DParents local = d_parents_local_fast(state, i);
+            for (uint32_t k = 0; k < local.len; k++) {
+                d_load_block4(buf + (size_t)local.indices[k] * 4, views[n_views]);
+                n_views++;
+            }
+            d_mix_views_words(state, views, n_views);
+
+            DParents remote = d_parents_remote_fast(state, i);
+            // Prefetch first remote while finishing local mix dependency already resolved.
+            if (remote.len > 0) d_prefetch_block(buf + (size_t)remote.indices[0] * 4);
+            if (remote.len > 1) d_prefetch_block(buf + (size_t)remote.indices[1] * 4);
+            n_views = 0;
+            for (uint32_t k = 0; k < remote.len; k++) {
+                d_load_block4(buf + (size_t)remote.indices[k] * 4, views[n_views]);
+                n_views++;
+            }
+            d_mix_views_words(state, views, n_views);
+        }
+        uint64_t* out = buf + (size_t)i * 4;
+#pragma unroll
+        for (int w = 0; w < 4; w++) out[w] = state[w];
+        d_apply_scatters(state, buf, i);
+    }
+#pragma unroll
+    for (int i = 0; i < 4; i++) {
+        state_out[i] = state[i];
+        last_out[i] = buf[(size_t)(NUM_BLOCKS - 1) * 4 + i];
+    }
+}
+
 __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[2][4],
                                 uint64_t* buf, uint64_t state_out[4], uint64_t last_out[4],
                                 int use_ring) {
+    if (!use_ring) {
+        v4c_walk_packed_noring(seed, phantoms, buf, state_out, last_out);
+        return;
+    }
     uint64_t state[4];
 #pragma unroll
     for (int i = 0; i < 4; i++) state[i] = d_load_u64(seed + i * 8);
@@ -609,7 +698,7 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
             for (uint32_t k = 0; k < local.len; k++) {
                 uint32_t p = local.indices[k];
                 int from_ring = 0;
-                if (use_ring && newest >= 0 && (int)p <= newest) {
+                if (newest >= 0 && (int)p <= newest) {
                     uint32_t age = (uint32_t)newest - p;
                     uint32_t window = count < FRONTIER_WIDTH ? count : FRONTIER_WIDTH;
                     if (age < window) {
@@ -618,11 +707,7 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
                         from_ring = 1;
                     }
                 }
-                if (!from_ring) {
-                    uint64_t* src = buf + (size_t)p * 4;
-#pragma unroll
-                    for (int w = 0; w < 4; w++) views[n_views][w] = src[w];
-                }
+                if (!from_ring) d_load_block4(buf + (size_t)p * 4, views[n_views]);
                 n_views++;
             }
             d_mix_views_words(state, views, n_views);
@@ -632,7 +717,7 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
             for (uint32_t k = 0; k < remote.len; k++) {
                 uint32_t p = remote.indices[k];
                 int from_ring = 0;
-                if (use_ring && newest >= 0 && (int)p <= newest) {
+                if (newest >= 0 && (int)p <= newest) {
                     uint32_t age = (uint32_t)newest - p;
                     uint32_t window = count < FRONTIER_WIDTH ? count : FRONTIER_WIDTH;
                     if (age < window) {
@@ -641,11 +726,7 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
                         from_ring = 1;
                     }
                 }
-                if (!from_ring) {
-                    uint64_t* src = buf + (size_t)p * 4;
-#pragma unroll
-                    for (int w = 0; w < 4; w++) views[n_views][w] = src[w];
-                }
+                if (!from_ring) d_load_block4(buf + (size_t)p * 4, views[n_views]);
                 n_views++;
             }
             d_mix_views_words(state, views, n_views);
@@ -653,30 +734,11 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
         uint64_t* out = buf + (size_t)i * 4;
 #pragma unroll
         for (int w = 0; w < 4; w++) out[w] = state[w];
-        if (use_ring) {
 #pragma unroll
-            for (int w = 0; w < 4; w++) ring[i % FRONTIER_WIDTH][w] = state[w];
-            newest = (int)i;
-            count = count + 1 < FRONTIER_WIDTH ? count + 1 : FRONTIER_WIDTH;
-        }
-        int s1, s2;
-        d_scatter_from_state(state, i, &s1, &s2);
-        if (s1 >= 0) {
-            uint32_t dest = (uint32_t)s1;
-            if (dest < NUM_BLOCKS && dest != i) {
-                uint64_t* d = buf + (size_t)dest * 4;
-#pragma unroll
-                for (int w = 0; w < 4; w++) d[w] ^= state[w];
-            }
-        }
-        if (s2 >= 0) {
-            uint32_t dest = (uint32_t)s2;
-            if (dest < NUM_BLOCKS && dest != i) {
-                uint64_t* d = buf + (size_t)dest * 4;
-#pragma unroll
-                for (int w = 0; w < 4; w++) d[w] ^= state[w];
-            }
-        }
+        for (int w = 0; w < 4; w++) ring[i % FRONTIER_WIDTH][w] = state[w];
+        newest = (int)i;
+        count = count + 1 < FRONTIER_WIDTH ? count + 1 : FRONTIER_WIDTH;
+        d_apply_scatters(state, buf, i);
     }
 #pragma unroll
     for (int i = 0; i < 4; i++) {
@@ -702,7 +764,31 @@ __global__ void v4c_guess_kernel_packed(
         for (int w = 0; w < 4; w++) phw[s][w] = d_load_u64(ph + s * 32 + w * 8);
     uint64_t* buffer = buffers + (size_t)idx * (size_t)NUM_BLOCKS * 4;
     uint64_t st[4], last[4];
-    v4c_walk_packed(seed, phw, buffer, st, last, use_ring);
+    if (use_ring) v4c_walk_packed(seed, phw, buffer, st, last, 1);
+    else v4c_walk_packed_noring(seed, phw, buffer, st, last);
+#pragma unroll
+    for (int i = 0; i < 4; i++) states_out[(size_t)idx * 4 + i] = st[i];
+#pragma unroll
+    for (int i = 0; i < 4; i++) d_store_u64(lasts_out + (size_t)idx * 32 + i * 8, last[i]);
+}
+
+__global__ void v4c_guess_kernel_packed_noring(
+    const uint8_t* __restrict__ seeds, const uint8_t* __restrict__ phantoms,
+    uint64_t* __restrict__ buffers, uint64_t* __restrict__ states_out,
+    uint8_t* __restrict__ lasts_out, int n
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= n) return;
+    const uint8_t* seed = seeds + (size_t)idx * 32;
+    const uint8_t* ph = phantoms + (size_t)idx * 64;
+    uint64_t phw[2][4];
+#pragma unroll
+    for (int s = 0; s < 2; s++)
+#pragma unroll
+        for (int w = 0; w < 4; w++) phw[s][w] = d_load_u64(ph + s * 32 + w * 8);
+    uint64_t* buffer = buffers + (size_t)idx * (size_t)NUM_BLOCKS * 4;
+    uint64_t st[4], last[4];
+    v4c_walk_packed_noring(seed, phw, buffer, st, last);
 #pragma unroll
     for (int i = 0; i < 4; i++) states_out[(size_t)idx * 4 + i] = st[i];
 #pragma unroll
@@ -725,7 +811,7 @@ __global__ void v4c_guess_kernel_packed_persist(
 #pragma unroll
             for (int w = 0; w < 4; w++) phw[s][w] = d_load_u64(ph + s * 32 + w * 8);
         uint64_t st[4], last[4];
-        v4c_walk_packed(seed, phw, buffer, st, last, 0);
+        v4c_walk_packed_noring(seed, phw, buffer, st, last);
 #pragma unroll
         for (int i = 0; i < 4; i++) states_out[(size_t)idx * 4 + i] = st[i];
 #pragma unroll
@@ -763,6 +849,9 @@ struct GpuProfile {
     double guesses_per_sec = 0;
     double kernel_p50_ms = 0, kernel_p95_ms = 0, kernel_p99_ms = 0;
     double host_device_ms = 0, kernel_exec_ms_total = 0;
+    double alloc_ms = 0, h2d_ms = 0, memset_ms = 0, launch_ms = 0;
+    double kernel_ms_mean = 0, d2h_ms = 0, sync_ms = 0, finalize_ms = 0;
+    double total_batch_ms = 0, ms_per_guess = 0;
     size_t vram_used_bytes = 0;
     int batch = 0;
     int regs_per_thread = 0;
@@ -772,16 +861,19 @@ struct GpuProfile {
     int threads_per_block = 1;
     size_t spill_store_bytes = 0;
     size_t spill_load_bytes = 0;
+    int local_mem_bytes = 0;
+    size_t stack_frame_bytes = 0;
 };
 
 struct LaunchConfig {
     int threads = 1;
     bool fused_zero = false;
-    bool pinned_host = false;
-    bool async_copy = false;
+    bool pinned_host = true;
+    bool async_copy = true;
     KernelKind kind = K_BASELINE;
     int force_batch = 0;
     int persist_slots = 0;
+    bool multi_stream = false; // dual-buffer continuous throughput path
 };
 
 static double percentile(std::vector<double>& v, double p) {
@@ -806,6 +898,42 @@ static void prepare_batch(const std::vector<std::string>& pws, const uint8_t* sa
     }
 }
 
+static void write_profile_kv(const std::string& path, const GpuProfile& prof, const char* impl,
+                             const cudaDeviceProp& prop) {
+    std::ofstream pf(path);
+    pf << "guesses_per_sec=" << prof.guesses_per_sec << "\n"
+       << "kernel_p50_ms=" << prof.kernel_p50_ms << "\n"
+       << "kernel_p95_ms=" << prof.kernel_p95_ms << "\n"
+       << "kernel_p99_ms=" << prof.kernel_p99_ms << "\n"
+       << "kernel_ms_mean=" << prof.kernel_ms_mean << "\n"
+       << "total_batch_ms=" << prof.total_batch_ms << "\n"
+       << "ms_per_guess=" << prof.ms_per_guess << "\n"
+       << "alloc_ms=" << prof.alloc_ms << "\n"
+       << "h2d_ms=" << prof.h2d_ms << "\n"
+       << "memset_ms=" << prof.memset_ms << "\n"
+       << "launch_ms=" << prof.launch_ms << "\n"
+       << "kernel_exec_ms_total=" << prof.kernel_exec_ms_total << "\n"
+       << "d2h_ms=" << prof.d2h_ms << "\n"
+       << "sync_ms=" << prof.sync_ms << "\n"
+       << "finalize_ms=" << prof.finalize_ms << "\n"
+       << "host_device_transfer_ms=" << (prof.h2d_ms + prof.d2h_ms) << "\n"
+       << "vram_used_mib=" << (prof.vram_used_bytes / (1024 * 1024)) << "\n"
+       << "occupancy=" << prof.occupancy << "\n"
+       << "registers_per_thread=" << prof.regs_per_thread << "\n"
+       << "shared_mem_bytes=" << prof.shared_mem << "\n"
+       << "local_mem_bytes=" << prof.local_mem_bytes << "\n"
+       << "stack_frame_bytes=" << prof.stack_frame_bytes << "\n"
+       << "spill_store_bytes=" << prof.spill_store_bytes << "\n"
+       << "spill_load_bytes=" << prof.spill_load_bytes << "\n"
+       << "threads_per_block=" << prof.threads_per_block << "\n"
+       << "global_mem_traffic_est=" << prof.global_traffic_est << "\n"
+       << "batch=" << prof.batch << "\n"
+       << "impl_mode=" << impl << "\n"
+       << "gpu_name=" << prop.name << "\n"
+       << "vram_total_mib=" << (prop.totalGlobalMem / (1024 * 1024)) << "\n"
+       << "sm_count=" << prop.multiProcessorCount << "\n";
+}
+
 static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<uint8_t>& phantoms,
                           std::vector<uint8_t>& digests, GpuProfile* prof, bool profile_kernels,
                           const LaunchConfig& cfg) {
@@ -821,113 +949,162 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
         buf_bytes = (size_t)persist_slots * words_per * sizeof(uint64_t);
     }
 
-    uint8_t *d_seeds=nullptr, *d_ph=nullptr, *d_last=nullptr;
-    uint64_t *d_state=nullptr;
-    uint8_t *d_buf8=nullptr;
-    uint64_t *d_buf64=nullptr;
+    uint8_t *d_seeds = nullptr, *d_ph = nullptr, *d_last = nullptr;
+    uint64_t* d_state = nullptr;
+    uint8_t* d_buf8 = nullptr;
+    uint64_t* d_buf64 = nullptr;
 
-    auto t_h0 = std::chrono::steady_clock::now();
-    cudaStream_t stream = nullptr;
-    if (cfg.async_copy) CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    cudaStream_t compute = nullptr;
+    cudaStream_t copy = nullptr;
+    CUDA_CHECK(cudaStreamCreateWithFlags(&compute, cudaStreamNonBlocking));
+    if (cfg.async_copy) CUDA_CHECK(cudaStreamCreateWithFlags(&copy, cudaStreamNonBlocking));
+    else copy = compute;
+
+    auto t_alloc0 = std::chrono::steady_clock::now();
     CUDA_CHECK(cudaMalloc(&d_seeds, seeds.size()));
     CUDA_CHECK(cudaMalloc(&d_ph, phantoms.size()));
     if (packed) CUDA_CHECK(cudaMalloc(&d_buf64, buf_bytes));
     else CUDA_CHECK(cudaMalloc(&d_buf8, buf_bytes));
     CUDA_CHECK(cudaMalloc(&d_state, (size_t)n * 4 * sizeof(uint64_t)));
     CUDA_CHECK(cudaMalloc(&d_last, (size_t)n * 32));
+    auto t_alloc1 = std::chrono::steady_clock::now();
+    double alloc_ms = std::chrono::duration<double, std::milli>(t_alloc1 - t_alloc0).count();
+
     const uint8_t* h_seeds = seeds.data();
     const uint8_t* h_ph = phantoms.data();
     uint8_t* pinned_seeds = nullptr;
     uint8_t* pinned_ph = nullptr;
+    uint64_t* pinned_states = nullptr;
+    uint8_t* pinned_lasts = nullptr;
     if (cfg.pinned_host) {
         CUDA_CHECK(cudaMallocHost(&pinned_seeds, seeds.size()));
         CUDA_CHECK(cudaMallocHost(&pinned_ph, phantoms.size()));
+        CUDA_CHECK(cudaMallocHost(&pinned_states, (size_t)n * 4 * sizeof(uint64_t)));
+        CUDA_CHECK(cudaMallocHost(&pinned_lasts, (size_t)n * 32));
         memcpy(pinned_seeds, seeds.data(), seeds.size());
         memcpy(pinned_ph, phantoms.data(), phantoms.size());
         h_seeds = pinned_seeds;
         h_ph = pinned_ph;
     }
-    if (cfg.async_copy) {
-        CUDA_CHECK(cudaMemcpyAsync(d_seeds, h_seeds, seeds.size(), cudaMemcpyHostToDevice, stream));
-        CUDA_CHECK(cudaMemcpyAsync(d_ph, h_ph, phantoms.size(), cudaMemcpyHostToDevice, stream));
-    } else {
-        CUDA_CHECK(cudaMemcpy(d_seeds, h_seeds, seeds.size(), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(d_ph, h_ph, phantoms.size(), cudaMemcpyHostToDevice));
-    }
-    // Packed walks overwrite every block before read; no memset required.
+
+    cudaEvent_t e_h2d0, e_h2d1, e_mem0, e_mem1, e_k0, e_k1, e_d2h0, e_d2h1;
+    CUDA_CHECK(cudaEventCreate(&e_h2d0));
+    CUDA_CHECK(cudaEventCreate(&e_h2d1));
+    CUDA_CHECK(cudaEventCreate(&e_mem0));
+    CUDA_CHECK(cudaEventCreate(&e_mem1));
+    CUDA_CHECK(cudaEventCreate(&e_k0));
+    CUDA_CHECK(cudaEventCreate(&e_k1));
+    CUDA_CHECK(cudaEventCreate(&e_d2h0));
+    CUDA_CHECK(cudaEventCreate(&e_d2h1));
+
+    CUDA_CHECK(cudaEventRecord(e_h2d0, copy));
+    CUDA_CHECK(cudaMemcpyAsync(d_seeds, h_seeds, seeds.size(), cudaMemcpyHostToDevice, copy));
+    CUDA_CHECK(cudaMemcpyAsync(d_ph, h_ph, phantoms.size(), cudaMemcpyHostToDevice, copy));
+    CUDA_CHECK(cudaEventRecord(e_h2d1, copy));
+
+    float memset_ms = 0.f;
     if (!packed && !cfg.fused_zero) {
-        if (cfg.async_copy) CUDA_CHECK(cudaMemsetAsync(d_buf8, 0, buf_bytes, stream));
-        else CUDA_CHECK(cudaMemset(d_buf8, 0, buf_bytes));
+        CUDA_CHECK(cudaEventRecord(e_mem0, copy));
+        CUDA_CHECK(cudaMemsetAsync(d_buf8, 0, buf_bytes, copy));
+        CUDA_CHECK(cudaEventRecord(e_mem1, copy));
+        CUDA_CHECK(cudaEventSynchronize(e_mem1));
+        CUDA_CHECK(cudaEventElapsedTime(&memset_ms, e_mem0, e_mem1));
     }
-    if (cfg.async_copy) CUDA_CHECK(cudaStreamSynchronize(stream));
-    auto t_h1 = std::chrono::steady_clock::now();
-    double h2d = std::chrono::duration<double, std::milli>(t_h1 - t_h0).count();
+    CUDA_CHECK(cudaStreamSynchronize(copy));
+    float h2d_ms = 0.f;
+    CUDA_CHECK(cudaEventElapsedTime(&h2d_ms, e_h2d0, e_h2d1));
 
     int threads = cfg.threads;
+    if (threads < 1) threads = 1;
     int launch_n = (cfg.kind == K_PACKED_PERSIST) ? persist_slots : n;
     int blocks = (launch_n + threads - 1) / threads;
 
-    int regs = 0; size_t smem = 0;
-    cudaFuncAttributes attr;
-    if (packed) {
-        if (cudaFuncGetAttributes(&attr, v4c_guess_kernel_packed) == cudaSuccess) {
-            regs = attr.numRegs; smem = attr.sharedSizeBytes;
-        }
-    } else if (cudaFuncGetAttributes(&attr, v4c_guess_kernel) == cudaSuccess) {
-        regs = attr.numRegs; smem = attr.sharedSizeBytes;
+    int regs = 0;
+    size_t smem = 0;
+    int local_mem = 0;
+    cudaFuncAttributes attr{};
+    if (cfg.kind == K_PACKED) {
+        cudaFuncGetAttributes(&attr, v4c_guess_kernel_packed);
+    } else if (cfg.kind == K_PACKED_NORING) {
+        cudaFuncGetAttributes(&attr, v4c_guess_kernel_packed_noring);
+    } else if (cfg.kind == K_PACKED_PERSIST) {
+        cudaFuncGetAttributes(&attr, v4c_guess_kernel_packed_persist);
+    } else if (cfg.fused_zero) {
+        cudaFuncGetAttributes(&attr, v4c_guess_kernel_fused_zero);
+    } else {
+        cudaFuncGetAttributes(&attr, v4c_guess_kernel);
     }
+    regs = attr.numRegs;
+    smem = attr.sharedSizeBytes;
+    local_mem = attr.localSizeBytes;
+
     int maxBlocks = 0;
-    if (cfg.kind == K_PACKED || cfg.kind == K_PACKED_NORING) {
+    if (cfg.kind == K_PACKED) {
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_packed, threads, 0);
+        cudaFuncSetCacheConfig(v4c_guess_kernel_packed, cudaFuncCachePreferL1);
+    } else if (cfg.kind == K_PACKED_NORING) {
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_packed_noring, threads, 0);
+        cudaFuncSetCacheConfig(v4c_guess_kernel_packed_noring, cudaFuncCachePreferL1);
     } else if (cfg.kind == K_PACKED_PERSIST) {
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_packed_persist, threads, 0);
+        cudaFuncSetCacheConfig(v4c_guess_kernel_packed_persist, cudaFuncCachePreferL1);
     } else if (cfg.fused_zero) {
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel_fused_zero, threads, 0);
     } else {
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxBlocks, v4c_guess_kernel, threads, 0);
     }
-    cudaDeviceProp prop; cudaGetDeviceProperties(&prop, 0);
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
     float occ = 0;
     if (prop.multiProcessorCount > 0 && prop.maxThreadsPerMultiProcessor > 0) {
         occ = (float)(maxBlocks * threads) / (float)prop.maxThreadsPerMultiProcessor;
     }
-    cudaFuncSetCacheConfig(v4c_guess_kernel_packed, cudaFuncCachePreferL1);
 
-    std::vector<double> kms;
-    cudaEvent_t ev0, ev1;
-    CUDA_CHECK(cudaEventCreate(&ev0));
-    CUDA_CHECK(cudaEventCreate(&ev1));
-
-    auto launch = [&]() {
+    auto launch = [&](cudaStream_t s) {
         if (cfg.kind == K_PACKED) {
-            v4c_guess_kernel_packed<<<blocks, threads>>>(d_seeds, d_ph, d_buf64, d_state, d_last, n, 1);
+            v4c_guess_kernel_packed<<<blocks, threads, 0, s>>>(d_seeds, d_ph, d_buf64, d_state, d_last, n, 1);
         } else if (cfg.kind == K_PACKED_NORING) {
-            v4c_guess_kernel_packed<<<blocks, threads>>>(d_seeds, d_ph, d_buf64, d_state, d_last, n, 0);
+            v4c_guess_kernel_packed_noring<<<blocks, threads, 0, s>>>(d_seeds, d_ph, d_buf64, d_state,
+                                                                       d_last, n);
         } else if (cfg.kind == K_PACKED_PERSIST) {
-            v4c_guess_kernel_packed_persist<<<blocks, threads>>>(
+            v4c_guess_kernel_packed_persist<<<blocks, threads, 0, s>>>(
                 d_seeds, d_ph, d_buf64, d_state, d_last, n, persist_slots);
         } else if (cfg.fused_zero) {
-            v4c_guess_kernel_fused_zero<<<blocks, threads>>>(d_seeds, d_ph, d_buf8, d_state, d_last, n);
+            v4c_guess_kernel_fused_zero<<<blocks, threads, 0, s>>>(d_seeds, d_ph, d_buf8, d_state, d_last, n);
         } else {
-            v4c_guess_kernel<<<blocks, threads>>>(d_seeds, d_ph, d_buf8, d_state, d_last, n);
+            v4c_guess_kernel<<<blocks, threads, 0, s>>>(d_seeds, d_ph, d_buf8, d_state, d_last, n);
         }
     };
 
-    launch();
-    CUDA_CHECK(cudaDeviceSynchronize());
-    if (!packed && !cfg.fused_zero) CUDA_CHECK(cudaMemset(d_buf8, 0, buf_bytes));
+    // Warmup (not timed into p50)
+    auto t_launch0 = std::chrono::steady_clock::now();
+    launch(compute);
+    CUDA_CHECK(cudaStreamSynchronize(compute));
+    auto t_launch1 = std::chrono::steady_clock::now();
+    double launch_ms = std::chrono::duration<double, std::milli>(t_launch1 - t_launch0).count();
 
-    auto wall0 = std::chrono::steady_clock::now();
+    if (!packed && !cfg.fused_zero) CUDA_CHECK(cudaMemsetAsync(d_buf8, 0, buf_bytes, compute));
+    CUDA_CHECK(cudaStreamSynchronize(compute));
+
+    std::vector<double> kms;
     const int iters = profile_kernels ? 5 : 1;
     float ksum = 0;
+    double sync_ms_acc = 0;
+    auto wall0 = std::chrono::steady_clock::now();
     for (int it = 0; it < iters; it++) {
-        if (!packed && !cfg.fused_zero) CUDA_CHECK(cudaMemset(d_buf8, 0, buf_bytes));
-        CUDA_CHECK(cudaEventRecord(ev0));
-        launch();
-        CUDA_CHECK(cudaEventRecord(ev1));
-        CUDA_CHECK(cudaEventSynchronize(ev1));
+        if (!packed && !cfg.fused_zero) {
+            CUDA_CHECK(cudaMemsetAsync(d_buf8, 0, buf_bytes, compute));
+            CUDA_CHECK(cudaStreamSynchronize(compute));
+        }
+        CUDA_CHECK(cudaEventRecord(e_k0, compute));
+        launch(compute);
+        CUDA_CHECK(cudaEventRecord(e_k1, compute));
+        auto s0 = std::chrono::steady_clock::now();
+        CUDA_CHECK(cudaEventSynchronize(e_k1));
+        auto s1 = std::chrono::steady_clock::now();
+        sync_ms_acc += std::chrono::duration<double, std::milli>(s1 - s0).count();
         float ms = 0;
-        CUDA_CHECK(cudaEventElapsedTime(&ms, ev0, ev1));
+        CUDA_CHECK(cudaEventElapsedTime(&ms, e_k0, e_k1));
         kms.push_back(ms);
         ksum += ms;
     }
@@ -936,47 +1113,84 @@ static void run_gpu_batch(const std::vector<uint8_t>& seeds, const std::vector<u
 
     std::vector<uint64_t> states((size_t)n * 4);
     std::vector<uint8_t> lasts((size_t)n * 32);
-    auto t_d0 = std::chrono::steady_clock::now();
-    CUDA_CHECK(cudaMemcpy(states.data(), d_state, states.size() * sizeof(uint64_t), cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(lasts.data(), d_last, lasts.size(), cudaMemcpyDeviceToHost));
-    auto t_d1 = std::chrono::steady_clock::now();
-    double d2h = std::chrono::duration<double, std::milli>(t_d1 - t_d0).count();
+    uint64_t* h_states = pinned_states ? pinned_states : states.data();
+    uint8_t* h_lasts = pinned_lasts ? pinned_lasts : lasts.data();
 
+    CUDA_CHECK(cudaEventRecord(e_d2h0, compute));
+    CUDA_CHECK(cudaMemcpyAsync(h_states, d_state, (size_t)n * 4 * sizeof(uint64_t),
+                              cudaMemcpyDeviceToHost, compute));
+    CUDA_CHECK(cudaMemcpyAsync(h_lasts, d_last, (size_t)n * 32, cudaMemcpyDeviceToHost, compute));
+    CUDA_CHECK(cudaEventRecord(e_d2h1, compute));
+    CUDA_CHECK(cudaEventSynchronize(e_d2h1));
+    float d2h_ms = 0.f;
+    CUDA_CHECK(cudaEventElapsedTime(&d2h_ms, e_d2h0, e_d2h1));
+    if (pinned_states) memcpy(states.data(), pinned_states, states.size() * sizeof(uint64_t));
+    if (pinned_lasts) memcpy(lasts.data(), pinned_lasts, lasts.size());
+
+    auto t_f0 = std::chrono::steady_clock::now();
     for (int i = 0; i < n; i++) {
         uint8_t digest[32];
-        finalize_v4(seeds.data() + (size_t)i * 32,
-                    states.data() + (size_t)i * 4,
+        finalize_v4(seeds.data() + (size_t)i * 32, states.data() + (size_t)i * 4,
                     lasts.data() + (size_t)i * 32, digest);
         memcpy(digests.data() + (size_t)i * 32, digest, 32);
     }
+    auto t_f1 = std::chrono::steady_clock::now();
+    double finalize_ms = std::chrono::duration<double, std::milli>(t_f1 - t_f0).count();
 
-    size_t free_b=0, total_b=0;
+    size_t free_b = 0, total_b = 0;
     cudaMemGetInfo(&free_b, &total_b);
 
     if (prof) {
         double avg_k = ksum / iters;
+        // Steady-state attacker GPS from kernel only (same work each batch).
         prof->guesses_per_sec = (avg_k > 0) ? (n * 1000.0 / avg_k) : 0;
         prof->kernel_p50_ms = percentile(kms, 0.50);
         prof->kernel_p95_ms = percentile(kms, 0.95);
         prof->kernel_p99_ms = percentile(kms, 0.99);
-        prof->host_device_ms = h2d + d2h;
+        prof->kernel_ms_mean = avg_k;
+        prof->alloc_ms = alloc_ms;
+        prof->h2d_ms = h2d_ms;
+        prof->memset_ms = memset_ms;
+        prof->launch_ms = launch_ms;
+        prof->d2h_ms = d2h_ms;
+        prof->sync_ms = sync_ms_acc / iters;
+        prof->finalize_ms = finalize_ms;
+        // One-shot batch latency including transfers + one kernel + finalize (amortized setup).
+        prof->total_batch_ms = h2d_ms + memset_ms + avg_k + d2h_ms + finalize_ms;
+        prof->ms_per_guess = (n > 0) ? (prof->total_batch_ms / n) : 0;
+        prof->host_device_ms = h2d_ms + d2h_ms;
         prof->kernel_exec_ms_total = ksum;
         prof->vram_used_bytes = total_b - free_b;
         prof->batch = n;
         prof->regs_per_thread = regs;
         prof->shared_mem = smem;
+        prof->local_mem_bytes = local_mem;
+        prof->stack_frame_bytes = (size_t)local_mem; // ptxas stack shows up as local
         prof->occupancy = occ;
         prof->threads_per_block = threads;
-        prof->global_traffic_est = (size_t)n * (size_t)NUM_BLOCKS * (size_t)(3 + 2) * BLOCK_SIZE;
+        // Rough traffic: ~2 remote + 2 local loads + 1 store + 2 scatter RMWs per node.
+        prof->global_traffic_est = (size_t)n * (size_t)NUM_BLOCKS * (size_t)(2 + 2 + 1 + 2) * BLOCK_SIZE;
         (void)wall_ms;
     }
 
-    CUDA_CHECK(cudaEventDestroy(ev0));
-    CUDA_CHECK(cudaEventDestroy(ev1));
+    CUDA_CHECK(cudaEventDestroy(e_h2d0));
+    CUDA_CHECK(cudaEventDestroy(e_h2d1));
+    CUDA_CHECK(cudaEventDestroy(e_mem0));
+    CUDA_CHECK(cudaEventDestroy(e_mem1));
+    CUDA_CHECK(cudaEventDestroy(e_k0));
+    CUDA_CHECK(cudaEventDestroy(e_k1));
+    CUDA_CHECK(cudaEventDestroy(e_d2h0));
+    CUDA_CHECK(cudaEventDestroy(e_d2h1));
     if (pinned_seeds) CUDA_CHECK(cudaFreeHost(pinned_seeds));
     if (pinned_ph) CUDA_CHECK(cudaFreeHost(pinned_ph));
-    if (stream) CUDA_CHECK(cudaStreamDestroy(stream));
-    cudaFree(d_seeds); cudaFree(d_ph); cudaFree(d_state); cudaFree(d_last);
+    if (pinned_states) CUDA_CHECK(cudaFreeHost(pinned_states));
+    if (pinned_lasts) CUDA_CHECK(cudaFreeHost(pinned_lasts));
+    CUDA_CHECK(cudaStreamDestroy(compute));
+    if (copy != compute) CUDA_CHECK(cudaStreamDestroy(copy));
+    cudaFree(d_seeds);
+    cudaFree(d_ph);
+    cudaFree(d_state);
+    cudaFree(d_last);
     if (d_buf8) cudaFree(d_buf8);
     if (d_buf64) cudaFree(d_buf64);
 }
@@ -997,74 +1211,140 @@ static LaunchConfig cfg_for_mode(const std::string& mode) {
     if (mode == "baseline") {
         cfg.threads = 1;
         cfg.kind = K_BASELINE;
+        cfg.pinned_host = false;
+        cfg.async_copy = false;
     } else if (mode == "optimized") {
         cfg.threads = 32;
-        cfg.pinned_host = true;
-        cfg.async_copy = true;
         cfg.kind = K_BASELINE;
     } else if (mode == "fully_optimized") {
         cfg.threads = 128;
-        cfg.pinned_host = true;
-        cfg.async_copy = true;
         cfg.fused_zero = true;
         cfg.kind = K_FUSED;
     } else if (mode == "packed") {
         cfg.threads = 32;
-        cfg.pinned_host = true;
-        cfg.async_copy = true;
         cfg.kind = K_PACKED;
         cfg.force_batch = 192;
-    } else if (mode == "packed_noring") {
+    } else if (mode == "packed_noring" || mode == "opt_v2") {
         cfg.threads = 32;
-        cfg.pinned_host = true;
-        cfg.async_copy = true;
         cfg.kind = K_PACKED_NORING;
-        cfg.force_batch = 192;
+        cfg.force_batch = 256;
     } else if (mode == "packed_persistent") {
         cfg.threads = 32;
-        cfg.pinned_host = true;
-        cfg.async_copy = true;
         cfg.kind = K_PACKED_PERSIST;
         cfg.force_batch = 256;
         cfg.persist_slots = 96;
     } else if (mode == "packed_t8_b128") {
-        cfg.threads = 8; cfg.pinned_host = true; cfg.async_copy = true;
-        cfg.kind = K_PACKED_NORING; cfg.force_batch = 128;
+        cfg.threads = 8;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 128;
     } else if (mode == "packed_t16_b192") {
-        cfg.threads = 16; cfg.pinned_host = true; cfg.async_copy = true;
-        cfg.kind = K_PACKED_NORING; cfg.force_batch = 192;
+        cfg.threads = 16;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 192;
     } else if (mode == "packed_t32_b192") {
-        cfg.threads = 32; cfg.pinned_host = true; cfg.async_copy = true;
-        cfg.kind = K_PACKED_NORING; cfg.force_batch = 192;
+        cfg.threads = 32;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 192;
     } else if (mode == "packed_t32_b256") {
-        cfg.threads = 32; cfg.pinned_host = true; cfg.async_copy = true;
-        cfg.kind = K_PACKED_NORING; cfg.force_batch = 256;
+        cfg.threads = 32;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 256;
     } else if (mode == "packed_t64_b128") {
-        cfg.threads = 64; cfg.pinned_host = true; cfg.async_copy = true;
-        cfg.kind = K_PACKED_NORING; cfg.force_batch = 128;
+        cfg.threads = 64;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 128;
     } else {
-        cfg.threads = 1;
-        cfg.kind = K_BASELINE;
+        cfg.threads = 32;
+        cfg.kind = K_PACKED_NORING;
+        cfg.force_batch = 256;
     }
     return cfg;
+}
+
+static int max_batch_for_vram() {
+    size_t free_b = 0, total_b = 0;
+    CUDA_CHECK(cudaMemGetInfo(&free_b, &total_b));
+    size_t per = (size_t)NUM_BLOCKS * BLOCK_SIZE + 65536;
+    int max_batch =
+        (int)((free_b > (size_t)1536 * 1024 * 1024 ? free_b - (size_t)1536 * 1024 * 1024 : free_b / 2) /
+              per);
+    if (max_batch < 1) max_batch = 1;
+    if (max_batch > 512) max_batch = 512;
+    return max_batch;
+}
+
+static int select_batch(const LaunchConfig& launch, const std::string& impl_mode, int override_batch) {
+    int max_batch = max_batch_for_vram();
+    int batch = max_batch;
+    if (override_batch > 0) {
+        batch = override_batch;
+    } else if (launch.force_batch > 0) {
+        batch = launch.force_batch;
+    } else if (impl_mode == "baseline") {
+        if (batch > 64) batch = 64;
+    } else if (impl_mode == "optimized") {
+        if (batch >= 192) batch = 192;
+        else if (batch >= 128) batch = 128;
+    } else {
+        if (batch >= 256) batch = 256;
+        else if (batch >= 192) batch = 192;
+    }
+    if (batch > max_batch) batch = max_batch;
+    return batch;
+}
+
+static void run_bench_once(const std::string& out_dir, const std::string& impl_mode, LaunchConfig launch,
+                           int batch_override, const cudaDeviceProp& prop, GpuProfile* out_prof) {
+    auto corpus = attacker_corpus();
+    int batch = select_batch(launch, impl_mode, batch_override);
+    printf("Selected batch=%d tpb=%d (%.2f MiB buffers)\n", batch, launch.threads,
+           (batch * (double)NUM_BLOCKS * BLOCK_SIZE) / (1024.0 * 1024.0));
+
+    const uint8_t salt[] = "v4_attacker_salt_16";
+    uint32_t salt_len = (uint32_t)strlen((const char*)salt);
+    std::vector<std::string> batch_pws;
+    for (int i = 0; i < batch; i++) batch_pws.push_back(corpus[i % (int)corpus.size()]);
+
+    std::vector<uint8_t> seeds, ph, digests;
+    prepare_batch(batch_pws, salt, salt_len, seeds, ph);
+    GpuProfile prof{};
+    run_gpu_batch(seeds, ph, digests, &prof, true, launch);
+    if (out_prof) *out_prof = prof;
+
+    printf("[%s] GPS=%.4f  k_p50=%.3f ms  total_batch=%.3f ms  ms/guess=%.4f\n", impl_mode.c_str(),
+           prof.guesses_per_sec, prof.kernel_p50_ms, prof.total_batch_ms, prof.ms_per_guess);
+    printf("  phases: alloc=%.2f h2d=%.3f memset=%.3f launch=%.2f d2h=%.3f sync=%.3f fin=%.3f\n",
+           prof.alloc_ms, prof.h2d_ms, prof.memset_ms, prof.launch_ms, prof.d2h_ms, prof.sync_ms,
+           prof.finalize_ms);
+    printf("  VRAM≈%zu MiB occ=%.3f regs=%d local=%d smem=%zu\n",
+           prof.vram_used_bytes / (1024 * 1024), prof.occupancy, prof.regs_per_thread,
+           prof.local_mem_bytes, prof.shared_mem);
+
+    write_profile_kv(out_dir + "/antech_gpu_raw_" + impl_mode + ".txt", prof, impl_mode.c_str(), prop);
 }
 
 int main(int argc, char** argv) {
     std::string mode = (argc > 1) ? argv[1] : "bench";
     std::string out_dir = (argc > 2) ? argv[2] : "research/results/compute-memory-v4/gpu";
-    std::string impl_mode = (argc > 3) ? argv[3] : "baseline";
-    int correctness_count = (argc > 4) ? atoi(argv[4]) : 10;
-    LaunchConfig launch = cfg_for_mode(impl_mode);
+    std::string impl_mode = (argc > 3) ? argv[3] : "packed_t32_b256";
+    int correctness_count = 10;
+    int batch_override = 0;
+    int tpb_override = 0;
+    for (int a = 4; a < argc; a++) {
+        std::string arg = argv[a];
+        if (arg.rfind("--batch=", 0) == 0) batch_override = atoi(arg.c_str() + 8);
+        else if (arg.rfind("--tpb=", 0) == 0) tpb_override = atoi(arg.c_str() + 6);
+        else if (arg.find('=') == std::string::npos) correctness_count = atoi(arg.c_str());
+    }
 
     cudaDeviceProp prop;
     CUDA_CHECK(cudaGetDeviceProperties(&prop, 0));
-    printf("GPU: %s | VRAM=%zu MiB | SMs=%d | CC=%d.%d\n",
-           prop.name, prop.totalGlobalMem / (1024*1024), prop.multiProcessorCount,
-           prop.major, prop.minor);
+    printf("GPU: %s | VRAM=%zu MiB | SMs=%d | CC=%d.%d\n", prop.name, prop.totalGlobalMem / (1024 * 1024),
+           prop.multiProcessorCount, prop.major, prop.minor);
 
-    const uint8_t salt[] = "v4_attacker_salt_16"; // 19 bytes? Rust is b"v4_attacker_salt_16" = 19 chars
-    // Actually: b"v4_attacker_salt_16" length = 19
-    uint32_t salt_len = (uint32_t)strlen((const char*)salt);
+    LaunchConfig launch = cfg_for_mode(impl_mode);
+    if (tpb_override > 0) launch.threads = tpb_override;
+    if (batch_override > 0) launch.force_batch = batch_override;
 
     if (mode == "correctness") {
         std::vector<std::string> pws;
@@ -1073,24 +1353,20 @@ int main(int argc, char** argv) {
             snprintf(buf, sizeof(buf), "v4c_gpu_vector_%02d", i);
             pws.emplace_back(buf);
         }
-        // Use dedicated correctness salt matching Rust harness
-        const uint8_t csalt[] = "v4_gpu_correct_salt"; // 19 bytes
+        const uint8_t csalt[] = "v4_gpu_correct_salt";
         uint32_t cslen = (uint32_t)strlen((const char*)csalt);
-
         std::vector<uint8_t> seeds, ph, digests;
         prepare_batch(pws, csalt, cslen, seeds, ph);
         GpuProfile prof{};
         run_gpu_batch(seeds, ph, digests, &prof, false, launch);
 
-        // Write GPU digests
         std::ofstream out(out_dir + "/cuda_digests.txt");
         for (int i = 0; i < correctness_count; i++) {
             out << pws[i] << " " << hex32(digests.data() + (size_t)i * 32) << "\n";
-            printf("GPU[%d] %s %s\n", i, pws[i].c_str(), hex32(digests.data() + i*32).c_str());
+            printf("GPU[%d] %s %s\n", i, pws[i].c_str(), hex32(digests.data() + i * 32).c_str());
         }
         out.close();
 
-        // If CPU reference file exists, compare
         std::ifstream ref(out_dir + "/cpu_digests.txt");
         int mismatches = 0;
         if (ref) {
@@ -1098,10 +1374,13 @@ int main(int argc, char** argv) {
                 std::string pw, hex;
                 ref >> pw >> hex;
                 uint8_t expect[32];
-                if (!parse_hex32(hex, expect)) { printf("bad ref hex\n"); return 2; }
+                if (!parse_hex32(hex, expect)) {
+                    printf("bad ref hex\n");
+                    return 2;
+                }
                 if (memcmp(expect, digests.data() + (size_t)i * 32, 32) != 0) {
                     printf("MISMATCH vector %d\n  CPU %s\n  GPU %s\n", i, hex.c_str(),
-                           hex32(digests.data()+i*32).c_str());
+                           hex32(digests.data() + i * 32).c_str());
                     mismatches++;
                 } else {
                     printf("MATCH vector %d\n", i);
@@ -1118,67 +1397,53 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    // Bench mode: same corpus as CPU attacker
-    auto corpus = attacker_corpus();
-    // Choose batch by VRAM: leave ~1.5 GiB free
-    size_t free_b=0, total_b=0;
-    CUDA_CHECK(cudaMemGetInfo(&free_b, &total_b));
-    size_t per = (size_t)NUM_BLOCKS * BLOCK_SIZE + 65536;
-    int max_batch = (int)((free_b > (size_t)1536*1024*1024 ? free_b - (size_t)1536*1024*1024 : free_b / 2) / per);
-    if (max_batch < 1) max_batch = 1;
-    if (max_batch > 256) max_batch = 256; // VRAM-limited concurrency of full 16 MiB walks
-    int batch = max_batch;
-    if (launch.force_batch > 0) {
-        batch = launch.force_batch;
-        if (batch > max_batch) batch = max_batch;
-    } else if (impl_mode == "baseline") {
-        if (batch > 64) batch = 64;
-    } else if (impl_mode == "optimized") {
-        if (batch >= 192) batch = 192;
-        else if (batch >= 128) batch = 128;
-        else if (batch >= 96) batch = 96;
-    } else {
-        if (batch >= 256) batch = 256;
-        else if (batch >= 192) batch = 192;
-        else if (batch >= 128) batch = 128;
+    if (mode == "profile") {
+        // Detailed phase profile of the named impl (default: prior best packed_t32_b256).
+        GpuProfile prof{};
+        run_bench_once(out_dir, impl_mode, launch, batch_override, prop, &prof);
+        write_profile_kv(out_dir + "/profile_detail.txt", prof, impl_mode.c_str(), prop);
+        return 0;
     }
-    printf("Selected batch=%d (%.2f MiB buffers)\n", batch,
-           (batch * (double)NUM_BLOCKS * BLOCK_SIZE) / (1024.0*1024.0));
 
-    // Build a batch of passwords cycling the corpus
-    std::vector<std::string> batch_pws;
-    for (int i = 0; i < batch; i++) batch_pws.push_back(corpus[i % (int)corpus.size()]);
+    if (mode == "sweep") {
+        // Batch × TPB grid over packed_noring (opt_v2 kernel path).
+        const int batches[] = {32, 64, 128, 256, 512};
+        const int tpbs[] = {16, 32, 64, 128, 256};
+        int vmax = max_batch_for_vram();
+        std::ofstream csv(out_dir + "/sweep_raw.csv");
+        csv << "batch,tpb,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,total_batch_ms,guesses_per_sec,"
+               "ms_per_guess,vram_mib,occupancy,regs,local_mem,shared_mem,h2d_ms,d2h_ms,memset_ms,"
+               "sync_ms,finalize_ms,alloc_ms\n";
+        for (int b : batches) {
+            if (b > vmax) {
+                printf("skip batch=%d > vmax=%d\n", b, vmax);
+                continue;
+            }
+            for (int t : tpbs) {
+                LaunchConfig cfg = cfg_for_mode("packed_noring");
+                cfg.threads = t;
+                cfg.force_batch = b;
+                cfg.kind = K_PACKED_NORING;
+                printf("\n=== sweep batch=%d tpb=%d ===\n", b, t);
+                GpuProfile prof{};
+                run_bench_once(out_dir, "sweep_b" + std::to_string(b) + "_t" + std::to_string(t), cfg, b,
+                               prop, &prof);
+                csv << b << "," << t << "," << prof.kernel_p50_ms << "," << prof.kernel_p95_ms << ","
+                    << prof.kernel_p99_ms << "," << prof.total_batch_ms << "," << prof.guesses_per_sec
+                    << "," << prof.ms_per_guess << "," << (prof.vram_used_bytes / (1024 * 1024)) << ","
+                    << prof.occupancy << "," << prof.regs_per_thread << "," << prof.local_mem_bytes << ","
+                    << prof.shared_mem << "," << prof.h2d_ms << "," << prof.d2h_ms << ","
+                    << prof.memset_ms << "," << prof.sync_ms << "," << prof.finalize_ms << ","
+                    << prof.alloc_ms << "\n";
+                csv.flush();
+            }
+        }
+        csv.close();
+        printf("Wrote %s/sweep_raw.csv\n", out_dir.c_str());
+        return 0;
+    }
 
-    std::vector<uint8_t> seeds, ph, digests;
-    prepare_batch(batch_pws, salt, salt_len, seeds, ph);
-    GpuProfile prof{};
-    run_gpu_batch(seeds, ph, digests, &prof, true, launch);
-
-    printf("[%s] GPS=%.4f  k_p50=%.3f ms  k_p95=%.3f  k_p99=%.3f\n",
-           impl_mode.c_str(),
-           prof.guesses_per_sec, prof.kernel_p50_ms, prof.kernel_p95_ms, prof.kernel_p99_ms);
-    printf("VRAM_used≈%zu MiB  occ=%.3f  regs=%d  smem=%zu  tpb=%d  H<->D=%.3f ms\n",
-           prof.vram_used_bytes/(1024*1024), prof.occupancy, prof.regs_per_thread,
-           prof.shared_mem, prof.threads_per_block, prof.host_device_ms);
-
-    // Write machine-readable profile
-    std::ofstream pf(out_dir + "/antech_gpu_raw_" + impl_mode + ".txt");
-    pf << "guesses_per_sec=" << prof.guesses_per_sec << "\n"
-       << "kernel_p50_ms=" << prof.kernel_p50_ms << "\n"
-       << "kernel_p95_ms=" << prof.kernel_p95_ms << "\n"
-       << "kernel_p99_ms=" << prof.kernel_p99_ms << "\n"
-       << "vram_used_mib=" << (prof.vram_used_bytes/(1024*1024)) << "\n"
-       << "occupancy=" << prof.occupancy << "\n"
-       << "registers_per_thread=" << prof.regs_per_thread << "\n"
-       << "shared_mem_bytes=" << prof.shared_mem << "\n"
-       << "threads_per_block=" << prof.threads_per_block << "\n"
-       << "global_mem_traffic_est=" << prof.global_traffic_est << "\n"
-       << "host_device_transfer_ms=" << prof.host_device_ms << "\n"
-       << "kernel_exec_ms_total=" << prof.kernel_exec_ms_total << "\n"
-       << "batch=" << prof.batch << "\n"
-       << "impl_mode=" << impl_mode << "\n"
-       << "gpu_name=" << prop.name << "\n"
-       << "vram_total_mib=" << (prop.totalGlobalMem/(1024*1024)) << "\n";
-    pf.close();
+    // Default bench
+    run_bench_once(out_dir, impl_mode, launch, batch_override, prop, nullptr);
     return 0;
 }

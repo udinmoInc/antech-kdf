@@ -1,0 +1,2 @@
+impl,batch,tpb,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,total_batch_ms,ms_per_guess,alloc_ms,h2d_ms,memset_ms,launch_ms,d2h_ms,sync_ms,finalize_ms,vram_mib,occupancy,regs,local_mem,shared_mem
+packed_t32_b256,256,32,81.1409,3154.73,3156.3,3156.3,3155.47,12.3261,8.4627,0.071808,0,3156.53,0.090304,3154.99,0.3036,5095,0.333333,60,432,0

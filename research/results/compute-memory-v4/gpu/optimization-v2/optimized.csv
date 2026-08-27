@@ -1,0 +1,3 @@
+impl,batch,tpb,guesses_per_sec,kernel_p50_ms,total_batch_ms,ms_per_guess,h2d_ms,d2h_ms,memset_ms,sync_ms,finalize_ms,vram_mib,occupancy,regs,local_mem,notes
+opt_v2,256,16,90.2511,2836.63,2836.99,11.082,0.089568,0.071328,0,2836.51,0.2961,5095,0.166667,60,432,confirmed_re_run_best_gps
+opt_v2_sweep_peak,256,16,90.5185,2827.59,2828.59,11.0492,0.089152,0.04624,0,2828.13,0.3011,5095,0.0833333,60,432,from_sweep_raw

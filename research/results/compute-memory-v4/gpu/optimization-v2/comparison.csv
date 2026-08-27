@@ -1,0 +1,6 @@
+algorithm,impl,batch,tpb,kernel_p50_ms,total_batch_ms,ms_per_guess,guesses_per_sec,notes
+antech_v5,prior_reported_packed_t32_b256,256,32,3413,,13.33,74.9,user_baseline_before_opt_v2
+antech_v5,session_baseline_packed_t32_b256,256,32,3154.73,3155.47,12.3261,81.1409,same_kernel_family_session
+antech_v5,opt_v2_best,256,16,2836.63,2836.99,11.082,90.2511,confirmed
+antech_v5,opt_v2_low_batch,32,32,3025,3015.47,94.2335,10.6126,latency_probe_weaker_attacker
+argon2id,gpu_attacker,96,,220.661,,2.299,434.947,same_RTX3050_session_m65536_t2_p1

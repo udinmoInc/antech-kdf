@@ -1,0 +1,7 @@
+target,status,exit_code,max_total_time_secs,elapsed_secs,executions_approx,exec_per_sec_last,corpus_before,corpus_after,artifact_files,hangs_flagged
+hash_parser,PASS,0,900,901,56125930,9000,21,356,0,0
+hash_verify,PASS,0,600,602,10030,138,6,93,0,0
+config_builder,PASS,0,600,601,399274898,4096,8,19,0,0
+malformed_v2,PASS,0,600,602,6976942,4096,6,315,0,0
+ffi_api,PASS,0,600,601,11233,45,4,98,0,0
+scheduler,PASS,0,600,602,46808969,4096,4,73,0,0

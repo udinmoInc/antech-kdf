@@ -39,3 +39,8 @@ tmp/
 /bindings/**/native/
 /bindings/node/dist/
 /bindings/node/node_modules/
+
+# Local CI artifact downloads + grown corpora (large; keep summaries/reports only)
+research/results/fuzz/ci-download*/
+research/results/fuzz/ci/corpus/
+

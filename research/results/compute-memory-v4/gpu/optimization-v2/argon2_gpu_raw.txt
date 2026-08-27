@@ -1,0 +1,11 @@
+guesses_per_sec=434.947
+kernel_p50_ms=220.661
+kernel_p95_ms=220.973
+kernel_p99_ms=220.973
+vram_used_mib=7164
+host_device_transfer_ms=4.7398
+batch=96
+m_cost_kib=65536
+t_cost=2
+lanes=1
+gpu_name=NVIDIA GeForce RTX 3050

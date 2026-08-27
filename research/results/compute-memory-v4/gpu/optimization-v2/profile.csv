@@ -1,0 +1,11 @@
+config,phase,ms,notes
+opt_v2_b256_t16,alloc_once,8.587,outside steady-state attacker loop
+opt_v2_b256_t16,h2d,0.089568,seeds+phantoms pinned async
+opt_v2_b256_t16,memset,0,packed overwrite — no zero
+opt_v2_b256_t16,kernel_p50,2836.63,actual CombinedFrontier walks
+opt_v2_b256_t16,d2h,0.071328,states+last blocks
+opt_v2_b256_t16,finalize_host,0.2961,SHA-256 finalize on host
+opt_v2_b256_t16,sync,2836.51,event sync ≈ kernel
+session_baseline_b256_t32,kernel_p50,3154.73,packed_t32_b256 session
+prior_user,kernel_p50,3413,reported before opt-v2
+argon2id_b96,kernel_p50,220.661,same session

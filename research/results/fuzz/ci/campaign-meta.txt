@@ -1,0 +1,3 @@
+campaign=full event=push
+SECS parser=900 heavy=600 light=600
+target_fail_flag=0

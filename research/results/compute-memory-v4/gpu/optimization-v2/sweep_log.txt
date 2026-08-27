@@ -1,0 +1,124 @@
+GPU: NVIDIA GeForce RTX 3050 | VRAM=8191 MiB | SMs=20 | CC=8.6
+
+=== sweep batch=32 tpb=16 ===
+Selected batch=32 tpb=16 (512.00 MiB buffers)
+[sweep_b32_t16] GPS=12.2095  k_p50=2620.930 ms  total_batch=2621.083 ms  ms/guess=81.9088
+  phases: alloc=1.40 h2d=0.066 memset=0.000 launch=2621.65 d2h=0.046 sync=2620.909 fin=0.051
+  VRAM≈1511 MiB occ=0.167 regs=60 local=432 smem=0
+
+=== sweep batch=32 tpb=32 ===
+Selected batch=32 tpb=32 (512.00 MiB buffers)
+[sweep_b32_t32] GPS=10.6540  k_p50=3013.719 ms  total_batch=3003.735 ms  ms/guess=93.8667
+  phases: alloc=1.18 h2d=0.076 memset=0.000 launch=3034.05 d2h=0.055 sync=3003.547 fin=0.045
+  VRAM≈1511 MiB occ=0.167 regs=60 local=432 smem=0
+
+=== sweep batch=32 tpb=64 ===
+Selected batch=32 tpb=64 (512.00 MiB buffers)
+[sweep_b32_t64] GPS=10.8568  k_p50=2944.308 ms  total_batch=2947.620 ms  ms/guess=92.1131
+  phases: alloc=1.26 h2d=0.086 memset=0.000 launch=2944.97 d2h=0.032 sync=2947.444 fin=0.045
+  VRAM≈1511 MiB occ=0.333 regs=60 local=432 smem=0
+
+=== sweep batch=32 tpb=128 ===
+Selected batch=32 tpb=128 (512.00 MiB buffers)
+[sweep_b32_t128] GPS=10.7830  k_p50=2916.606 ms  total_batch=2967.776 ms  ms/guess=92.7430
+  phases: alloc=1.08 h2d=0.066 memset=0.000 launch=4425.25 d2h=0.031 sync=2967.716 fin=0.044
+  VRAM≈1511 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=32 tpb=256 ===
+Selected batch=32 tpb=256 (512.00 MiB buffers)
+[sweep_b32_t256] GPS=10.7653  k_p50=2977.948 ms  total_batch=2972.704 ms  ms/guess=92.8970
+  phases: alloc=1.21 h2d=0.094 memset=0.000 launch=2913.47 d2h=0.047 sync=2972.498 fin=0.049
+  VRAM≈1511 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=64 tpb=16 ===
+Selected batch=64 tpb=16 (1024.00 MiB buffers)
+[sweep_b64_t16] GPS=23.2239  k_p50=2758.301 ms  total_batch=2755.969 ms  ms/guess=43.0620
+  phases: alloc=2.08 h2d=0.071 memset=0.000 launch=2740.96 d2h=0.030 sync=2755.781 fin=0.081
+  VRAM≈2023 MiB occ=0.083 regs=60 local=432 smem=0
+
+=== sweep batch=64 tpb=32 ===
+Selected batch=64 tpb=32 (1024.00 MiB buffers)
+[sweep_b64_t32] GPS=21.2210  k_p50=3011.990 ms  total_batch=3016.158 ms  ms/guess=47.1275
+  phases: alloc=2.31 h2d=0.163 memset=0.000 launch=3081.62 d2h=0.034 sync=3015.867 fin=0.079
+  VRAM≈2023 MiB occ=0.167 regs=60 local=432 smem=0
+
+=== sweep batch=64 tpb=64 ===
+Selected batch=64 tpb=64 (1024.00 MiB buffers)
+[sweep_b64_t64] GPS=20.4477  k_p50=3130.100 ms  total_batch=3130.614 ms  ms/guess=48.9158
+  phases: alloc=2.15 h2d=0.551 memset=0.000 launch=3130.43 d2h=0.044 sync=3129.909 fin=0.088
+  VRAM≈2023 MiB occ=0.333 regs=60 local=432 smem=0
+
+=== sweep batch=64 tpb=128 ===
+Selected batch=64 tpb=128 (1024.00 MiB buffers)
+[sweep_b64_t128] GPS=20.4563  k_p50=3128.059 ms  total_batch=3128.783 ms  ms/guess=48.8872
+  phases: alloc=2.22 h2d=0.056 memset=0.000 launch=3129.30 d2h=0.032 sync=3128.619 fin=0.080
+  VRAM≈2023 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=64 tpb=256 ===
+Selected batch=64 tpb=256 (1024.00 MiB buffers)
+[sweep_b64_t256] GPS=20.5119  k_p50=3120.165 ms  total_batch=3120.372 ms  ms/guess=48.7558
+  phases: alloc=2.08 h2d=0.091 memset=0.000 launch=3121.29 d2h=0.058 sync=3120.159 fin=0.083
+  VRAM≈2023 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=128 tpb=16 ===
+Selected batch=128 tpb=16 (2048.00 MiB buffers)
+[sweep_b128_t16] GPS=46.6864  k_p50=2741.668 ms  total_batch=2742.050 ms  ms/guess=21.4223
+  phases: alloc=4.80 h2d=0.067 memset=0.000 launch=2741.75 d2h=0.126 sync=2741.681 fin=0.159
+  VRAM≈3047 MiB occ=0.083 regs=60 local=432 smem=0
+
+=== sweep batch=128 tpb=32 ===
+Selected batch=128 tpb=32 (2048.00 MiB buffers)
+[sweep_b128_t32] GPS=41.7809  k_p50=3063.392 ms  total_batch=3063.849 ms  ms/guess=23.9363
+  phases: alloc=4.88 h2d=0.059 memset=0.000 launch=3064.09 d2h=0.035 sync=3063.602 fin=0.152
+  VRAM≈3047 MiB occ=0.167 regs=60 local=432 smem=0
+
+=== sweep batch=128 tpb=64 ===
+Selected batch=128 tpb=64 (2048.00 MiB buffers)
+[sweep_b128_t64] GPS=40.2165  k_p50=3183.016 ms  total_batch=3183.107 ms  ms/guess=24.8680
+  phases: alloc=4.30 h2d=0.093 memset=0.000 launch=3182.72 d2h=0.089 sync=3182.773 fin=0.152
+  VRAM≈3047 MiB occ=0.333 regs=60 local=432 smem=0
+
+=== sweep batch=128 tpb=128 ===
+Selected batch=128 tpb=128 (2048.00 MiB buffers)
+[sweep_b128_t128] GPS=34.1104  k_p50=3776.520 ms  total_batch=3752.788 ms  ms/guess=29.3187
+  phases: alloc=4.20 h2d=0.082 memset=0.000 launch=3688.40 d2h=0.029 sync=3752.518 fin=0.150
+  VRAM≈3047 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=128 tpb=256 ===
+Selected batch=128 tpb=256 (2048.00 MiB buffers)
+[sweep_b128_t256] GPS=35.7631  k_p50=3578.813 ms  total_batch=3579.375 ms  ms/guess=27.9639
+  phases: alloc=4.42 h2d=0.088 memset=0.000 launch=3601.08 d2h=0.031 sync=3579.094 fin=0.151
+  VRAM≈3047 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=256 tpb=16 ===
+Selected batch=256 tpb=16 (4096.00 MiB buffers)
+[sweep_b256_t16] GPS=90.5185  k_p50=2827.592 ms  total_batch=2828.588 ms  ms/guess=11.0492
+  phases: alloc=8.75 h2d=0.089 memset=0.000 launch=2827.32 d2h=0.046 sync=2828.132 fin=0.301
+  VRAM≈5095 MiB occ=0.083 regs=60 local=432 smem=0
+
+=== sweep batch=256 tpb=32 ===
+Selected batch=256 tpb=32 (4096.00 MiB buffers)
+[sweep_b256_t32] GPS=81.3545  k_p50=3146.509 ms  total_batch=3147.154 ms  ms/guess=12.2936
+  phases: alloc=8.63 h2d=0.092 memset=0.000 launch=3148.13 d2h=0.046 sync=3146.708 fin=0.295
+  VRAM≈5095 MiB occ=0.167 regs=60 local=432 smem=0
+
+=== sweep batch=256 tpb=64 ===
+Selected batch=256 tpb=64 (4096.00 MiB buffers)
+[sweep_b256_t64] GPS=78.0760  k_p50=3277.616 ms  total_batch=3279.288 ms  ms/guess=12.8097
+  phases: alloc=8.74 h2d=0.077 memset=0.000 launch=3281.13 d2h=0.058 sync=3278.854 fin=0.296
+  VRAM≈5095 MiB occ=0.333 regs=60 local=432 smem=0
+
+=== sweep batch=256 tpb=128 ===
+Selected batch=256 tpb=128 (4096.00 MiB buffers)
+[sweep_b256_t128] GPS=68.9141  k_p50=3712.257 ms  total_batch=3715.174 ms  ms/guess=14.5124
+  phases: alloc=9.13 h2d=0.068 memset=0.000 launch=3683.29 d2h=0.033 sync=3714.779 fin=0.302
+  VRAM≈5095 MiB occ=0.667 regs=60 local=432 smem=0
+
+=== sweep batch=256 tpb=256 ===
+Selected batch=256 tpb=256 (4096.00 MiB buffers)
+[sweep_b256_t256] GPS=50.7702  k_p50=5026.191 ms  total_batch=5042.772 ms  ms/guess=19.6983
+  phases: alloc=8.66 h2d=0.084 memset=0.000 launch=5055.98 d2h=0.062 sync=5042.307 fin=0.303
+  VRAM≈5095 MiB occ=0.667 regs=60 local=432 smem=0
+skip batch=512 > vmax=352
+Wrote research/results/compute-memory-v4/gpu/optimization-v2/sweep_raw.csv
+
