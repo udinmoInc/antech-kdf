@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
   "api": {
-    "hash": "password -> encoded $antech$v2$…",
+    "hash": "password -> encoded $antech$v2$\u2026",
     "verify": "password + encoded -> bool",
     "needs_rehash": "encoded -> bool (default policy)",
     "hash_with_config": "password + config -> encoded",
@@ -47,5 +47,9 @@
     "fan_in": 2,
     "graph": 3,
     "output_length": 32
-  }
+  },
+  "author": "Udinmo, Inc.",
+  "email": "antech-kdf@udinmo.com",
+  "license": "MIT OR Apache-2.0",
+  "homepage": "https://github.com/udinmoInc/antech-kdf"
 }

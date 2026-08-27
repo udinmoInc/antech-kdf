@@ -4,6 +4,8 @@ plugins {
 
 group = "com.udinmo"
 version = "0.1.0"
+description = "Antech KDF — thin language wrappers over the canonical Rust FFI"
+
 
 repositories { mavenCentral() }
 

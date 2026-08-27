@@ -102,7 +102,33 @@ Narrative, attackers, CUDA, TMTO, and campaign outputs: [`research/`](./research
 
 ## SDKs
 
-Thin wrappers over `antech-kdf-ffi`: C/C++, Go, Python, Node, Java/Kotlin, Swift, .NET. Conformance vectors: [`sdk/conformance/`](./sdk/conformance/).
+Thin wrappers over `antech-kdf-ffi` (no language reimplements the KDF). **21 ecosystems**:
+
+| Ecosystem | Path |
+|---|---|
+| Rust | `crates/antech-kdf` |
+| C / C++ | `bindings/c`, `bindings/cpp` |
+| Go | `bindings/go` |
+| Python | `bindings/python` |
+| Node / TypeScript | `bindings/node` |
+| Java / Kotlin | `bindings/java`, `bindings/kotlin` |
+| Swift | `bindings/swift` |
+| .NET | `bindings/dotnet` |
+| PHP | `bindings/php` |
+| Ruby | `bindings/ruby` |
+| Dart | `bindings/dart` |
+| Perl | `bindings/perl` |
+| R | `bindings/r` |
+| Lua (LuaJIT) | `bindings/lua` |
+| Zig | `bindings/zig` |
+| Crystal | `bindings/crystal` |
+| Nim | `bindings/nim` |
+| Julia | `bindings/julia` |
+| Haskell | `bindings/haskell` |
+
+Conformance vectors: [`sdk/conformance/`](./sdk/conformance/). Native build: `sdk/scripts/build-native.*`.
+
+Version / metadata: edit root [`VERSION`](./VERSION) and [`sdk/package-meta.json`](./sdk/package-meta.json), then run `python sdk/scripts/sync-versions.py`.
 
 ## Changelog
 

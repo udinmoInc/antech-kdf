@@ -1,6 +1,11 @@
 import CAntechKdf
 import Foundation
 
+public enum PackageInfo {
+  public static let version = "0.1.0"
+}
+
+
 public enum AntechError: Error {
   case invalidInput
   case invalidHash

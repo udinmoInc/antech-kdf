@@ -1,2 +1,2 @@
 target,executions,corpus_seeds,panics,assertion_fails,elapsed_secs,status
-scheduler,11648848,1,0,0,30.000,PASS
+scheduler,915479,1,0,0,2.000,PASS

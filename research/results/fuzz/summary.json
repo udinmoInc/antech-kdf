@@ -1,68 +1,61 @@
 {
   "assertion_fails": 0,
-  "blockers": [
-    "cargo-fuzz install failed on Windows GNU (dlltool.exe missing)",
-    "cargo-fuzz install failed on Windows MSVC nightly (link.exe / VS Build Tools missing)",
-    "libFuzzer campaigns run on ubuntu-latest via .github/workflows/fuzz.yml"
-  ],
-  "bugs_fixed": 2,
   "bugs_found": 0,
-  "campaign_time_secs": 180.0202864,
+  "campaign_time_secs": 12.0056124,
   "corpus_entries": 27,
-  "executions": 98397540,
+  "executions": 6240981,
   "hangs": 0,
   "panics": 0,
   "per_target": [
     {
       "assertion_fails": 0,
       "corpus_seeds": 20,
-      "elapsed_secs": 30.0000013,
-      "executions": 27417893,
+      "elapsed_secs": 2.0000007,
+      "executions": 1928567,
       "name": "parser",
       "panics": 0
     },
     {
       "assertion_fails": 0,
       "corpus_seeds": 2,
-      "elapsed_secs": 30.0000006,
-      "executions": 57177825,
+      "elapsed_secs": 2.0000002,
+      "executions": 3239294,
       "name": "config",
       "panics": 0
     },
     {
       "assertion_fails": 0,
       "corpus_seeds": 1,
-      "elapsed_secs": 30.0106384,
-      "executions": 6854,
+      "elapsed_secs": 2.00164,
+      "executions": 616,
       "name": "hash_verify",
       "panics": 0
     },
     {
       "assertion_fails": 0,
+      "corpus_seeds": 2,
+      "elapsed_secs": 2.0000112,
+      "executions": 156824,
+      "name": "malformed_v2",
+      "panics": 0
+    },
+    {
+      "assertion_fails": 0,
       "corpus_seeds": 1,
-      "elapsed_secs": 30.009643,
-      "executions": 3384,
+      "elapsed_secs": 2.0039581,
+      "executions": 201,
       "name": "ffi",
       "panics": 0
     },
     {
       "assertion_fails": 0,
       "corpus_seeds": 1,
-      "elapsed_secs": 30.0000009,
-      "executions": 11648848,
+      "elapsed_secs": 2.0000022,
+      "executions": 915479,
       "name": "scheduler",
-      "panics": 0
-    },
-    {
-      "assertion_fails": 0,
-      "corpus_seeds": 2,
-      "elapsed_secs": 30.0000022,
-      "executions": 2142736,
-      "name": "malformed_v2",
       "panics": 0
     }
   ],
-  "regression_tests": 3,
   "targets": 6,
   "tools_executed": [
     "antech-kdf-fuzz-harness"

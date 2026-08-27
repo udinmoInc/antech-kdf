@@ -1,2 +1,2 @@
 target,executions,corpus_seeds,panics,assertion_fails,elapsed_secs,status
-ffi,3384,1,0,0,30.010,PASS
+ffi,201,1,0,0,2.004,PASS

@@ -1,5 +1,6 @@
 /**
  * Antech KDF — C ABI
+ * Package: antech-kdf 0.1.0 — Udinmo, Inc. <antech-kdf@udinmo.com>
  *
  * Thin FFI over the canonical Rust implementation. Do not reimplement crypto here.
  *

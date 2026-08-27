@@ -7,6 +7,8 @@ import com.sun.jna.ptr.PointerByReference;
 import java.nio.charset.StandardCharsets;
 
 public final class AntechKdf {
+  public static final String PACKAGE_VERSION = "0.1.0";
+
   private AntechKdf() {}
 
   public static final int GRAPH_COMBINED_FRONTIER = 3;

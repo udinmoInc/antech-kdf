@@ -1,4 +1,4 @@
-"""ctypes wrapper over libantech_kdf_ffi. Crypto lives in the native library."""
+"""ctypes wrapper over libantech_kdf_ffi."""
 
 from __future__ import annotations
 

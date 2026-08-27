@@ -6,9 +6,15 @@
     <PackageId>Antech.Kdf</PackageId>
     <Version>0.1.0</Version>
     <Authors>Udinmo, Inc.</Authors>
-    <Description>Antech KDF — thin .NET wrapper over the canonical Rust FFI</Description>
+    <Description>Antech KDF — thin language wrappers over the canonical Rust FFI</Description>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/udinmoInc/antech-kdf</RepositoryUrl>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <Company>Udinmo, Inc.</Company>
+      <Copyright>Copyright (c) Udinmo, Inc.</Copyright>
+      <PackageProjectUrl>https://github.com/udinmoInc/antech-kdf</PackageProjectUrl>
+      <PackageTags>antech;kdf;password;hash;security</PackageTags>
+      <Owners>Udinmo, Inc.</Owners>
+      <PackageMetadata>author-email=antech-kdf@udinmo.com</PackageMetadata>
   </PropertyGroup>
 </Project>

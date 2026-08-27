@@ -7,7 +7,30 @@
   <artifactId>antech-kdf</artifactId>
   <version>0.1.0</version>
   <name>Antech KDF</name>
-  <description>Thin Java wrapper over Antech KDF FFI</description>
+  <description>Antech KDF — thin language wrappers over the canonical Rust FFI</description>
+  <organization>
+    <name>Udinmo, Inc.</name>
+    <url>https://github.com/udinmoInc/antech-kdf</url>
+  </organization>
+  <developers>
+    <developer>
+      <name>Udinmo, Inc.</name>
+      <email>antech-kdf@udinmo.com</email>
+      <organization>Udinmo, Inc.</organization>
+      <organizationUrl>https://github.com/udinmoInc/antech-kdf</organizationUrl>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>MIT OR Apache-2.0</name>
+      <url>https://github.com/udinmoInc/antech-kdf</url>
+    </license>
+  </licenses>
+  <url>https://github.com/udinmoInc/antech-kdf</url>
+  <scm>
+    <url>https://github.com/udinmoInc/antech-kdf</url>
+    <connection>scm:git:https://github.com/udinmoInc/antech-kdf.git</connection>
+  </scm>
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -1,2 +1,2 @@
 target,executions,corpus_seeds,panics,assertion_fails,elapsed_secs,status
-malformed_v2,2142736,2,0,0,30.000,PASS
+malformed_v2,156824,2,0,0,2.000,PASS

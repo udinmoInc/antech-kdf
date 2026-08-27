@@ -21,6 +21,15 @@ All published packages track release **0.1.0**. Verify the version in your depen
 | Java / Kotlin | JNA binding | see [Java / Kotlin SDK](./java-kotlin) |
 | Swift | SwiftPM package | see [Swift SDK](./swift) |
 | C / C++ | headers + native library | see [C / C++ SDK](./c-cpp) |
+| PHP | `bindings/php` | Composer + `ext-ffi` |
+| Ruby | `bindings/ruby` | gemspec + `ffi` |
+| Dart | `bindings/dart` | `dart pub get` |
+| Perl | `bindings/perl` | `FFI::Platypus` |
+| R | `bindings/r` | `.Call` shim |
+| Lua (LuaJIT) | `bindings/lua` | `require("antech_kdf")` |
+| Zig / Crystal / Nim | `bindings/{zig,crystal,nim}` | link C ABI |
+| Julia | `bindings/julia` | `ccall` |
+| Haskell | `bindings/haskell` | Cabal FFI |
 
 Changelog: [CHANGELOG.md](https://github.com/udinmoInc/antech-kdf/blob/main/CHANGELOG.md).
 
@@ -94,7 +103,7 @@ FFI-based SDKs load `antech_kdf_ffi` at runtime. If automatic discovery fails, s
 <StatsRow>
   <Stat value="1" label="Crypto implementation" />
   <Stat value="12" label="Conformance KAT cases" />
-  <Stat value="9+" label="Language packages" />
+  <Stat value="20+" label="Language packages" />
 </StatsRow>
 
 <NextSteps links={[

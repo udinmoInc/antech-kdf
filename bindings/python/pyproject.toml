@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "antech-kdf"
 version = "0.1.0"
-description = "Antech KDF — thin Python wrapper over the canonical Rust FFI"
+description = "Antech KDF — thin language wrappers over the canonical Rust FFI"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT OR Apache-2.0" }
-authors = [{ name = "Udinmo, Inc." }]
+authors = [{ name = "Udinmo, Inc.", email = "antech-kdf@udinmo.com" }]
 dependencies = []
 
 [project.optional-dependencies]
@@ -20,3 +20,9 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 antech_kdf = ["py.typed"]
+
+[project.urls]
+Homepage = "https://github.com/udinmoInc/antech-kdf"
+Documentation = "https://developers.udinmo.com/antech-kdf"
+Repository = "https://github.com/udinmoInc/antech-kdf"
+Bug Tracker = "https://github.com/udinmoInc/antech-kdf/issues"

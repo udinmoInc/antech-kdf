@@ -18,6 +18,9 @@ cargo test -p antech-kdf conformance -- --nocapture
 # FFI + Python (after build-native)
 ./sdk/scripts/build-native.sh   # or .ps1
 python sdk/conformance/run_python.py
+
+# PHP (requires ext-ffi)
+php -d ffi.enable=true sdk/conformance/run_php.php
 ```
 
 CI job `sdk` runs Rust + Python conformance on Linux/Windows/macOS where toolchains allow.

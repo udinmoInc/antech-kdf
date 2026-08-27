@@ -1,0 +1,28 @@
+cabal-version:      2.4
+name:               antech-kdf
+version:            0.1.0
+copyright: Copyright (c) Udinmo, Inc.
+maintainer: antech-kdf@udinmo.com
+author: Udinmo, Inc.
+bug-reports: https://github.com/udinmoInc/antech-kdf/issues
+homepage: https://github.com/udinmoInc/antech-kdf
+synopsis:           Antech KDF — thin language wrappers over the canonical Rust FFI
+license:            MIT
+build-type:         Simple
+
+library
+  exposed-modules:  Antech.Kdf
+  hs-source-dirs:   src
+  build-depends:    base >= 4.14 && < 5, bytestring
+  default-language: Haskell2010
+  extra-libraries:  antech_kdf
+  include-dirs:     ../c
+  extra-lib-dirs:   ../../sdk/native, ../../target/release
+
+executable antech-basic
+  main-is:          basic.hs
+  hs-source-dirs:   examples
+  build-depends:    base, bytestring, antech-kdf
+  default-language: Haskell2010
+  extra-libraries:  antech_kdf
+  extra-lib-dirs:   ../../sdk/native, ../../target/release

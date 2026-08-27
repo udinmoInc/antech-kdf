@@ -1,7 +1,7 @@
 {
   "name": "antech-kdf",
   "version": "0.1.0",
-  "description": "Antech KDF \u2014 thin Node/TypeScript wrapper over the canonical Rust FFI",
+  "description": "Antech KDF \u2014 thin language wrappers over the canonical Rust FFI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -23,5 +23,25 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "typescript": "^5.4.0"
-  }
+  },
+  "author": {
+    "name": "Udinmo, Inc.",
+    "email": "antech-kdf@udinmo.com",
+    "url": "https://github.com/udinmoInc/antech-kdf"
+  },
+  "homepage": "https://github.com/udinmoInc/antech-kdf",
+  "bugs": {
+    "url": "https://github.com/udinmoInc/antech-kdf/issues",
+    "email": "antech-kdf@udinmo.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/udinmoInc/antech-kdf.git"
+  },
+  "contributors": [
+    {
+      "name": "Udinmo, Inc.",
+      "email": "antech-kdf@udinmo.com"
+    }
+  ]
 }

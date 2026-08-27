@@ -1,0 +1,14 @@
+{
+  "name": "antech-kdf",
+  "description": "Antech KDF — thin language wrappers over the canonical Rust FFI",
+  "author": "Udinmo, Inc.",
+  "email": "antech-kdf@udinmo.com",
+  "organization": "Udinmo, Inc.",
+  "license": "MIT OR Apache-2.0",
+  "license_spdx": "MIT OR Apache-2.0",
+  "repository": "https://github.com/udinmoInc/antech-kdf",
+  "homepage": "https://github.com/udinmoInc/antech-kdf",
+  "docs": "https://developers.udinmo.com/antech-kdf",
+  "bugs": "https://github.com/udinmoInc/antech-kdf/issues",
+  "copyright": "Copyright (c) Udinmo, Inc."
+}

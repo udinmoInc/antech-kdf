@@ -3,6 +3,11 @@ using System.Text;
 
 namespace Antech.Kdf;
 
+public static class PackageInfo
+{
+    public const string Version = "0.1.0";
+}
+
 public enum AntechStatus : int
 {
     Ok = 0,
