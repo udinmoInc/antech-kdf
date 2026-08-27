@@ -19,4 +19,4 @@ if needs_rehash(&stored)? {
 
 `hash_with_config` takes an `AntechConfig` (memory, block size, fan-in, graph, salt/output lengths). Work is `memory / block_size`. Hashes are `$antech$v2$...`; `v1` is rejected. Rehash checks use `needs_rehash` / `needs_rehash_with_policy`.
 
-Experimental — not audited. Attackers and CUDA live under `research/code/`.
+Experimental — not audited. The KDF algorithm lives in `antech-kdf-core`. Attackers and CUDA live under `research/code/` and never ship in this crate.

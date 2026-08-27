@@ -1,4 +1,0 @@
-attacker,baseline_gps,optimized_gps,improvement_ratio,argon2id_gps,antech_over_argon2
-CPU_16T,39.593248,43.586846,1.1009,22.669427,1.9227
-CPU_32T,35.481704,43.793277,1.2342,23.244162,1.8841
-RTX3050_GPU,16.678000,85.979800,5.1553,0.000000,0.0000

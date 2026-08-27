@@ -1,2 +1,2 @@
 mode,gps,status,notes
-packed_t32_b256_prior_campaign,85.9798,PRIOR_CORRECT,"From attacker-optimization; 100/100 digest match"
+none,0.0000,UNAVAILABLE,"No CUDA binary or prior GPU CSV"

@@ -30,7 +30,7 @@ __device__ void mix4(uint64_t s[4], const uint8_t* b1, const uint8_t* b2) {
 }
 
 // Probe uses a reduced on-device window; full 12–32 MiB sets exceed practical
-// per-thread local memory. Host OptimizedEngine remains the reference.
+// per-thread local memory. Host digests must match antech_kdf_core::AntechEngine.
 extern "C" __global__ void antech_cm_guess(
     const unsigned char* passwords,
     const unsigned char* salts,

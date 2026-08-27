@@ -1,12 +1,10 @@
-# Compute-memory v2 (research)
+# Compute-memory v2 (archived)
 
-Work is `memory_bytes / block_size` nodes. No exposed dependency-depth or pass count.
+Historical engines. Source: `research/archive/code/compute-memory-v2/`.  
+**Not linked** from the live research workspace. Canonical digests: `antech_kdf_core::AntechEngine`.
 
-Defaults: 16 MiB, 32 B blocks, fan-in 2 → 524 288 nodes. Frozen KAT (1 MiB, fan-in 2, password `antech-kat-password`, salt `antech-kat-salt!`):
+Defaults were 16 MiB / 32 B / fan-in 2. Frozen KAT (1 MiB, fan-in 2, password `antech-kat-password`, salt `antech-kat-salt!`):
 
 `d2675d5422a98993886e9014728bcf4d72f8d587ffb57131321851c19d09ba63`
 
-```bash
-cargo test --manifest-path research/code/Cargo.toml -p antech-kdf-research compute_memory
-cargo run  --manifest-path research/code/Cargo.toml --release -p antech-kdf-research --example compute_memory_runner
-```
+Results: `research/archive/results/compute-memory/` (if present).

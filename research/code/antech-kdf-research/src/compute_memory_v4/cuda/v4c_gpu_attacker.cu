@@ -283,7 +283,7 @@ __device__ DParents d_parents_local(const uint64_t state[4], uint32_t i) {
     return out;
 }
 
-// CombinedFrontier v5 phase-2: global + always-2 far from post-local state.
+// CombinedFrontier v5 phase-2: dual-global + always-2 far from post-local state.
 __device__ DParents d_parents_remote(const uint64_t state[4], uint32_t i) {
     DParents out;
     out.len = 0; out.scatter1 = -1; out.scatter2 = -1;
@@ -293,10 +293,12 @@ __device__ DParents d_parents_remote(const uint64_t state[4], uint32_t i) {
 
     if (i > 1) {
         d_push_unique(&out, (uint32_t)(state[1] % i), i);
+        d_push_unique(&out, (uint32_t)((state[2] ^ d_rotl(state[0], 13)) % i), i);
     }
 
-    if (i > fw + 1) {
-        uint32_t remote_span = i - fw;
+    uint32_t cold = TILE_LEN > fw ? TILE_LEN : fw;
+    if (i > cold + 1) {
+        uint32_t remote_span = i - cold;
         uint32_t far = (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span);
         d_push_unique(&out, far, i);
         uint32_t far2 = (uint32_t)((state[0] ^ GOLDEN) % remote_span);
@@ -538,9 +540,11 @@ __device__ DParents d_parents_remote_fast(const uint64_t state[4], uint32_t i) {
 
     if (i > 1) {
         d_push_u(out.indices, &out.len, (uint32_t)(state[1] % i), i);
+        d_push_u(out.indices, &out.len, (uint32_t)((state[2] ^ d_rotl(state[0], 13)) % i), i);
     }
-    if (i > fw + 1) {
-        uint32_t remote_span = i - fw;
+    uint32_t cold = TILE_LEN > fw ? TILE_LEN : fw;
+    if (i > cold + 1) {
+        uint32_t remote_span = i - cold;
         d_push_u(out.indices, &out.len,
                  (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span), i);
         d_push_u(out.indices, &out.len, (uint32_t)((state[0] ^ GOLDEN) % remote_span), i);

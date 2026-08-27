@@ -1,2 +1,0 @@
-impl,threads_per_block,batch,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,local_spill_store,local_spill_load,shared_mem,global_traffic_est,l2_hit_rate,sm_util,vram_mib
-packed_t32_b256,32,256,85.9798,2979.28,2980.03,2980.03,0.333333,61,UNAVAILABLE,UNAVAILABLE,0,21474836480,UNAVAILABLE,UNAVAILABLE,5137

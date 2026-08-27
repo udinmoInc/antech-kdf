@@ -2,7 +2,7 @@
 
 use crate::graph::{self, MAX_PARENTS};
 use crate::memory::FrontierRing;
-use crate::mixing::{mix_parent_words, mix_pair_words};
+use crate::mixing::{mix_pair_words, mix_parent_words};
 use crate::state::{
     bind_seed_with_inputs, finalize, mix_parent_views, phantom_block, seed_to_state,
     state_to_block_fast, xor_state_into_block_fast,
@@ -15,7 +15,7 @@ const MAX_BLOCK: usize = 64; // must match antech_kdf_types::BlockSize::MAX_BYTE
 
 thread_local! {
     /// Reused CombinedFrontier word buffer (defender asymmetry vs per-guess alloc+memset).
-    static WORD_BUF: RefCell<Vec<[u64; 4]>> = RefCell::new(Vec::new());
+    static WORD_BUF: RefCell<Vec<[u64; 4]>> = const { RefCell::new(Vec::new()) };
 }
 
 #[derive(Debug, Clone, Default)]
@@ -55,7 +55,7 @@ impl AntechEngine {
             ));
         }
 
-        // Default CombinedFrontier @ 32 B: word-packed walk (same digests as byte path).
+        // CombinedFrontier @ 32 B: word-packed walk (normative digests).
         if cfg.graph == antech_kdf_types::GraphKind::CombinedFrontier && block_size == 32 {
             return derive_combined_frontier_words(password, salt, cfg, inputs);
         }
@@ -76,6 +76,7 @@ fn derive_combined_frontier_words(
     let seed = bind_seed_with_inputs(password, salt, cfg, inputs);
     let mut state = seed_to_state(&seed);
 
+    // CombinedFrontier node 0 always mixes two phantoms (slots 0 and 1).
     let mut phantoms = [[0u64; 4]; 2];
     for (slot, phantom) in phantoms.iter_mut().enumerate() {
         let mut raw = [0u8; 32];
@@ -183,17 +184,24 @@ fn derive_generic_bytes(
 
     let mut phantoms = [[0u8; MAX_BLOCK]; MAX_PARENTS];
     let fan = (cfg.fan_in.get() as usize).min(MAX_PARENTS);
-    for (slot, phantom) in phantoms.iter_mut().enumerate().take(fan) {
+    // CombinedFrontier node 0: always two phantoms (matches word-packed path).
+    // Other graphs: fan_in phantoms.
+    let node0_count = if cfg.graph == antech_kdf_types::GraphKind::CombinedFrontier {
+        2
+    } else {
+        fan
+    };
+    for (slot, phantom) in phantoms.iter_mut().enumerate().take(node0_count) {
         phantom_block(&seed, slot as u32, block_size, &mut phantom[..block_size]);
     }
 
     for i in 0..num_blocks {
         if i == 0 {
             let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
-            for slot in 0..fan {
+            for slot in 0..node0_count {
                 views[slot] = &phantoms[slot][..block_size];
             }
-            mix_parent_views(&mut state, &views[..fan]);
+            mix_parent_views(&mut state, &views[..node0_count]);
         } else if cfg.graph == antech_kdf_types::GraphKind::CombinedFrontier {
             let local = graph::combined_local_parents(&state, i);
             gather_and_mix(&mut state, &buffer, &ring, block_size, local.as_slice());
@@ -211,14 +219,8 @@ fn derive_generic_bytes(
             apply_scatter(&state, &mut buffer, block_size, num_blocks, i, s1, s2);
             continue;
         } else {
-            let parents = graph::parents_for_node(
-                cfg.graph,
-                &state,
-                i,
-                cfg.fan_in.get(),
-                period,
-                tile_len,
-            );
+            let parents =
+                graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
             gather_and_mix(&mut state, &buffer, &ring, block_size, parents.as_slice());
             {
                 let out = &mut buffer[i * block_size..(i + 1) * block_size];
@@ -350,14 +352,8 @@ mod tests {
         let word = engine.derive(b"match_words", salt, &cfg).unwrap();
         // Force byte path by using a temporary graph round-trip via generic with same logic:
         // re-derive through generic bytes by calling derive_generic_bytes directly.
-        let byte = derive_generic_bytes(
-            b"match_words",
-            salt,
-            &cfg,
-            &DeriveInputs::default(),
-            32,
-        )
-        .unwrap();
+        let byte =
+            derive_generic_bytes(b"match_words", salt, &cfg, &DeriveInputs::default(), 32).unwrap();
         assert_eq!(word, byte);
     }
 

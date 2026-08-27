@@ -187,7 +187,7 @@ Under the default review target, `b = 32`, so each block is exactly the LE encod
 
 ## 9. Phantom blocks (node 0 parents)
 
-For each parent slot `t ∈ {0,…,f−1}` define phantom material:
+Define phantom material for slot `t`:
 
 \[
 H_t = \mathrm{SHA256}(DOMAIN\_NODE0 \,\|\, Seed \,\|\, t_{le32})
@@ -198,11 +198,15 @@ Let `Phantom[t]` be a `b`-byte buffer:
 - Copy `min(b,32)` bytes from `H_t`.
 - If `b > 32`, expand with the ARX stretch in production `node0_material` (see reference implementation). **Default review target uses `b = 32`, so no stretch is used.**
 
+**CombinedFrontier (canonical):** node 0 always mixes exactly two phantoms (`t ∈ {0,1}`), independent of `fan_in`. `fan_in` applies to later nodes via remote parent fill (§10.2).
+
+**Other graph kinds (research / non-default):** node 0 uses `t ∈ {0,…,f−1}`.
+
 ---
 
 ## 10. Parent selection — CombinedFrontier (canonical, construction v5)
 
-For node index `i = 0`, the parent set is empty; the engine uses phantoms instead (§11).
+For node index `i = 0`, the parent set is empty; the engine mixes `Phantom[0]` and `Phantom[1]` (§9, §11).
 
 For `i ≥ 1`, CombinedFrontier is **two-phase**. Far parent indices are computed from the state *after* mixing local-frontier parents, so they cannot be prefetched or batched from the pre-node state. Scatter destinations are computed from the state *after* both mixes.
 
@@ -227,9 +231,10 @@ Notation: `push_unique(addr)` adds `addr` if `addr < i`, not already present, an
 2. `critical = (i % critical_period == 0) OR (i % FRONTIER_WIDTH == 0)` (node class only).
 3. If `i > 1`:
    \[
-   push\_unique\big((S′[1] \bmod i)\big)
+   push\_unique\big((S′[1] \bmod i)\big),\quad
+   push\_unique\big(((S′[2] \oplus \mathrm{rotl}(S′[0],13)) \bmod i)\big)
    \]
-4. If `i > fw + 1` with `remote_span = i − fw`:
+4. If `i > cold + 1` with `cold = max(min(TILE_BLOCKS, 512), fw)` and `remote_span = i − cold`:
    - Always: `push_unique(((S′[1] ⊕ rotl(S′[3],11)) mod remote_span))`
    - Always: `push_unique(((S′[0] ⊕ GOLDEN) mod remote_span))`
 5. While `|Parents| < f` and guard `< 4`, add addresses from
@@ -363,10 +368,10 @@ function Derive(P, Salt, Cfg):
     Seed ← BindSeed(P, Salt, Cfg)           // §6
     S ← StateFromSeed(Seed)                 // §7
     M ← zeros(Cfg.memory_bytes)
-    Ph ← Phantoms(Seed, Cfg.fan_in, Cfg.block_size)
+    Ph ← [Phantom(Seed,0,b), Phantom(Seed,1,b)]   // CombinedFrontier: always 2
     for i in 0 .. N-1:
         if i == 0:
-            S ← MixViews(S, Ph)
+            S ← MixPair(S, Ph[0], Ph[1])
         else:
             S ← MixViews(S, gather(M, LocalParents(S,i)))
             S ← MixViews(S, gather(M, RemoteParents(S,i)))

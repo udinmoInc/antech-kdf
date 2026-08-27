@@ -17,8 +17,8 @@ Work is `memory / block_size` nodes. There is no separate iteration-count or “
 | Block size | 32 B |
 | Fan-in | 2 |
 | Graph | CombinedFrontier (`g=3` in `$antech$v2$`) |
-| Construction version | 4 |
-| Domain separators | `antech-compute-memory-v4-*` constants in core |
+| Construction version | 5 |
+| Domain separators | `antech-compute-memory-v4-*` constants in core (string prefix retained; version integer is 5) |
 
 Other graph families (reduced-critical-path, cache-locality) appear in research benchmarks for comparison. Only CombinedFrontier is the public default.
 

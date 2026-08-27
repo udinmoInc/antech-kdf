@@ -5,12 +5,12 @@ Target: production `AntechEngine` / CombinedFrontier / 16 MiB default.
 ## Full evaluation baseline (16 MiB)
 
 - nodes (num_blocks): **524288**
-- mix_pairs: **1572762**
-- parent_gathers: **2621322**
+- mix_pairs: **1572349**
+- parent_gathers: **3144642**
 - scatters: **1048446**
 - unique parents touched: **524287**
-- far vs frontier hits: **1572048** / **1049274**
-- 1-thread throughput: **7.50 guesses/s** (133.4 ms/guess)
+- far vs frontier hits: **2094786** / **1049856**
+- 1-thread throughput: **1.43 guesses/s** (697.1 ms/guess)
 
 ## Answers to required questions
 
@@ -32,7 +32,7 @@ Target: production `AntechEngine` / CombinedFrontier / 16 MiB default.
 
 9. **Strongest cheaper correct attack:** `A8_packed_prefetch_full_eval` — Full DAG with packed u64 layout + prefetch (no node skip)
 
-10. **How much cheaper?** attack_work/full_work ≈ **0.843** (84.3% of reference defender latency). Measured 9.03 vs baseline 7.61 guesses/s at 1 thread / 16 MiB.
+10. **How much cheaper?** attack_work/full_work ≈ **0.709** (70.9% of reference defender latency). Measured 8.79 vs baseline 6.23 guesses/s at 1 thread / 16 MiB.
 
 > **Important:** This reduces wall-clock via layout/prefetch only. Node count and mix_pair count are unchanged — it is **not** a mathematical shortcut past the DAG.
 
@@ -40,16 +40,16 @@ Target: production `AntechEngine` / CombinedFrontier / 16 MiB default.
 
 | Attack | Threads | GPS | work_ratio vs full@1t |
 |---|---|---|---|
-| full_eval | 1 | 7.90 | 0.780 |
-| packed_prefetch | 1 | 9.02 | 0.683 |
-| full_eval | 16 | 40.70 | 2.422 |
-| packed_prefetch | 16 | 45.39 | 2.172 |
-| full_eval | 32 | 36.22 | 5.444 |
-| packed_prefetch | 32 | 41.26 | 4.778 |
+| full_eval | 1 | 7.64 | 0.964 |
+| packed_prefetch | 1 | 7.90 | 0.932 |
+| full_eval | 16 | 36.97 | 3.187 |
+| packed_prefetch | 16 | 34.29 | 3.436 |
+| full_eval | 32 | 28.76 | 8.195 |
+| packed_prefetch | 32 | 34.67 | 6.798 |
 
 ## GPU
 
-- mode=packed_t32_b256_prior_campaign gps=85.98 status=PRIOR_CORRECT — From attacker-optimization; 100/100 digest match
+- mode=none gps=0.00 status=UNAVAILABLE — No CUDA binary or prior GPU CSV
 
 ## Important caveat
 

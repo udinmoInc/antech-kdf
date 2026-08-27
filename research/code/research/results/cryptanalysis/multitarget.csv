@@ -1,4 +1,0 @@
-attack,work_per_guess_ratio,memory_per_guess_ratio,shared_across_guesses,notes
-independent_full,1.0,1.0,false,no shared DAG intermediates
-dual_walk,1.0,2.0,false,interleaved schedule only
-a9_note,1.0,2.0,false,"No work reduction per guess; may improve multi-target wall-clock."

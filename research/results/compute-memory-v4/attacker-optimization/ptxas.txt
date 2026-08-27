@@ -1,0 +1,29 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.0
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z31v4c_guess_kernel_packed_persistPKhS0_PyS1_Phii' for 'sm_86'
+ptxas info    : Function properties for _Z31v4c_guess_kernel_packed_persistPKhS0_PyS1_Phii
+    432 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 60 registers, used 0 barriers, 432 bytes cumulative stack size, 400 bytes cmem[0], 24 bytes cmem[2]
+ptxas info    : Compile time = 0.000 ms
+ptxas info    : Compiling entry function '_Z23v4c_guess_kernel_packedPKhS0_PyS1_Phii' for 'sm_86'
+ptxas info    : Function properties for _Z23v4c_guess_kernel_packedPKhS0_PyS1_Phii
+    2480 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 60 registers, used 0 barriers, 2480 bytes cumulative stack size, 400 bytes cmem[0], 24 bytes cmem[2]
+ptxas info    : Compile time = 0.000 ms
+ptxas info    : Compiling entry function '_Z27v4c_guess_kernel_fused_zeroPKhS0_PhPyS1_i' for 'sm_86'
+ptxas info    : Function properties for _Z27v4c_guess_kernel_fused_zeroPKhS0_PhPyS1_i
+    2304 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 72 registers, used 0 barriers, 2304 bytes cumulative stack size, 396 bytes cmem[0], 24 bytes cmem[2]
+ptxas info    : Compile time = 0.000 ms
+ptxas info    : Compiling entry function '_Z16v4c_guess_kernelPKhS0_PhPyS1_i' for 'sm_86'
+ptxas info    : Function properties for _Z16v4c_guess_kernelPKhS0_PhPyS1_i
+    2304 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 72 registers, used 0 barriers, 2304 bytes cumulative stack size, 396 bytes cmem[0], 24 bytes cmem[2]
+ptxas info    : Compile time = 0.000 ms
+v4c_gpu_attacker.cu
+tmpxft_00003f8c_00000000-7_v4c_gpu_attacker.cudafe1.cpp
+

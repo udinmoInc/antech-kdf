@@ -10,6 +10,7 @@ const C2: u64 = 0x94D049BB133111EB;
 const GOLDEN: u64 = 0x9E3779B97F4A7C15;
 const MIX_ROUNDS: u32 = 4;
 const FW: usize = 64;
+const TILE: usize = 512;
 const FAN: usize = 2;
 pub const NUM_BLOCKS_16MIB: usize = 16 * 1024 * 1024 / 32;
 
@@ -102,7 +103,7 @@ fn parents_local(state: &[u64; 4], i: u32) -> ([u32; 8], usize) {
     (indices, len)
 }
 
-/// v5 phase-2: global + always-2 far from *post-local* state. Scatter filled separately post-mix.
+/// v5 phase-2: dual-global + always-2 far from *post-local* state. Scatter filled separately post-mix.
 #[inline(always)]
 fn parents_remote(state: &[u64; 4], i: u32) -> ([u32; 8], usize) {
     let mut indices = [0u32; 8];
@@ -120,10 +121,17 @@ fn parents_remote(state: &[u64; 4], i: u32) -> ([u32; 8], usize) {
             ((state[1] as usize) % i_us) as u32,
             i,
         );
+        push_unique(
+            &mut indices,
+            &mut len,
+            (((state[2] ^ state[0].rotate_left(13)) as usize) % i_us) as u32,
+            i,
+        );
     }
 
-    if i_us > fw + 1 {
-        let remote_span = i_us - fw;
+    let cold = TILE.max(fw);
+    if i_us > cold + 1 {
+        let remote_span = i_us - cold;
         let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
         push_unique(&mut indices, &mut len, far as u32, i);
         let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;

@@ -1,11 +1,11 @@
 impl,threads_per_block,batch,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,local_spill_store,local_spill_load,shared_mem,global_traffic_est,l2_hit_rate,sm_util,vram_mib
-baseline,1,64,16.678,3836.76,3840.59,3840.59,0.0104167,72,UNAVAILABLE,UNAVAILABLE,0,5368709120,UNAVAILABLE,UNAVAILABLE,2061
-optimized,32,192,29.8939,6411.56,6463.77,6463.77,0.333333,72,UNAVAILABLE,UNAVAILABLE,0,16106127360,UNAVAILABLE,UNAVAILABLE,4109
-packed,32,192,62.7374,3062.02,3064.52,3064.52,0.333333,61,UNAVAILABLE,UNAVAILABLE,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
-packed_noring,32,192,65.3693,2937.3,2946.12,2946.12,0.333333,61,UNAVAILABLE,UNAVAILABLE,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
-packed_persistent,32,256,30.8447,8300.23,8307.82,8307.82,0.333333,61,UNAVAILABLE,UNAVAILABLE,0,21474836480,UNAVAILABLE,UNAVAILABLE,2535
-packed_t8_b128,8,128,51.9207,2465.29,2465.6,2465.6,0.0833333,61,UNAVAILABLE,UNAVAILABLE,0,10737418240,UNAVAILABLE,UNAVAILABLE,3089
-packed_t16_b192,16,192,72.8832,2635.08,2635.62,2635.62,0.166667,61,UNAVAILABLE,UNAVAILABLE,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
-packed_t32_b192,32,192,65.2175,2945.55,2946.95,2946.95,0.333333,61,UNAVAILABLE,UNAVAILABLE,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
-packed_t32_b256,32,256,85.9798,2979.28,2980.03,2980.03,0.333333,61,UNAVAILABLE,UNAVAILABLE,0,21474836480,UNAVAILABLE,UNAVAILABLE,5137
-packed_t64_b128,64,128,42.2918,3025.5,3028.81,3028.81,0.666667,61,UNAVAILABLE,UNAVAILABLE,0,10737418240,UNAVAILABLE,UNAVAILABLE,3089
+baseline,1,64,15.4312,4148.34,4159.05,4159.05,0.0104167,72,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,5368709120,UNAVAILABLE,UNAVAILABLE,2061
+optimized,32,192,27.5402,6962.98,7003.1,7003.1,0.333333,72,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4109
+packed,32,192,54.6476,3512.29,3528.44,3528.44,0.333333,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_noring,32,192,56.8312,3377.73,3391.32,3391.32,0.333333,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_persistent,32,256,26.4897,9670.81,9762.14,9762.14,0.333333,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,21474836480,UNAVAILABLE,UNAVAILABLE,2535
+packed_t8_b128,8,128,45.0289,2842.25,2844.63,2844.63,0.0833333,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,10737418240,UNAVAILABLE,UNAVAILABLE,3089
+packed_t16_b192,16,192,63.2011,3036.93,3042.79,3042.79,0.166667,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_t32_b192,32,192,56.768,3381.71,3394.63,3394.63,0.333333,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,16106127360,UNAVAILABLE,UNAVAILABLE,4113
+packed_t32_b256,32,256,74.9399,3412.86,3431.69,3431.69,0.333333,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,21474836480,UNAVAILABLE,UNAVAILABLE,5137
+packed_t64_b128,64,128,36.8894,3468.23,3473.39,3473.39,0.666667,60,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,10737418240,UNAVAILABLE,UNAVAILABLE,3089

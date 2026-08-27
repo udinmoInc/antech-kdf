@@ -6,9 +6,9 @@ Target: production CombinedFrontier Antech KDF (unchanged). Digests must match `
 
 | Config | Strategy | GPS |
 |---|---|---|
-| 1 MiB | full_packed | 330.81 |
-| 1 MiB | scatter_log (full pristine+index) | 132.78 |
-| 16 MiB | full_packed | 7.94 |
+| 1 MiB | full_packed | 296.48 |
+| 1 MiB | scatter_log (full pristine+index) | 120.30 |
+| 16 MiB | full_packed | 7.44 |
 
 16 MiB ⇒ 524288 × 32 B. Dual far-scatter performs ~2×N historical XORs. Prior strongest schedule-only CPU attack remains **packed_prefetch**; this campaign focuses on *memory reduction*.
 
@@ -21,7 +21,7 @@ Target: production CombinedFrontier Antech KDF (unchanged). Digests must match `
 
 ## Checkpointing
 
-Best **scatter_log** stride on 1 MiB: stride=8 cost_factor=2.34 gps=141.55 (still slower than full_packed; stride mainly affects bookkeeping).
+Best **scatter_log** stride on 1 MiB: stride=8 cost_factor=2.32 gps=127.57 (still slower than full_packed; stride mainly affects bookkeeping).
 
 Sparse stride sweep at ~75% budget: any correct finishes? **no — recompute wall**. See `checkpoint-sweep.csv`.
 
@@ -58,27 +58,27 @@ No cross-password DAG reuse (seed binds password). Only allocator/layout reuse. 
 
 | frac | strategy | correct | gps | cost_factor | est_attacker_MiB |
 |---|---|---|---|---|---|
-| 1 | full_packed | true | 335.738 | 0.99 | 1.00 |
-| 0.75 | sparse_checkpoint | false | 0.000 | 1256.88 | 1.00 |
-| 0.5 | sparse_checkpoint | false | 0.000 | 3788.50 | 0.75 |
-| 0.375 | sparse_checkpoint | false | 0.000 | 4750.75 | 0.62 |
-| 0.25 | sparse_checkpoint | false | 0.000 | 4948.62 | 0.50 |
-| 0.1875 | sparse_checkpoint | false | 0.000 | 4582.75 | 0.44 |
-| 0.125 | sparse_checkpoint | false | 0.000 | 3776.88 | 0.38 |
-| 0.09375 | sparse_checkpoint | false | 0.000 | 3157.84 | 0.34 |
-| 0.0625 | sparse_checkpoint | false | 0.000 | 2355.06 | 0.31 |
-| 0.03125 | sparse_checkpoint | false | 0.000 | 1328.58 | 0.28 |
-| 0.015625 | sparse_checkpoint | false | 0.000 | 710.41 | 0.27 |
+| 1 | full_packed | true | 300.051 | 0.99 | 1.00 |
+| 0.75 | sparse_checkpoint | false | 0.000 | 1719.62 | 1.00 |
+| 0.5 | sparse_checkpoint | false | 0.000 | 5072.75 | 0.75 |
+| 0.375 | sparse_checkpoint | false | 0.000 | 6406.38 | 0.62 |
+| 0.25 | sparse_checkpoint | false | 0.000 | 6699.75 | 0.50 |
+| 0.1875 | sparse_checkpoint | false | 0.000 | 6201.62 | 0.44 |
+| 0.125 | sparse_checkpoint | false | 0.000 | 5116.00 | 0.38 |
+| 0.09375 | sparse_checkpoint | false | 0.000 | 4275.67 | 0.34 |
+| 0.0625 | sparse_checkpoint | false | 0.000 | 3189.84 | 0.31 |
+| 0.03125 | sparse_checkpoint | false | 0.000 | 1808.80 | 0.28 |
+| 0.015625 | sparse_checkpoint | false | 0.000 | 975.39 | 0.27 |
 
 ## 16 MiB key points
 
 | frac | strategy | correct | gps | cost | est_MiB |
 |---|---|---|---|---|---|
-| 1 | full_packed | true | 7.604 | 1.04 | 16.0 |
-| 0.75 | sparse_checkpoint | false | 0.000 | 20269.38 | 16.0 |
-| 0.5 | sparse_checkpoint | false | 0.000 | 60310.75 | 12.0 |
-| 0.25 | sparse_checkpoint | false | 0.000 | 79442.50 | 8.0 |
-| 0.125 | sparse_checkpoint | false | 0.000 | 60549.50 | 6.0 |
+| 1 | full_packed | true | 7.460 | 1.00 | 16.0 |
+| 0.75 | sparse_checkpoint | false | 0.000 | 27017.12 | 16.0 |
+| 0.5 | sparse_checkpoint | false | 0.000 | 80598.75 | 12.0 |
+| 0.25 | sparse_checkpoint | false | 0.000 | 106026.75 | 8.0 |
+| 0.125 | sparse_checkpoint | false | 0.000 | 80745.50 | 6.0 |
 
 ## Strongest valid TMTO attack
 

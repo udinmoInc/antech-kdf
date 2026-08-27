@@ -275,10 +275,16 @@ pub fn parents_combined_frontier_remote(
 
     if i > 1 {
         push_unique(&mut indices, (state[1] as usize) % i, i);
+        push_unique(
+            &mut indices,
+            ((state[2] ^ state[0].rotate_left(13)) as usize) % i,
+            i,
+        );
     }
 
-    if i > fw + 1 {
-        let remote_span = i - fw;
+    let cold = 512usize.max(fw);
+    if i > cold + 1 {
+        let remote_span = i - cold;
         let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
         push_unique(&mut indices, far, i);
         let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
@@ -372,17 +378,18 @@ pub fn derive(password: &[u8], salt: &[u8], cfg: &RefConfig) -> Vec<u8> {
     let mut state = state_from_seed(&seed);
     let mut memory = vec![0u8; cfg.memory_bytes()];
     let b = cfg.block_size;
-    let fan = cfg.fan_in as usize;
-    let phantoms: Vec<Vec<u8>> = (0..fan)
-        .map(|t| phantom_block(&seed, t as u32, b))
-        .collect();
+    // CombinedFrontier node 0 always mixes two domain-separated phantoms
+    // (matches antech_kdf_core word-packed path). fan_in applies to later nodes.
+    let phantoms: [Vec<u8>; 2] = [
+        phantom_block(&seed, 0, b),
+        phantom_block(&seed, 1, b),
+    ];
     let period = cfg.critical_period();
     let tile_len = cfg.tile_len();
 
     for i in 0..n {
         if i == 0 {
-            let views: Vec<&[u8]> = phantoms.iter().map(|ph| ph.as_slice()).collect();
-            mix_views(&mut state, &views);
+            mix_pair(&mut state, &phantoms[0], &phantoms[1]);
         } else {
             let local = parents_combined_frontier_local(&state, i);
             {

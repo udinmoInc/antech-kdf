@@ -90,15 +90,17 @@ Canonical construction: **construction version 5**, CombinedFrontier, `$antech$v
 
 ## Research (second)
 
-Narrative, attackers, CUDA, TMTO, and campaign outputs: [`research/`](./research/). Current measured datasets:
+Narrative, attackers, CUDA, TMTO, and campaign outputs: [`research/`](./research/).
+
+Canonical implementation: **`crates/antech-kdf-core`** (`AntechEngine`, construction version 5). Research may import core for digests; production never imports research.
 
 | Dataset | Path |
 |---|---|
-| CPU / GPU compute–memory (v4-C) | [`research/results/compute-memory-v4/`](./research/results/compute-memory-v4/) |
+| Current v5 cost / asymmetry tradeoff | [`research/results/compute-memory-v4/v5-asymm/`](./research/results/compute-memory-v4/v5-asymm/) |
+| CPU / GPU attacker suite | [`research/results/compute-memory-v4/attacker-optimization/`](./research/results/compute-memory-v4/attacker-optimization/) |
 | Cryptanalysis + TMTO | [`research/results/cryptanalysis/`](./research/results/cryptanalysis/) |
-| Correctness | [`research/results/correctness/`](./research/results/correctness/) |
-| Stress | [`research/results/stress/`](./research/results/stress/) |
-| Fuzz | [`research/results/fuzz/`](./research/results/fuzz/) |
+| Spec + vectors | [`research/security-review/`](./research/security-review/) |
+| Correctness / stress / fuzz | [`research/results/`](./research/results/) |
 
 ## SDKs
 

@@ -235,7 +235,8 @@ pub fn combined_local_parents(state: &[u64; 4], i: usize) -> ParentSet {
     out
 }
 
-/// Phase-2 CombinedFrontier parents: global + always-2 far gathers from *post-local* state.
+/// Phase-2 CombinedFrontier parents: dual-global + always-2 *cold* far gathers
+/// from *post-local* state (far span excludes the last `max(tile, frontier)` blocks).
 /// Scatter destinations are left unset; the engine fills them from the final post-mix state.
 pub fn combined_remote_parents(
     state: &[u64; 4],
@@ -255,15 +256,20 @@ pub fn combined_remote_parents(
     } else {
         NodeClass::Local
     });
-    // Global (not tile-local) secondary gather: reduces shared-cache friendliness under
-    // multi-guess load without dropping the far/scatter dependency structure.
+    // Two global (not tile-local) gathers from post-local state: independent address
+    // streams that thrash shared caches under multi-candidate load more than they
+    // inflate a single verifier (one extra dependent load per node).
     if i > 1 {
         out.push_unique((state[1] as usize) % i, i);
+        out.push_unique(((state[2] ^ state[0].rotate_left(13)) as usize) % i, i);
     }
 
     let fw = FRONTIER_WIDTH.min(i);
-    if i > fw + 1 {
-        let remote_span = i - fw;
+    // Exclude a larger hot tail than the frontier ring so far gathers hit colder
+    // region of the live buffer (hurts multi-candidate shared-cache reuse).
+    let cold = TILE_BLOCKS.min(512).max(fw);
+    if i > cold + 1 {
+        let remote_span = i - cold;
         // Every node: two state-dependent far gathers from post-local state.
         let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
         out.push_unique(far, i);

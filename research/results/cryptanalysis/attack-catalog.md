@@ -11,10 +11,10 @@
 | A4b_tmto_scatterlog_frac_0.25 | Scatter-log TMTO at window frac 0.25 | INCORRECT | inf | 2.7500 | 0.00 | 1 MiB prototype; correct=false; no correct cheaper reduced-memory attack found for CombinedFrontier |
 | A4a_tmto_naive_frac_0.125 | Naive checkpoint TMTO at 0.125 without scatter log | INCORRECT | 1.000 | 0.1250 | 0.00 | Measured on 1 MiB; dual scatter mutates past blocks so eviction without scatter log breaks digests (same graph as 16 MiB). |
 | A4b_tmto_scatterlog_frac_0.125 | Scatter-log TMTO at window frac 0.125 | INCORRECT | inf | 2.6250 | 0.00 | 1 MiB prototype; correct=false; no correct cheaper reduced-memory attack found for CombinedFrontier |
-| A5_mitm_split | Meet-in-the-middle split at mid DAG | CORRECT (no savings) | 1.000 | 1.0000 | 7.61 | State-dependent parents prevent independent half-DAG evaluation. |
+| A5_mitm_split | Meet-in-the-middle split at mid DAG | CORRECT (no savings) | 1.000 | 1.0000 | 6.23 | State-dependent parents prevent independent half-DAG evaluation. |
 | A6_precomputation | Precompute salt/password-independent intermediates | N/A | 1.000 | 1.0000 | 0.00 | Seed binds password+salt; parent indices bind rolling state; no cross-guess DAG reuse. |
 | A7_frontier_only_store | Store only FRONTIER_WIDTH=64 recent blocks | Requires TMTO recompute for far parents | 1.000 | 0.0001 | 0.00 | Far gathers + dual scatter need random history access. |
-| A8_packed_prefetch_full_eval | Full DAG with packed u64 layout + prefetch (no node skip) | CORRECT | 0.843 | 1.0000 | 9.03 | Same num_blocks mixes; attack_work/full_work≈0.843 via schedule only |
+| A8_packed_prefetch_full_eval | Full DAG with packed u64 layout + prefetch (no node skip) | CORRECT | 0.709 | 1.0000 | 8.79 | Same num_blocks mixes; attack_work/full_work≈0.709 via schedule only |
 | A9_dual_walk_multitarget | Interleave two independent password walks | CORRECT (2 digests) | 1.000 | 2.0000 | 0.00 | No work reduction per guess; may improve multi-target wall-clock. |
 | A10_cse_reuse | Share mix results across nodes | N/A | 1.000 | 1.0000 | 0.00 | Each node writes unique state-derived block; no identical subgraph CSE. |
 

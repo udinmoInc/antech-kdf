@@ -18,28 +18,29 @@ Every public table should cite one campaign and label each figure **MEASURED**, 
 
 | Campaign | Path | Status |
 |---|---|---|
-| v5 cost tradeoff (current CombinedFrontier) | [`results/compute-memory-v4/v5-cost-tradeoff/`](results/compute-memory-v4/v5-cost-tradeoff/) | MEASURED |
-| CPU/GPU attacker-opt suite (v5, RTX 3050) | [`results/compute-memory-v4/attacker-optimization/`](results/compute-memory-v4/attacker-optimization/) | MEASURED |
-| CPU compute–memory v4-C (prior graph) | [`results/compute-memory-v4/`](results/compute-memory-v4/) | MEASURED (superseded graph) |
+| v5 asymmetry / cost tradeoff (current CombinedFrontier) | [`results/compute-memory-v4/v5-asymm/`](results/compute-memory-v4/v5-asymm/) · [`v5-cost-tradeoff/`](results/compute-memory-v4/v5-cost-tradeoff/) | MEASURED |
+| CPU/GPU attacker-opt suite (construction v5, RTX 3050) | [`results/compute-memory-v4/attacker-optimization/`](results/compute-memory-v4/attacker-optimization/) | MEASURED |
 | Cryptanalysis + TMTO | [`results/cryptanalysis/`](results/cryptanalysis/) | MEASURED / MODELED |
 | Correctness | [`results/correctness/`](results/correctness/) | PASS |
 | Stress | [`results/stress/`](results/stress/) | PASS |
 | Fuzz (fallback harness on Windows; libFuzzer in CI) | [`results/fuzz/`](results/fuzz/) | PASS |
 | Reliability matrix | [`results/reliability/`](results/reliability/) | MEASURED |
 
-Snapshot from the **v5** attacker-opt + defender microbench ([`results/compute-memory-v4/v5-cost-tradeoff/report.md`](results/compute-memory-v4/v5-cost-tradeoff/report.md)), **MEASURED**:
+Snapshot from the **current v5** ship (dual-global + cold far; [`results/compute-memory-v4/v5-asymm/report.md`](results/compute-memory-v4/v5-asymm/report.md)), **MEASURED**:
 
 | Profile | Memory | Defender p50 | Strongest CPU 16t | Strongest CPU 32t |
 |---|---:|---:|---:|---:|
-| Antech CombinedFrontier (construction v5) | 16 MiB | 128.9 ms | 52.39 g/s packed_prefetch | 49.93 g/s packed_prefetch |
-| Argon2id (same host, same runner) | 64 MiB | — | 21.84 g/s | 21.43 g/s |
+| Antech CombinedFrontier (construction v5) | 16 MiB | ~131 ms | ~43.1 g/s packed_prefetch | ~44.4 g/s packed_prefetch |
+| Argon2id (same host, same runner) | 64 MiB | — | ~23.0 g/s | ~25.3 g/s |
 
 GPU head-to-head on **RTX 3050** @ 16 MiB (same attacker-opt run), **MEASURED**:
 
 | | Guesses/sec | Kernel p50 |
 |---|---:|---:|
-| Antech v5 (best: packed_t32_b256) | 97.69 | 2617 ms |
-| Argon2id (same GPU, same session) | 434.87 | 221 ms |
+| Antech v5 (best: packed_t32_b256) | ~74.9 | ~3413 ms |
+| Argon2id (same GPU, same session) | ~434.7 | ~221 ms |
+
+The **20–30 g/s** CPU target under defender p50 ≤ 140 ms was **not reached** under honest work; see the tradeoff reports for the measured boundary.
 
 ## Build research
 
@@ -50,4 +51,4 @@ cargo run   --manifest-path research/code/Cargo.toml --release -p antech-kdf-res
 cargo run   --manifest-path research/code/Cargo.toml --release -p antech-kdf-research --example cryptanalysis_runner
 ```
 
-Historical v2/v3 runners still compile; their outputs belong under `archive/results/`, not under current claims.
+Historical v2/v3 engines and spent screens are under [`archive/code/`](archive/code/). Their outputs belong under `archive/results/`, not under current claims.

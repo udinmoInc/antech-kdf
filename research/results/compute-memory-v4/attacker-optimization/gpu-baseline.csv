@@ -1,2 +1,2 @@
 impl,threads_per_block,batch,guesses_per_sec,kernel_p50_ms,kernel_p95_ms,kernel_p99_ms,occupancy,registers_per_thread,local_spill_store,local_spill_load,shared_mem,global_traffic_est,l2_hit_rate,sm_util,vram_mib
-baseline,1,64,16.678,3836.76,3840.59,3840.59,0.0104167,72,UNAVAILABLE,UNAVAILABLE,0,5368709120,UNAVAILABLE,UNAVAILABLE,2061
+baseline,1,64,15.4312,4148.34,4159.05,4159.05,0.0104167,72,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,2304 bytes stack frame; 0 bytes spill stores; 0 bytes spill loads,0,5368709120,UNAVAILABLE,UNAVAILABLE,2061

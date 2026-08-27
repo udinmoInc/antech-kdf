@@ -1,0 +1,5 @@
+# Digests after SOT migration (must match digest-before-migration.txt)
+# salt = v5_cost_salt_16b, AntechConfig::default(), AntechEngine::derive
+migration-kat -> 75aba2885d02bce33e0a8d0939dbd29e45fe3a2aadb618eb4be5370f8c3a37f5
+def_0 -> 92fdf4baf2a4d936a5b48ae6b297a1a414c4ff1a036d031579e8d8e69685435f
+a_0 -> c2819549a0d15b560274bbb7d3b16f392366849a55012ded82421d74b1753595

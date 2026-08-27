@@ -2,9 +2,10 @@
 
 Readable CombinedFrontier implementation matching [`../../security-review/specification.md`](../../security-review/specification.md).
 
-- **Not** production code
+- **Not** production code — production digests come from `crates/antech-kdf-core`
 - **Not** optimized
 - Prefer this when comparing the specification to concrete computation
+- Dev-tests cross-check digests against `AntechEngine`
 
 ```bash
 cargo test --manifest-path research/code/Cargo.toml -p antech-kdf-reference --release

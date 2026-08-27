@@ -1,5 +1,0 @@
-GPU: NVIDIA GeForce RTX 3050 | VRAM=8191 MiB | SMs=20 | CC=8.6
-Selected batch=256 (4096.00 MiB buffers)
-[packed_t32_b256] GPS=85.6537  k_p50=2987.900 ms  k_p95=3003.017  k_p99=3003.017
-VRAM_used≈5137 MiB  occ=0.333  regs=61  smem=0  tpb=32  H<->D=116.989 ms
-
