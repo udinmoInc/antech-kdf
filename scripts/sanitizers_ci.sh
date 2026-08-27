@@ -17,10 +17,13 @@ TOOLCHAIN="nightly"
 case "${MODE}" in
   asan)
     SAN_FLAGS="-Zsanitizer=address"
+    USE_BUILD_STD=1
     export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1:abort_on_error=1:print_summary=1}"
     ;;
   ubsan)
-    SAN_FLAGS="-Zsanitizer=undefined"
+    # Nightly rustc 1.100+ dropped `-Zsanitizer=undefined`; drive UBSan via LLVM on the host libc.
+    SAN_FLAGS="-Cllvm-args=-fsanitize=undefined -Clink-args=-fsanitize=undefined"
+    USE_BUILD_STD=0
     export UBSAN_OPTIONS="${UBSAN_OPTIONS:-print_stacktrace=1:halt_on_error=1}"
     ;;
   *)
@@ -55,10 +58,18 @@ run_cargo_test() {
   local log="${OUT}/logs/${MODE}-${name}.log"
   echo "=== ${MODE} ${name} (${profile}) ===" | tee "${log}"
   set +e
-  if [[ "${profile}" == "release" ]]; then
-    cargo +nightly test -Zbuild-std --target "${TARGET}" --release "$@" 2>&1 | tee -a "${log}"
+  if [[ "${USE_BUILD_STD}" == 1 ]]; then
+    if [[ "${profile}" == "release" ]]; then
+      cargo +nightly test -Zbuild-std --target "${TARGET}" --release "$@" 2>&1 | tee -a "${log}"
+    else
+      cargo +nightly test -Zbuild-std --target "${TARGET}" "$@" 2>&1 | tee -a "${log}"
+    fi
   else
-    cargo +nightly test -Zbuild-std --target "${TARGET}" "$@" 2>&1 | tee -a "${log}"
+    if [[ "${profile}" == "release" ]]; then
+      cargo +nightly test --release "$@" 2>&1 | tee -a "${log}"
+    else
+      cargo +nightly test "$@" 2>&1 | tee -a "${log}"
+    fi
   fi
   local rc=${PIPESTATUS[0]}
   set -e
@@ -118,8 +129,8 @@ FR=$(count_failed "${LOG_RELEASE}")
 CSV="${OUT}/${MODE}.csv"
 {
   echo "suite,profile,status,passed,failed,command,notes"
-  echo "production_workspace,debug,${STATUS_DEBUG},${PD},${FD},cargo test -Zbuild-std --target ${TARGET} [types format core kdf ffi] --lib --tests,integration+unit+ffi"
-  echo "production_workspace,release,${STATUS_RELEASE},${PR},${FR},cargo test -Zbuild-std --target ${TARGET} --release [types format core kdf ffi] --lib --tests,release-like optimized+sanitizer"
+  echo "production_workspace,debug,${STATUS_DEBUG},${PD},${FD},cargo test [types format core kdf ffi] --lib --tests,integration+unit+ffi"
+  echo "production_workspace,release,${STATUS_RELEASE},${PR},${FR},cargo test --release [types format core kdf ffi] --lib --tests,release-like optimized+sanitizer"
   if [[ "${STATUS_REF_DEBUG}" != NOT_APPLICABLE ]]; then
     RPD=$(count_passed "${LOG_REF_D}")
     RFD=$(count_failed "${LOG_REF_D}")
