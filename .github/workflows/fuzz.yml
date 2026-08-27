@@ -78,12 +78,18 @@ jobs:
               echo "unknown campaign $CAMPAIGN"; exit 2 ;;
           esac
           echo "SECS parser=$SECS_PARSER heavy=$SECS_HEAVY light=$SECS_LIGHT" | tee -a research/results/fuzz/ci/campaign-meta.txt
-          ./fuzz/ci_run_and_report.sh hash_parser "$SECS_PARSER" "$REPORT"
-          ./fuzz/ci_run_and_report.sh hash_verify "$SECS_HEAVY" "$REPORT"
-          ./fuzz/ci_run_and_report.sh config_builder "$SECS_LIGHT" "$REPORT"
-          ./fuzz/ci_run_and_report.sh malformed_v2 "$SECS_LIGHT" "$REPORT"
-          ./fuzz/ci_run_and_report.sh ffi_api "$SECS_LIGHT" "$REPORT"
-          ./fuzz/ci_run_and_report.sh scheduler "$SECS_LIGHT" "$REPORT"
+          # Run every target even if one fails; aggregate status in the summarize step.
+          set +e
+          FAIL=0
+          ./fuzz/ci_run_and_report.sh hash_parser "$SECS_PARSER" "$REPORT" || FAIL=1
+          ./fuzz/ci_run_and_report.sh hash_verify "$SECS_HEAVY" "$REPORT" || FAIL=1
+          ./fuzz/ci_run_and_report.sh config_builder "$SECS_LIGHT" "$REPORT" || FAIL=1
+          ./fuzz/ci_run_and_report.sh malformed_v2 "$SECS_LIGHT" "$REPORT" || FAIL=1
+          ./fuzz/ci_run_and_report.sh ffi_api "$SECS_LIGHT" "$REPORT" || FAIL=1
+          ./fuzz/ci_run_and_report.sh scheduler "$SECS_LIGHT" "$REPORT" || FAIL=1
+          set -e
+          echo "target_fail_flag=$FAIL" | tee -a research/results/fuzz/ci/campaign-meta.txt
+          if [ "$FAIL" -ne 0 ]; then exit 1; fi
       - name: Collect per-target artifacts and corpora
         if: always()
         run: |

@@ -17,12 +17,18 @@ LibFuzzer targets under `fuzz_targets/` call shared runners in `fuzz/harness`
 ```bash
 rustup toolchain install nightly
 cargo install cargo-fuzz
-./fuzz/ci_run_and_report.sh hash_parser 600 research/results/final-validation/fuzz/libfuzzer.jsonl
+./fuzz/ci_run_and_report.sh hash_parser 600 research/results/fuzz/ci/libfuzzer.jsonl
 ```
 
 Workflow: `.github/workflows/fuzz.yml`
 
-**Do not claim libFuzzer PASS unless the Ubuntu `fuzz-libfuzzer` job executed.**
+- `workflow_dispatch` input `campaign`: `quick` | **`full`** | `deep`
+- Push to `main` runs **`full`** (parser 900s, heavy 600s, light 600s)
+- Schedule (weekly) runs **`deep`**
+
+**Artifacts:** `research/results/fuzz/ci/` and upload `fuzz-libfuzzer-results`.
+
+**Do not claim libFuzzer PASS unless the Ubuntu `fuzz-libfuzzer` job executed and its summary says PASS.**
 
 ## Windows fallback (not libFuzzer)
 
@@ -31,10 +37,10 @@ set ANTECH_FUZZ_SECS=180
 cargo run --manifest-path fuzz/Cargo.toml -p antech-kdf-fuzz-harness --release
 ```
 
-Results: `research/results/fuzz/`
-
-Campaign findings fixed in-tree: **R14** (non-ASCII hex panic), **R15** (nested acquire Condvar hang).
+Results may land in `research/results/fuzz/summary.md` — label them as **fallback**, never as libFuzzer.
 
 ## Corpora
 
-Seed inputs live in `fuzz/corpus/<target>/`.
+Seed inputs live in `fuzz/corpus/<target>/` (valid shapes, malformed, boundaries, R14 regression).
+
+Campaign findings fixed in-tree: **R14** (non-ASCII hex panic), **R15** (nested acquire Condvar hang).
