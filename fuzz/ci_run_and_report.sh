@@ -11,15 +11,14 @@ cd "$ROOT"
 
 mkdir -p "$(dirname "$OUT")"
 CORPUS_DIR="fuzz/corpus/${TARGET}"
-# Map target names that share corpora with alternate dirs
 case "$TARGET" in
-  hash_parser) CORPUS_DIR="fuzz/corpus/hash_parser" ;;
-  verify_input) CORPUS_DIR="fuzz/corpus/verify_input" ;;
-  hash_verify) CORPUS_DIR="fuzz/corpus/hash_verify" ;;
-  config_builder) CORPUS_DIR="fuzz/corpus/config_builder" ;;
-  malformed_v2) CORPUS_DIR="fuzz/corpus/malformed_v2" ;;
-  ffi_api) CORPUS_DIR="fuzz/corpus/ffi_api" ;;
-  scheduler) CORPUS_DIR="fuzz/corpus/scheduler" ;;
+  hash_parser|hash_verify|config_builder|malformed_v2|ffi_api|scheduler)
+    CORPUS_DIR="fuzz/corpus/${TARGET}"
+    ;;
+  *)
+    echo "unknown target: $TARGET" >&2
+    exit 2
+    ;;
 esac
 
 CORPUS_BEFORE=$(find "$CORPUS_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')

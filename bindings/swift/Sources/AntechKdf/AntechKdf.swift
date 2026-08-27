@@ -111,6 +111,27 @@ public enum AntechKdf {
     return try takeString(out)
   }
 
+  public static func hashWithConfigAndSalt(
+    _ password: Data,
+    salt: Data,
+    config: Config
+  ) throws -> String {
+    var out: UnsafeMutablePointer<CChar>?
+    let st: AntechStatus = try config.withC { cfg in
+      password.withUnsafeBytes { pwRaw in
+        salt.withUnsafeBytes { saltRaw in
+          let pw = pwRaw.bindMemory(to: UInt8.self).baseAddress
+          let s = saltRaw.bindMemory(to: UInt8.self).baseAddress
+          return antech_hash_with_config_and_salt(
+            pw, password.count, s, salt.count, &cfg, &out
+          )
+        }
+      }
+    }
+    try raise(st)
+    return try takeString(out)
+  }
+
   public static func verify(_ password: String, encodedHash: String) throws -> Bool {
     try verify(Data(password.utf8), encodedHash: encodedHash)
   }
@@ -122,10 +143,7 @@ public enum AntechKdf {
         antech_verify_bytes(base, password.count, cHash)
       }
     }
-    if st == ANTECH_OK { return true }
-    if st == ANTECH_VERIFICATION_FAILED { return false }
-    try raise(st)
-    return false
+    return try asVerified(st)
   }
 
   public static func needsRehash(_ encodedHash: String) throws -> Bool {
@@ -176,6 +194,34 @@ public enum AntechKdf {
     return try takeString(out)
   }
 
+  public static func hashWithInputsAndSalt(
+    _ password: Data,
+    salt: Data,
+    config: Config,
+    secret: Data? = nil,
+    associatedData: Data? = nil
+  ) throws -> String {
+    var out: UnsafeMutablePointer<CChar>?
+    let st: AntechStatus = try config.withC { cfg in
+      try withOptional(secret) { secPtr, secLen in
+        try withOptional(associatedData) { adPtr, adLen in
+          password.withUnsafeBytes { pwRaw in
+            salt.withUnsafeBytes { saltRaw in
+              let pw = pwRaw.bindMemory(to: UInt8.self).baseAddress
+              let s = saltRaw.bindMemory(to: UInt8.self).baseAddress
+              return antech_hash_with_inputs_and_salt(
+                pw, password.count, s, salt.count, &cfg,
+                secPtr, secLen, adPtr, adLen, &out
+              )
+            }
+          }
+        }
+      }
+    }
+    try raise(st)
+    return try takeString(out)
+  }
+
   public static func verifyWithInputs(
     _ password: Data,
     encodedHash: String,
@@ -194,11 +240,15 @@ public enum AntechKdf {
         }
       }
     }
-    if st == ANTECH_OK { return true }
-    if st == ANTECH_VERIFICATION_FAILED { return false }
-    try raise(st)
-    return false
+    return try asVerified(st)
   }
+}
+
+private func asVerified(_ st: AntechStatus) throws -> Bool {
+  if st == ANTECH_OK { return true }
+  if st == ANTECH_VERIFICATION_FAILED { return false }
+  try raise(st)
+  return false
 }
 
 private func withOptional<R>(

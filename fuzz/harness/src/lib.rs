@@ -1,5 +1,5 @@
 //! Shared fuzz surface logic (no libFuzzer dependency).
-//! Used by the Windows/CI fallback campaign and mirrored by `fuzz_targets/*`.
+//! libFuzzer targets and the Windows/CI fallback campaign both call these runners.
 
 use antech_kdf::{
     hash_with_config, hash_with_config_and_salt, verify, AntechConfig, GraphKind,
@@ -7,6 +7,7 @@ use antech_kdf::{
 use antech_kdf_core::{BoundedResourceScheduler, ResourcePolicy, ResourceScheduler};
 use antech_kdf_format::parse_hash;
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 #[derive(Default, Clone, Debug)]
@@ -90,6 +91,9 @@ pub fn run_config(data: &[u8]) -> Result<(), String> {
         if cfg.num_blocks() < 64 {
             return Err("accepted <64 blocks".into());
         }
+        if !(2..=8).contains(&cfg.fan_in.get()) {
+            return Err("accepted fan_in out of 2..=8".into());
+        }
     }
     Ok(())
 }
@@ -144,6 +148,7 @@ pub fn run_malformed_v2(data: &[u8]) -> Result<(), String> {
         format!("$antech$v2$m={m},s=16,b=32,f=2,g=3,l=32,m=2048${hex}${hex}"),
         format!("$antech$v2$m=-1,s=16,b=32,f=2,g=3,l=32${hex}${hex}"),
         format!("$antech$v2$m={m},s=16,b=128,f=2,g=3,l=32${hex}${hex}"),
+        format!("$bogus$v2$m={m},s=16,b=32,f=2,g=3,l=32${hex}${hex}"),
     ];
     for s in &templates {
         let p = parse_hash(s);
@@ -222,10 +227,16 @@ pub fn run_ffi(data: &[u8]) -> Result<(), String> {
         }
         let mut cfg = std::mem::zeroed::<AntechConfigC>();
         let _ = antech_config_default(&mut cfg);
+
         let mut out: *mut c_char = ptr::null_mut();
         if antech_hash_bytes(ptr::null(), 1, &mut out) != AntechStatus::InvalidInput {
             return Err("null password accepted".into());
         }
+        if antech_hash_bytes(data.as_ptr(), data.len(), ptr::null_mut()) != AntechStatus::InvalidInput
+        {
+            return Err("null out accepted".into());
+        }
+
         let tiny = AntechConfigC {
             memory_kib: 1024,
             salt_length: 16,
@@ -248,6 +259,7 @@ pub fn run_ffi(data: &[u8]) -> Result<(), String> {
             );
             if st == AntechStatus::Ok && !out.is_null() {
                 let _ = antech_verify_bytes(pw.as_ptr(), pw.len(), out);
+                let _ = antech_verify_bytes(b"x".as_ptr(), 1, out);
                 antech_free(out);
             }
         }
@@ -264,7 +276,7 @@ pub fn run_ffi(data: &[u8]) -> Result<(), String> {
 
 type TargetFn = fn(&[u8]) -> Result<(), String>;
 
-fn load_corpus(dir: &std::path::Path) -> Vec<Vec<u8>> {
+fn load_corpus(dir: &Path) -> Vec<Vec<u8>> {
     let mut out = Vec::new();
     if let Ok(rd) = std::fs::read_dir(dir) {
         for e in rd.flatten() {
@@ -276,14 +288,47 @@ fn load_corpus(dir: &std::path::Path) -> Vec<Vec<u8>> {
     out
 }
 
+fn record_failure(crash_dir: &Path, label: &str, data: &[u8], msg: Option<&str>) {
+    let _ = std::fs::create_dir_all(crash_dir);
+    let path = crash_dir.join(label);
+    let _ = std::fs::write(&path, data);
+    if let Some(msg) = msg {
+        let _ = std::fs::write(path.with_extension("msg"), msg.as_bytes());
+    }
+}
+
+fn execute_once(
+    f: TargetFn,
+    data: &[u8],
+    stats: &mut TargetStats,
+    crash_dir: &Path,
+    label: String,
+) {
+    stats.executions += 1;
+    match catch_unwind(AssertUnwindSafe(|| f(data))) {
+        Ok(Ok(())) => {}
+        Ok(Err(msg)) => {
+            stats.assertion_fails += 1;
+            if stats.assertion_fails <= 20 {
+                record_failure(crash_dir, &label, data, Some(&msg));
+            }
+        }
+        Err(_) => {
+            stats.panics += 1;
+            if stats.panics <= 20 {
+                record_failure(crash_dir, &label, data, None);
+            }
+        }
+    }
+}
+
 pub fn campaign(
     name: &str,
     f: TargetFn,
-    corpus_dir: &std::path::Path,
+    corpus_dir: &Path,
     duration: Duration,
-    crash_dir: &std::path::Path,
+    crash_dir: &Path,
 ) -> TargetStats {
-    // Avoid flooding logs when catch_unwind recovers from target panics.
     let prev = std::panic::take_hook();
     std::panic::set_hook(Box::new(|_| {}));
 
@@ -296,32 +341,19 @@ pub fn campaign(
     let t0 = Instant::now();
     let mut seed = 0xF00D_CAFEu64 ^ (name.len() as u64);
 
-    // Replay corpus first
     for (i, item) in corpus.iter().enumerate() {
-        stats.executions += 1;
-        match catch_unwind(AssertUnwindSafe(|| f(item))) {
-            Ok(Ok(())) => {}
-            Ok(Err(msg)) => {
-                stats.assertion_fails += 1;
-                let _ = std::fs::create_dir_all(crash_dir);
-                let _ = std::fs::write(crash_dir.join(format!("{name}_assert_{i}")), item);
-                let _ = std::fs::write(
-                    crash_dir.join(format!("{name}_assert_{i}.msg")),
-                    msg.as_bytes(),
-                );
-            }
-            Err(_) => {
-                stats.panics += 1;
-                let _ = std::fs::create_dir_all(crash_dir);
-                let _ = std::fs::write(crash_dir.join(format!("{name}_panic_{i}")), item);
-            }
-        }
+        execute_once(
+            f,
+            item,
+            &mut stats,
+            crash_dir,
+            format!("{name}_corpus_{i}"),
+        );
     }
 
     while t0.elapsed() < duration {
         let len = 1 + (xorshift(&mut seed) % 512) as usize;
         let mut data = fill(&mut seed, len);
-        // Occasionally splice corpus entry
         if !corpus.is_empty() && (xorshift(&mut seed) % 4 == 0) {
             let base = &corpus[(xorshift(&mut seed) as usize) % corpus.len()];
             data = base.clone();
@@ -330,31 +362,37 @@ pub fn campaign(
                 data[idx] ^= (xorshift(&mut seed) & 0xff) as u8;
             }
         }
-        stats.executions += 1;
-        match catch_unwind(AssertUnwindSafe(|| f(&data))) {
-            Ok(Ok(())) => {}
-            Ok(Err(msg)) => {
-                stats.assertion_fails += 1;
-                if stats.assertion_fails <= 20 {
-                    let _ = std::fs::create_dir_all(crash_dir);
-                    let path = crash_dir.join(format!("{name}_assert_{}", stats.assertion_fails));
-                    let _ = std::fs::write(&path, &data);
-                    let _ = std::fs::write(path.with_extension("msg"), msg.as_bytes());
-                }
-            }
-            Err(_) => {
-                stats.panics += 1;
-                if stats.panics <= 20 {
-                    let _ = std::fs::create_dir_all(crash_dir);
-                    let _ = std::fs::write(
-                        crash_dir.join(format!("{name}_panic_{}", stats.panics)),
-                        &data,
-                    );
-                }
-            }
-        }
+        let label = if stats.assertion_fails + stats.panics > 0 {
+            format!(
+                "{name}_mut_{}",
+                stats.assertion_fails + stats.panics
+            )
+        } else {
+            format!("{name}_mut")
+        };
+        execute_once(f, &data, &mut stats, crash_dir, label);
     }
+
     stats.elapsed_secs = t0.elapsed().as_secs_f64();
     std::panic::set_hook(prev);
     stats
+}
+
+/// Canonical target list for the fallback campaign (corpus path relative to repo root).
+pub fn campaign_targets() -> &'static [(&'static str, &'static str, TargetFn)] {
+    &[
+        ("parser", "fuzz/corpus/hash_parser", run_parser),
+        ("config", "fuzz/corpus/config_builder", run_config),
+        ("hash_verify", "fuzz/corpus/hash_verify", run_hash_verify),
+        ("malformed_v2", "fuzz/corpus/malformed_v2", run_malformed_v2),
+        ("ffi", "fuzz/corpus/ffi_api", run_ffi),
+        ("scheduler", "fuzz/corpus/scheduler", run_scheduler),
+    ]
+}
+
+pub fn csv_name(target: &str) -> PathBuf {
+    match target {
+        "malformed_v2" => PathBuf::from("parser_malformed_v2.csv"),
+        other => PathBuf::from(format!("{other}.csv")),
+    }
 }

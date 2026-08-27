@@ -1,4 +1,5 @@
-//! Integration tests for Antech KDF public API entry points.
+//! Integration tests for public API entry points (named scenarios).
+//! Boundary tables live in `reliability_matrix.rs`.
 
 use antech_kdf::{hash, needs_rehash, verify};
 
@@ -17,42 +18,11 @@ fn wrong_password_fails_verification() {
 }
 
 #[test]
-fn empty_password_verifies_successfully() {
-    let password = "";
-    let encoded = hash(password).unwrap();
-    assert!(verify(password, &encoded).unwrap());
-    assert!(!verify("non_empty", &encoded).unwrap());
-}
-
-#[test]
 fn unicode_password_verifies_successfully() {
     let password = "🔒🔑 Password_über_123_日本語 🔑🔒";
     let encoded = hash(password).unwrap();
     assert!(verify(password, &encoded).unwrap());
     assert!(!verify("🔒🔑 Password_über_123_日本語 🔑🔓", &encoded).unwrap());
-}
-
-#[test]
-fn binary_password_verifies_successfully() {
-    let password = [0x00, 0xFF, 0x42, 0x13, 0x37, 0xDE, 0xAD, 0xBE, 0xEF];
-    let encoded = hash(password).unwrap();
-    assert!(verify(password, &encoded).unwrap());
-
-    let wrong_binary = [0x00, 0xFF, 0x42, 0x13, 0x37, 0xDE, 0xAD, 0xBE, 0xF0];
-    assert!(!verify(wrong_binary, &encoded).unwrap());
-}
-
-#[test]
-fn large_password_verifies_successfully() {
-    let password = vec![b'A'; 65536];
-    let encoded = hash(&password).unwrap();
-    assert!(verify(&password, &encoded).unwrap());
-}
-
-#[test]
-fn malformed_hash_returns_error() {
-    assert!(verify("pass", "invalid_string").is_err());
-    assert!(verify("pass", "$antech$v2$m=invalid$salt$digest").is_err());
 }
 
 #[test]

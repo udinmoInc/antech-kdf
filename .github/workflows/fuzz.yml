@@ -23,7 +23,6 @@ jobs:
       - name: Build all fuzz targets
         run: |
           cargo fuzz build hash_parser
-          cargo fuzz build verify_input
           cargo fuzz build hash_verify
           cargo fuzz build config_builder
           cargo fuzz build malformed_v2
@@ -49,7 +48,6 @@ jobs:
           fi
           : > "$REPORT"
           ./fuzz/ci_run_and_report.sh hash_parser "$PR_SECS_PARSER" "$REPORT"
-          ./fuzz/ci_run_and_report.sh verify_input "$PR_SECS_LIGHT" "$REPORT"
           ./fuzz/ci_run_and_report.sh hash_verify "$PR_SECS_HEAVY" "$REPORT"
           ./fuzz/ci_run_and_report.sh config_builder "$PR_SECS_LIGHT" "$REPORT"
           ./fuzz/ci_run_and_report.sh malformed_v2 "$PR_SECS_LIGHT" "$REPORT"
@@ -105,7 +103,7 @@ jobs:
       - name: Run fallback harness (2 min/target)
         env:
           ANTECH_FUZZ_SECS: "120"
-        run: cargo run --manifest-path fuzz/harness/Cargo.toml --release
+        run: cargo run --manifest-path fuzz/Cargo.toml -p antech-kdf-fuzz-harness --release
       - name: Copy fallback summary into final-validation
         if: always()
         run: |

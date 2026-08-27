@@ -5,10 +5,7 @@
 //! ANTECH_FUZZ_SECS=600 cargo run --manifest-path fuzz/harness/Cargo.toml --release
 //! ```
 
-use antech_kdf_fuzz_harness::{
-    campaign, run_config, run_ffi, run_hash_verify, run_malformed_v2, run_parser, run_scheduler,
-    TargetStats,
-};
+use antech_kdf_fuzz_harness::{campaign, campaign_targets, csv_name, TargetStats};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
@@ -18,7 +15,7 @@ fn secs_per_target() -> u64 {
     std::env::var("ANTECH_FUZZ_SECS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(300) // default 5 minutes each when cargo-fuzz unavailable
+        .unwrap_or(300)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,41 +26,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Antech fuzz fallback campaign ===");
     println!("secs_per_target={secs} out={}", out.display());
 
-    let targets: &[(&str, &str, fn(&[u8]) -> Result<(), String>)] = &[
-        ("parser", "fuzz/corpus/hash_parser", run_parser),
-        ("config", "fuzz/corpus/config_builder", run_config),
-        ("hash_verify", "fuzz/corpus/hash_verify", run_hash_verify),
-        ("ffi", "fuzz/corpus/ffi_api", run_ffi),
-        ("scheduler", "fuzz/corpus/scheduler", run_scheduler),
-    ];
-
     let mut all = Vec::new();
-    for (name, corpus, f) in targets {
+    for (name, corpus, f) in campaign_targets() {
         println!("[{name}] running {secs}s …");
         let st = campaign(name, *f, &PathBuf::from(corpus), dur, &out.join("crashes"));
         println!(
             "[{name}] execs={} panics={} asserts={} corpus={} elapsed={:.1}s",
             st.executions, st.panics, st.assertion_fails, st.corpus_seeds, st.elapsed_secs
         );
-        write_csv(&out.join(format!("{name}.csv")), &st)?;
+        write_csv(&out.join(csv_name(name)), &st)?;
         all.push(st);
     }
-
-    // Extra malformed_v2 surface (feeds parser.csv companion file)
-    println!("[malformed_v2] running {secs}s …");
-    let st = campaign(
-        "malformed_v2",
-        run_malformed_v2,
-        &PathBuf::from("fuzz/corpus/malformed_v2"),
-        dur,
-        &out.join("crashes"),
-    );
-    println!(
-        "[malformed_v2] execs={} panics={} asserts={} corpus={} elapsed={:.1}s",
-        st.executions, st.panics, st.assertion_fails, st.corpus_seeds, st.elapsed_secs
-    );
-    write_csv(&out.join("parser_malformed_v2.csv"), &st)?;
-    all.push(st);
 
     write_summary(&out, &all, secs)?;
     let crashes = all.iter().map(|s| s.panics + s.assertion_fails).sum::<u64>();
@@ -136,7 +109,7 @@ fn write_summary(out: &PathBuf, all: &[TargetStats], secs: u64) -> std::io::Resu
     writeln!(log, "# Fuzz campaign log\n")?;
     writeln!(
         log,
-        "- Host: {} / {}\n- Mode: **fallback harness** (cargo-fuzz not installable: missing dlltool.exe / link.exe)\n- Duration: {secs}s per target\n",
+        "- Host: {} / {}\n- Mode: **fallback harness**\n- Duration: {secs}s per target\n",
         std::env::consts::OS,
         std::env::consts::ARCH
     )?;
@@ -148,21 +121,6 @@ fn write_summary(out: &PathBuf, all: &[TargetStats], secs: u64) -> std::io::Resu
         )?;
     }
 
-    let mut reg = File::create(out.join("regressions.csv"))?;
-    writeln!(reg, "id,status,notes")?;
-    writeln!(
-        reg,
-        "R12,covered,oversize acquire fail-fast exercised via scheduler+hash_verify paths"
-    )?;
-                writeln!(
-        reg,
-        "R14,fixed,hex_decode panicked on non-ASCII UTF-8 salt/digest; reject non-ASCII before slicing"
-    )?;
-    writeln!(
-        reg,
-        "R15,fixed,nested acquire-while-holding with queue_limit>0 Condvar-deadlocked; fail-fast"
-    )?;
-
     let summary = serde_json::json!({
         "verdict": verdict,
         "targets": all.len(),
@@ -172,15 +130,8 @@ fn write_summary(out: &PathBuf, all: &[TargetStats], secs: u64) -> std::io::Resu
         "assertion_fails": total_assert,
         "hangs": 0,
         "bugs_found": total_panic + total_assert,
-        "bugs_fixed": 2,
-        "regression_tests": 3,
         "campaign_time_secs": total_time,
         "tools_executed": ["antech-kdf-fuzz-harness"],
-        "blockers": [
-            "cargo-fuzz install failed on Windows GNU (dlltool.exe missing)",
-            "cargo-fuzz install failed on Windows MSVC nightly (link.exe / VS Build Tools missing)",
-            "libFuzzer campaigns run on ubuntu-latest via .github/workflows/fuzz.yml"
-        ],
         "per_target": all.iter().map(|s| serde_json::json!({
             "name": s.name,
             "executions": s.executions,
@@ -191,11 +142,5 @@ fn write_summary(out: &PathBuf, all: &[TargetStats], secs: u64) -> std::io::Resu
         })).collect::<Vec<_>>(),
     });
     fs::write(out.join("summary.json"), serde_json::to_string_pretty(&summary)?)?;
-
-    let mut readme = File::create(out.join("README.md"))?;
-    writeln!(
-        readme,
-        "# Fuzz results\n\nSee `summary.md` and `campaign-log.md`.\n\n- **Linux/CI libFuzzer:** `.github/workflows/fuzz.yml` + `fuzz/fuzz_targets/`\n- **This host:** fallback harness under `fuzz/harness`\n- Crashing inputs (if any): `crashes/`\n"
-    )?;
     Ok(())
 }

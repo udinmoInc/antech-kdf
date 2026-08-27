@@ -120,78 +120,99 @@ def _load_lib() -> ctypes.CDLL:
 
 
 _LIB = _load_lib()
-_LIB.antech_version.restype = ctypes.c_char_p
-_LIB.antech_free.argtypes = [ctypes.c_void_p]
-_LIB.antech_config_default.argtypes = [ctypes.POINTER(_AntechConfig)]
-_LIB.antech_config_default.restype = ctypes.c_int
-_LIB.antech_rehash_policy_default.argtypes = [ctypes.POINTER(_AntechRehashPolicy)]
-_LIB.antech_rehash_policy_default.restype = ctypes.c_int
-_LIB.antech_hash_bytes.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(ctypes.c_void_p),
-]
-_LIB.antech_hash_bytes.restype = ctypes.c_int
-_LIB.antech_hash_with_config_bytes.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(_AntechConfig),
-    ctypes.POINTER(ctypes.c_void_p),
-]
-_LIB.antech_hash_with_config_bytes.restype = ctypes.c_int
-_LIB.antech_hash_with_config_and_salt.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(_AntechConfig),
-    ctypes.POINTER(ctypes.c_void_p),
-]
-_LIB.antech_hash_with_config_and_salt.restype = ctypes.c_int
-_LIB.antech_verify_bytes.argtypes = [ctypes.c_void_p, ctypes.c_size_t, ctypes.c_char_p]
-_LIB.antech_verify_bytes.restype = ctypes.c_int
-_LIB.antech_hash_with_inputs_bytes.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(_AntechConfig),
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(ctypes.c_void_p),
-]
-_LIB.antech_hash_with_inputs_bytes.restype = ctypes.c_int
-_LIB.antech_hash_with_inputs_and_salt.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(_AntechConfig),
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.POINTER(ctypes.c_void_p),
-]
-_LIB.antech_hash_with_inputs_and_salt.restype = ctypes.c_int
-_LIB.antech_verify_with_inputs_bytes.argtypes = [
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.c_char_p,
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-    ctypes.c_void_p,
-    ctypes.c_size_t,
-]
-_LIB.antech_verify_with_inputs_bytes.restype = ctypes.c_int
-_LIB.antech_needs_rehash.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_int)]
-_LIB.antech_needs_rehash.restype = ctypes.c_int
-_LIB.antech_needs_rehash_with_policy.argtypes = [
-    ctypes.c_char_p,
-    ctypes.POINTER(_AntechRehashPolicy),
-    ctypes.POINTER(ctypes.c_int),
-]
-_LIB.antech_needs_rehash_with_policy.restype = ctypes.c_int
+
+
+def _bind(name: str, restype, argtypes) -> None:
+    fn = getattr(_LIB, name)
+    fn.restype = restype
+    fn.argtypes = argtypes
+
+
+_bind("antech_version", ctypes.c_char_p, [])
+_bind("antech_free", None, [ctypes.c_void_p])
+_bind("antech_config_default", ctypes.c_int, [ctypes.POINTER(_AntechConfig)])
+_bind("antech_rehash_policy_default", ctypes.c_int, [ctypes.POINTER(_AntechRehashPolicy)])
+_bind(
+    "antech_hash_bytes",
+    ctypes.c_int,
+    [ctypes.c_void_p, ctypes.c_size_t, ctypes.POINTER(ctypes.c_void_p)],
+)
+_bind(
+    "antech_hash_with_config_bytes",
+    ctypes.c_int,
+    [
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(_AntechConfig),
+        ctypes.POINTER(ctypes.c_void_p),
+    ],
+)
+_bind(
+    "antech_hash_with_config_and_salt",
+    ctypes.c_int,
+    [
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(_AntechConfig),
+        ctypes.POINTER(ctypes.c_void_p),
+    ],
+)
+_bind(
+    "antech_verify_bytes",
+    ctypes.c_int,
+    [ctypes.c_void_p, ctypes.c_size_t, ctypes.c_char_p],
+)
+_bind(
+    "antech_hash_with_inputs_bytes",
+    ctypes.c_int,
+    [
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(_AntechConfig),
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_void_p),
+    ],
+)
+_bind(
+    "antech_hash_with_inputs_and_salt",
+    ctypes.c_int,
+    [
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(_AntechConfig),
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_void_p),
+    ],
+)
+_bind(
+    "antech_verify_with_inputs_bytes",
+    ctypes.c_int,
+    [
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_char_p,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+    ],
+)
+_bind("antech_needs_rehash", ctypes.c_int, [ctypes.c_char_p, ctypes.POINTER(ctypes.c_int)])
+_bind(
+    "antech_needs_rehash_with_policy",
+    ctypes.c_int,
+    [ctypes.c_char_p, ctypes.POINTER(_AntechRehashPolicy), ctypes.POINTER(ctypes.c_int)],
+)
 
 
 def _raise(st: int) -> None:
@@ -289,7 +310,6 @@ class RehashPolicy:
 
 
 def _as_ptr(data: bytes):
-    """Return (c_void_p or None, keep-alive buffer or None)."""
     if not data:
         return None, None
     buf = (ctypes.c_uint8 * len(data)).from_buffer_copy(data)
@@ -297,7 +317,7 @@ def _as_ptr(data: bytes):
 
 
 def _opt_buf(data: Optional[bytes]) -> tuple[Optional[ctypes.c_void_p], int, object]:
-    """None → absent; b'' → present empty. Returns (ptr, len, keep-alive)."""
+    # None → absent; b'' → present empty (non-null scratch). See antech_kdf.h.
     if data is None:
         return None, 0, None
     if len(data) == 0:
@@ -307,6 +327,21 @@ def _opt_buf(data: Optional[bytes]) -> tuple[Optional[ctypes.c_void_p], int, obj
     return ctypes.cast(buf, ctypes.c_void_p), len(data), buf
 
 
+def _call_hash(fn, *args) -> str:
+    out = ctypes.c_void_p()
+    _raise(fn(*args, ctypes.byref(out)))
+    return _take(out)
+
+
+def _as_verified(st: int) -> bool:
+    if st == ANTECH_OK:
+        return True
+    if st == ANTECH_VERIFICATION_FAILED:
+        return False
+    _raise(st)
+    return False
+
+
 def version() -> str:
     v = _LIB.antech_version()
     return v.decode("utf-8") if v else __version__
@@ -314,52 +349,40 @@ def version() -> str:
 
 def hash(password: Password) -> str:
     pw = _pw_bytes(password)
-    out = ctypes.c_void_p()
     ptr, _keep = _as_ptr(pw)
-    _raise(_LIB.antech_hash_bytes(ptr, len(pw), ctypes.byref(out)))
-    return _take(out)
+    return _call_hash(_LIB.antech_hash_bytes, ptr, len(pw))
 
 
 def hash_with_config(password: Password, config: Config) -> str:
     pw = _pw_bytes(password)
-    out = ctypes.c_void_p()
     cfg = config._c()
     ptr, _keep = _as_ptr(pw)
-    _raise(
-        _LIB.antech_hash_with_config_bytes(ptr, len(pw), ctypes.byref(cfg), ctypes.byref(out))
+    return _call_hash(
+        _LIB.antech_hash_with_config_bytes, ptr, len(pw), ctypes.byref(cfg)
     )
-    return _take(out)
 
 
 def hash_with_config_and_salt(password: Password, salt: bytes, config: Config) -> str:
     pw = _pw_bytes(password)
-    out = ctypes.c_void_p()
     cfg = config._c()
     pw_ptr, _pw = _as_ptr(pw)
     salt_ptr, _salt = _as_ptr(salt)
-    _raise(
-        _LIB.antech_hash_with_config_and_salt(
-            pw_ptr,
-            len(pw),
-            salt_ptr,
-            len(salt),
-            ctypes.byref(cfg),
-            ctypes.byref(out),
-        )
+    return _call_hash(
+        _LIB.antech_hash_with_config_and_salt,
+        pw_ptr,
+        len(pw),
+        salt_ptr,
+        len(salt),
+        ctypes.byref(cfg),
     )
-    return _take(out)
 
 
 def verify(password: Password, encoded_hash: str) -> bool:
     pw = _pw_bytes(password)
     ptr, _keep = _as_ptr(pw)
-    st = _LIB.antech_verify_bytes(ptr, len(pw), encoded_hash.encode("utf-8"))
-    if st == ANTECH_OK:
-        return True
-    if st == ANTECH_VERIFICATION_FAILED:
-        return False
-    _raise(st)
-    return False
+    return _as_verified(
+        _LIB.antech_verify_bytes(ptr, len(pw), encoded_hash.encode("utf-8"))
+    )
 
 
 def hash_with_inputs(
@@ -369,26 +392,21 @@ def hash_with_inputs(
     secret: Optional[bytes] = None,
     associated_data: Optional[bytes] = None,
 ) -> str:
-    # None = absent; b"" = present-but-empty. See antech_kdf.h.
     pw = _pw_bytes(password)
-    out = ctypes.c_void_p()
     cfg = config._c()
     pw_ptr, _pw = _as_ptr(pw)
     sec_ptr, sec_len, _sec = _opt_buf(secret)
     ad_ptr, ad_len, _ad = _opt_buf(associated_data)
-    _raise(
-        _LIB.antech_hash_with_inputs_bytes(
-            pw_ptr,
-            len(pw),
-            ctypes.byref(cfg),
-            sec_ptr,
-            sec_len,
-            ad_ptr,
-            ad_len,
-            ctypes.byref(out),
-        )
+    return _call_hash(
+        _LIB.antech_hash_with_inputs_bytes,
+        pw_ptr,
+        len(pw),
+        ctypes.byref(cfg),
+        sec_ptr,
+        sec_len,
+        ad_ptr,
+        ad_len,
     )
-    return _take(out)
 
 
 def hash_with_inputs_and_salt(
@@ -400,27 +418,23 @@ def hash_with_inputs_and_salt(
     associated_data: Optional[bytes] = None,
 ) -> str:
     pw = _pw_bytes(password)
-    out = ctypes.c_void_p()
     cfg = config._c()
     pw_ptr, _pw = _as_ptr(pw)
     salt_ptr, _salt = _as_ptr(salt)
     sec_ptr, sec_len, _sec = _opt_buf(secret)
     ad_ptr, ad_len, _ad = _opt_buf(associated_data)
-    _raise(
-        _LIB.antech_hash_with_inputs_and_salt(
-            pw_ptr,
-            len(pw),
-            salt_ptr,
-            len(salt),
-            ctypes.byref(cfg),
-            sec_ptr,
-            sec_len,
-            ad_ptr,
-            ad_len,
-            ctypes.byref(out),
-        )
+    return _call_hash(
+        _LIB.antech_hash_with_inputs_and_salt,
+        pw_ptr,
+        len(pw),
+        salt_ptr,
+        len(salt),
+        ctypes.byref(cfg),
+        sec_ptr,
+        sec_len,
+        ad_ptr,
+        ad_len,
     )
-    return _take(out)
 
 
 def verify_with_inputs(
@@ -434,21 +448,17 @@ def verify_with_inputs(
     pw_ptr, _pw = _as_ptr(pw)
     sec_ptr, sec_len, _sec = _opt_buf(secret)
     ad_ptr, ad_len, _ad = _opt_buf(associated_data)
-    st = _LIB.antech_verify_with_inputs_bytes(
-        pw_ptr,
-        len(pw),
-        encoded_hash.encode("utf-8"),
-        sec_ptr,
-        sec_len,
-        ad_ptr,
-        ad_len,
+    return _as_verified(
+        _LIB.antech_verify_with_inputs_bytes(
+            pw_ptr,
+            len(pw),
+            encoded_hash.encode("utf-8"),
+            sec_ptr,
+            sec_len,
+            ad_ptr,
+            ad_len,
+        )
     )
-    if st == ANTECH_OK:
-        return True
-    if st == ANTECH_VERIFICATION_FAILED:
-        return False
-    _raise(st)
-    return False
 
 
 def needs_rehash(encoded_hash: str) -> bool:

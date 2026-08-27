@@ -1,14 +1,13 @@
-// Backend Integration Example: Go + Gin
-// Demonstrates strictly where HashPassword() and VerifyPassword() are invoked.
+// Backend sketch: register/login with the Go binding (CGO).
 
 package main
 
-import "github.com/antech-kdf/antech-kdf-go"
+import antech "github.com/udinmo/antech-kdf/bindings/go"
 
 func RegisterUser(password string) (string, error) {
-    return antech.HashPassword(password)
+	return antech.Hash([]byte(password))
 }
 
-func LoginUser(password string, storedHash string) (bool, error) {
-    return antech.VerifyPassword(password, storedHash)
+func LoginUser(password, storedHash string) (bool, error) {
+	return antech.Verify([]byte(password), storedHash)
 }

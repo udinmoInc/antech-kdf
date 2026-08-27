@@ -5,9 +5,6 @@ edition = "2021"
 publish = false
 description = "Deterministic/random fuzz campaign fallback when cargo-fuzz/libFuzzer is unavailable"
 
-# Standalone package (not part of the production workspace / cargo-fuzz package).
-[workspace]
-
 [dependencies]
 antech-kdf = { path = "../../crates/antech-kdf" }
 antech-kdf-format = { path = "../../crates/antech-kdf-format" }

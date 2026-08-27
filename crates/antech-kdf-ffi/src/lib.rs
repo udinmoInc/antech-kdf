@@ -175,6 +175,28 @@ fn hash_result(r: Result<String, antech_kdf::Error>, out: *mut *mut c_char) -> A
     }
 }
 
+fn require_cfg_out(
+    config: *const AntechConfigC,
+    out_hash: *mut *mut c_char,
+) -> Result<AntechConfig, AntechStatus> {
+    if config.is_null() || out_hash.is_null() {
+        return Err(AntechStatus::InvalidInput);
+    }
+    config_from_c(unsafe { &*config })
+}
+
+fn write_needs_rehash(hash: &str, policy: &RehashPolicy, out: *mut c_int) -> AntechStatus {
+    match needs_rehash_with_policy(hash, policy) {
+        Ok(needed) => {
+            unsafe {
+                *out = i32::from(needed);
+            }
+            AntechStatus::Ok
+        }
+        Err(e) => map_err(e),
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn antech_version() -> *const c_char {
     static VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "\0");
@@ -276,10 +298,7 @@ pub unsafe extern "C" fn antech_hash_with_config_bytes(
     out_hash: *mut *mut c_char,
 ) -> AntechStatus {
     ffi_catch(|| {
-        if config.is_null() || out_hash.is_null() {
-            return AntechStatus::InvalidInput;
-        }
-        let cfg = match config_from_c(&*config) {
+        let cfg = match require_cfg_out(config, out_hash) {
             Ok(c) => c,
             Err(s) => return s,
         };
@@ -301,10 +320,7 @@ pub unsafe extern "C" fn antech_hash_with_config_and_salt(
     out_hash: *mut *mut c_char,
 ) -> AntechStatus {
     ffi_catch(|| {
-        if config.is_null() || out_hash.is_null() {
-            return AntechStatus::InvalidInput;
-        }
-        let cfg = match config_from_c(&*config) {
+        let cfg = match require_cfg_out(config, out_hash) {
             Ok(c) => c,
             Err(s) => return s,
         };
@@ -332,10 +348,7 @@ pub unsafe extern "C" fn antech_hash_with_inputs_bytes(
     out_hash: *mut *mut c_char,
 ) -> AntechStatus {
     ffi_catch(|| {
-        if config.is_null() || out_hash.is_null() {
-            return AntechStatus::InvalidInput;
-        }
-        let cfg = match config_from_c(&*config) {
+        let cfg = match require_cfg_out(config, out_hash) {
             Ok(c) => c,
             Err(s) => return s,
         };
@@ -366,10 +379,7 @@ pub unsafe extern "C" fn antech_hash_with_inputs_and_salt(
     out_hash: *mut *mut c_char,
 ) -> AntechStatus {
     ffi_catch(|| {
-        if config.is_null() || out_hash.is_null() {
-            return AntechStatus::InvalidInput;
-        }
-        let cfg = match config_from_c(&*config) {
+        let cfg = match require_cfg_out(config, out_hash) {
             Ok(c) => c,
             Err(s) => return s,
         };
@@ -471,13 +481,7 @@ pub unsafe extern "C" fn antech_needs_rehash(
             Ok(s) => s,
             Err(s) => return s,
         };
-        match needs_rehash_with_policy(hash, &RehashPolicy::default()) {
-            Ok(needed) => {
-                *out_needs_rehash = i32::from(needed);
-                AntechStatus::Ok
-            }
-            Err(e) => map_err(e),
-        }
+        write_needs_rehash(hash, &RehashPolicy::default(), out_needs_rehash)
     })
 }
 
@@ -495,14 +499,7 @@ pub unsafe extern "C" fn antech_needs_rehash_with_policy(
             Ok(s) => s,
             Err(s) => return s,
         };
-        let pol = policy_from_c(&*policy);
-        match needs_rehash_with_policy(hash, &pol) {
-            Ok(needed) => {
-                *out_needs_rehash = i32::from(needed);
-                AntechStatus::Ok
-            }
-            Err(e) => map_err(e),
-        }
+        write_needs_rehash(hash, &policy_from_c(&*policy), out_needs_rehash)
     })
 }
 

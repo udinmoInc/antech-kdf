@@ -1,16 +1,15 @@
-// Backend Integration Example: Java + Spring Boot
-// Demonstrates strictly where AntechKdf.hash() and AntechKdf.verify() are invoked.
+// Backend sketch: register/login with the Java JNA binding.
 
-package com.antech.example;
+package com.udinmo.antech.example;
 
-import org.antech.AntechKdf;
+import com.udinmo.antech.AntechKdf;
 
-pub class UserService {
-    public String registerUser(String password) {
-        return AntechKdf.hash(password);
-    }
+public class UserService {
+  public String registerUser(String password) {
+    return AntechKdf.hash(password);
+  }
 
-    public boolean loginUser(String password, String storedHash) {
-        return AntechKdf.verify(password, storedHash);
-    }
+  public boolean loginUser(String password, String storedHash) {
+    return AntechKdf.verify(password, storedHash);
+  }
 }
