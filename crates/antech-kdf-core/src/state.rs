@@ -154,3 +154,32 @@ pub fn mix_parent_views(state: &mut [u64; 4], parents: &[&[u8]]) {
         mix_pair(state, parents[i], parents[i]);
     }
 }
+
+/// CombinedFrontier v5: local mix → state-dependent remote → post-mix scatter dests.
+/// `load(p)` must return a copy of parent block `p` (owned to avoid borrow conflicts).
+pub fn mix_combined_frontier_node(
+    state: &mut [u64; 4],
+    i: usize,
+    fan_in: u32,
+    period: usize,
+    tile_len: usize,
+    mut load: impl FnMut(usize) -> Vec<u8>,
+) -> (Option<usize>, Option<usize>) {
+    use crate::graph::{combined_local_parents, combined_remote_parents, scatter_dests_from_state};
+    if i == 0 {
+        return (None, None);
+    }
+    let local = combined_local_parents(state, i);
+    let local_bufs: Vec<Vec<u8>> = local.as_slice().iter().map(|&p| load(p)).collect();
+    {
+        let views: Vec<&[u8]> = local_bufs.iter().map(|b| b.as_slice()).collect();
+        mix_parent_views(state, &views);
+    }
+    let remote = combined_remote_parents(state, i, fan_in, period, tile_len);
+    let remote_bufs: Vec<Vec<u8>> = remote.as_slice().iter().map(|&p| load(p)).collect();
+    {
+        let views: Vec<&[u8]> = remote_bufs.iter().map(|b| b.as_slice()).collect();
+        mix_parent_views(state, &views);
+    }
+    scatter_dests_from_state(state, i)
+}

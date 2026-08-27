@@ -2,14 +2,21 @@
 
 use crate::graph::{self, MAX_PARENTS};
 use crate::memory::FrontierRing;
+use crate::mixing::{mix_parent_words, mix_pair_words};
 use crate::state::{
     bind_seed_with_inputs, finalize, mix_parent_views, phantom_block, seed_to_state,
     state_to_block_fast, xor_state_into_block_fast,
 };
 use crate::traits::KdfEngine;
 use antech_kdf_types::{Algorithm, AntechConfig, DeriveInputs, KdfError};
+use std::cell::RefCell;
 
 const MAX_BLOCK: usize = 64; // must match antech_kdf_types::BlockSize::MAX_BYTES
+
+thread_local! {
+    /// Reused CombinedFrontier word buffer (defender asymmetry vs per-guess alloc+memset).
+    static WORD_BUF: RefCell<Vec<[u64; 4]>> = RefCell::new(Vec::new());
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct AntechEngine;
@@ -48,85 +55,66 @@ impl AntechEngine {
             ));
         }
 
-        let num_blocks = cfg.num_blocks();
-        let period = cfg.critical_period();
-        let tile_len = cfg.tile_len();
-        let seed = bind_seed_with_inputs(password, salt, cfg, inputs);
-        let mut buffer = vec![0u8; cfg.memory.as_bytes()];
-        let mut state = seed_to_state(&seed);
-        let mut ring = FrontierRing::new(block_size);
-
-        let mut phantoms = [[0u8; MAX_BLOCK]; MAX_PARENTS];
-        let fan = (cfg.fan_in.get() as usize).min(MAX_PARENTS);
-        for (slot, phantom) in phantoms.iter_mut().enumerate().take(fan) {
-            phantom_block(&seed, slot as u32, block_size, &mut phantom[..block_size]);
+        // Default CombinedFrontier @ 32 B: word-packed walk (same digests as byte path).
+        if cfg.graph == antech_kdf_types::GraphKind::CombinedFrontier && block_size == 32 {
+            return derive_combined_frontier_words(password, salt, cfg, inputs);
         }
+
+        derive_generic_bytes(password, salt, cfg, inputs, block_size)
+    }
+}
+
+fn derive_combined_frontier_words(
+    password: &[u8],
+    salt: &[u8],
+    cfg: &AntechConfig,
+    inputs: &DeriveInputs,
+) -> Result<Vec<u8>, KdfError> {
+    let num_blocks = cfg.num_blocks();
+    let period = cfg.critical_period();
+    let tile_len = cfg.tile_len();
+    let seed = bind_seed_with_inputs(password, salt, cfg, inputs);
+    let mut state = seed_to_state(&seed);
+
+    let mut phantoms = [[0u64; 4]; 2];
+    for (slot, phantom) in phantoms.iter_mut().enumerate() {
+        let mut raw = [0u8; 32];
+        phantom_block(&seed, slot as u32, 32, &mut raw);
+        *phantom = [
+            u64::from_le_bytes(raw[0..8].try_into().unwrap()),
+            u64::from_le_bytes(raw[8..16].try_into().unwrap()),
+            u64::from_le_bytes(raw[16..24].try_into().unwrap()),
+            u64::from_le_bytes(raw[24..32].try_into().unwrap()),
+        ];
+    }
+
+    WORD_BUF.with(|cell| {
+        let mut buf = cell.borrow_mut();
+        if buf.len() < num_blocks {
+            buf.resize(num_blocks, [0u64; 4]);
+        }
+        let buf = &mut buf[..num_blocks];
 
         for i in 0..num_blocks {
-            let parents =
-                graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
-
-            let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
-            let mut n_views = 0usize;
-
             if i == 0 {
-                for slot in 0..fan {
-                    views[slot] = &phantoms[slot][..block_size];
-                }
-                n_views = fan;
+                mix_pair_words(&mut state, &phantoms[0], &phantoms[1]);
             } else {
-                #[cfg(target_arch = "x86_64")]
-                {
-                    for k in 0..parents.len {
-                        let p = parents.indices[k];
-                        let ptr = buffer.as_ptr().wrapping_add(p * block_size);
-                        // SAFETY: prefetch hint only; pointer is within `buffer`.
-                        unsafe {
-                            core::arch::x86_64::_mm_prefetch(
-                                ptr as *const i8,
-                                core::arch::x86_64::_MM_HINT_T0,
-                            );
-                        }
-                    }
-                }
-                for k in 0..parents.len {
-                    let p = parents.indices[k];
-                    views[n_views] = match ring.get(p) {
-                        Some(v) => v,
-                        None => &buffer[p * block_size..(p + 1) * block_size],
-                    };
-                    n_views += 1;
-                }
+                let local = graph::combined_local_parents(&state, i);
+                gather_mix_words(&mut state, buf, local.as_slice());
+                let remote =
+                    graph::combined_remote_parents(&state, i, cfg.fan_in.get(), period, tile_len);
+                gather_mix_words(&mut state, buf, remote.as_slice());
             }
-
-            mix_parent_views(&mut state, &views[..n_views]);
-
-            {
-                let out = &mut buffer[i * block_size..(i + 1) * block_size];
-                state_to_block_fast(&state, out);
-                ring.push(i, out);
-            }
-
-            if let Some(dest) = parents.scatter_dest {
-                if dest < num_blocks && dest != i {
-                    xor_state_into_block_fast(
-                        &state,
-                        &mut buffer[dest * block_size..(dest + 1) * block_size],
-                    );
-                }
-            }
-            if let Some(dest) = parents.scatter_dest2 {
-                if dest < num_blocks && dest != i {
-                    xor_state_into_block_fast(
-                        &state,
-                        &mut buffer[dest * block_size..(dest + 1) * block_size],
-                    );
-                }
-            }
+            buf[i] = state;
+            let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+            apply_scatter_words(&state, buf, i, s1, s2);
         }
 
-        let last = &buffer[(num_blocks - 1) * block_size..num_blocks * block_size];
-        let mut digest = finalize(&seed, &state, last, cfg.graph);
+        let mut last_bytes = [0u8; 32];
+        for w in 0..4 {
+            last_bytes[w * 8..(w + 1) * 8].copy_from_slice(&buf[num_blocks - 1][w].to_le_bytes());
+        }
+        let mut digest = finalize(&seed, &state, &last_bytes, cfg.graph);
         let out_len = cfg.output_length.as_bytes();
         if digest.len() > out_len {
             digest.truncate(out_len);
@@ -134,6 +122,189 @@ impl AntechEngine {
             digest.resize(out_len, 0);
         }
         Ok(digest)
+    })
+}
+
+#[inline(always)]
+fn gather_mix_words(state: &mut [u64; 4], buf: &[[u64; 4]], parents: &[usize]) {
+    if parents.is_empty() {
+        return;
+    }
+    #[cfg(target_arch = "x86_64")]
+    {
+        for &p in parents {
+            let ptr = buf.as_ptr().wrapping_add(p) as *const i8;
+            // SAFETY: prefetch hint only.
+            unsafe {
+                core::arch::x86_64::_mm_prefetch(ptr, core::arch::x86_64::_MM_HINT_T0);
+            }
+        }
+    }
+    let mut views = [[0u64; 4]; MAX_PARENTS];
+    let n = parents.len().min(MAX_PARENTS);
+    for (k, &p) in parents.iter().take(n).enumerate() {
+        views[k] = buf[p];
+    }
+    mix_parent_words(state, &views, n);
+}
+
+#[inline(always)]
+fn apply_scatter_words(
+    state: &[u64; 4],
+    buf: &mut [[u64; 4]],
+    i: usize,
+    s1: Option<usize>,
+    s2: Option<usize>,
+) {
+    for dest in [s1, s2].into_iter().flatten() {
+        if dest < buf.len() && dest != i {
+            buf[dest][0] ^= state[0];
+            buf[dest][1] ^= state[1];
+            buf[dest][2] ^= state[2];
+            buf[dest][3] ^= state[3];
+        }
+    }
+}
+
+fn derive_generic_bytes(
+    password: &[u8],
+    salt: &[u8],
+    cfg: &AntechConfig,
+    inputs: &DeriveInputs,
+    block_size: usize,
+) -> Result<Vec<u8>, KdfError> {
+    let num_blocks = cfg.num_blocks();
+    let period = cfg.critical_period();
+    let tile_len = cfg.tile_len();
+    let seed = bind_seed_with_inputs(password, salt, cfg, inputs);
+    let mut buffer = vec![0u8; cfg.memory.as_bytes()];
+    let mut state = seed_to_state(&seed);
+    let mut ring = FrontierRing::new(block_size);
+
+    let mut phantoms = [[0u8; MAX_BLOCK]; MAX_PARENTS];
+    let fan = (cfg.fan_in.get() as usize).min(MAX_PARENTS);
+    for (slot, phantom) in phantoms.iter_mut().enumerate().take(fan) {
+        phantom_block(&seed, slot as u32, block_size, &mut phantom[..block_size]);
+    }
+
+    for i in 0..num_blocks {
+        if i == 0 {
+            let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
+            for slot in 0..fan {
+                views[slot] = &phantoms[slot][..block_size];
+            }
+            mix_parent_views(&mut state, &views[..fan]);
+        } else if cfg.graph == antech_kdf_types::GraphKind::CombinedFrontier {
+            let local = graph::combined_local_parents(&state, i);
+            gather_and_mix(&mut state, &buffer, &ring, block_size, local.as_slice());
+
+            let remote =
+                graph::combined_remote_parents(&state, i, cfg.fan_in.get(), period, tile_len);
+            gather_and_mix(&mut state, &buffer, &ring, block_size, remote.as_slice());
+
+            let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+            {
+                let out = &mut buffer[i * block_size..(i + 1) * block_size];
+                state_to_block_fast(&state, out);
+                ring.push(i, out);
+            }
+            apply_scatter(&state, &mut buffer, block_size, num_blocks, i, s1, s2);
+            continue;
+        } else {
+            let parents = graph::parents_for_node(
+                cfg.graph,
+                &state,
+                i,
+                cfg.fan_in.get(),
+                period,
+                tile_len,
+            );
+            gather_and_mix(&mut state, &buffer, &ring, block_size, parents.as_slice());
+            {
+                let out = &mut buffer[i * block_size..(i + 1) * block_size];
+                state_to_block_fast(&state, out);
+                ring.push(i, out);
+            }
+            apply_scatter(
+                &state,
+                &mut buffer,
+                block_size,
+                num_blocks,
+                i,
+                parents.scatter_dest,
+                parents.scatter_dest2,
+            );
+            continue;
+        }
+
+        {
+            let out = &mut buffer[i * block_size..(i + 1) * block_size];
+            state_to_block_fast(&state, out);
+            ring.push(i, out);
+        }
+    }
+
+    let last = &buffer[(num_blocks - 1) * block_size..num_blocks * block_size];
+    let mut digest = finalize(&seed, &state, last, cfg.graph);
+    let out_len = cfg.output_length.as_bytes();
+    if digest.len() > out_len {
+        digest.truncate(out_len);
+    } else if digest.len() < out_len {
+        digest.resize(out_len, 0);
+    }
+    Ok(digest)
+}
+
+#[inline(always)]
+fn gather_and_mix(
+    state: &mut [u64; 4],
+    buffer: &[u8],
+    ring: &FrontierRing,
+    block_size: usize,
+    parents: &[usize],
+) {
+    if parents.is_empty() {
+        return;
+    }
+    let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
+    let mut n_views = 0usize;
+    #[cfg(target_arch = "x86_64")]
+    {
+        for &p in parents {
+            let ptr = buffer.as_ptr().wrapping_add(p * block_size);
+            // SAFETY: prefetch hint only; pointer is within `buffer`.
+            unsafe {
+                core::arch::x86_64::_mm_prefetch(ptr as *const i8, core::arch::x86_64::_MM_HINT_T0);
+            }
+        }
+    }
+    for &p in parents {
+        views[n_views] = match ring.get(p) {
+            Some(v) => v,
+            None => &buffer[p * block_size..(p + 1) * block_size],
+        };
+        n_views += 1;
+    }
+    mix_parent_views(state, &views[..n_views]);
+}
+
+#[inline(always)]
+fn apply_scatter(
+    state: &[u64; 4],
+    buffer: &mut [u8],
+    block_size: usize,
+    num_blocks: usize,
+    i: usize,
+    s1: Option<usize>,
+    s2: Option<usize>,
+) {
+    for dest in [s1, s2].into_iter().flatten() {
+        if dest < num_blocks && dest != i {
+            xor_state_into_block_fast(
+                state,
+                &mut buffer[dest * block_size..(dest + 1) * block_size],
+            );
+        }
     }
 }
 
@@ -165,6 +336,29 @@ mod tests {
         let b = engine.derive(b"pwd", b"salt_16_bytes!!", &cfg).unwrap();
         assert_eq!(a, b);
         assert_eq!(a.len(), 32);
+    }
+
+    #[test]
+    fn word_path_matches_byte_path_1mib() {
+        let cfg = AntechConfig::builder()
+            .memory_mib(1)
+            .graph(GraphKind::CombinedFrontier)
+            .build()
+            .unwrap();
+        let engine = AntechEngine::new();
+        let salt = b"salt_16_bytes!!";
+        let word = engine.derive(b"match_words", salt, &cfg).unwrap();
+        // Force byte path by using a temporary graph round-trip via generic with same logic:
+        // re-derive through generic bytes by calling derive_generic_bytes directly.
+        let byte = derive_generic_bytes(
+            b"match_words",
+            salt,
+            &cfg,
+            &DeriveInputs::default(),
+            32,
+        )
+        .unwrap();
+        assert_eq!(word, byte);
     }
 
     #[test]

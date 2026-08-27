@@ -14,7 +14,7 @@ Exactly one production construction is in scope:
 |---|---|
 | Public algorithm id | `antech` |
 | Stored hash encoding | **v2** (`$antech$v2$…`) |
-| Construction version (bound into seed) | **`CONSTRUCTION_VERSION = 4`** (u32 LE) |
+| Construction version (bound into seed) | **`CONSTRUCTION_VERSION = 5`** (u32 LE) |
 | Default graph | **`CombinedFrontier`** (tag `g = 3`) |
 | Default memory | **16 MiB** = 16384 KiB |
 | Default block size | **32 bytes** |
@@ -117,7 +117,7 @@ DOMAIN_SEED  = ASCII "antech-compute-memory-v4-seed"
 DOMAIN_FINAL = ASCII "antech-compute-memory-v4-final"
 DOMAIN_NODE0 = ASCII "antech-compute-memory-v2-node0"
 
-CONSTRUCTION_VERSION = 4u32
+CONSTRUCTION_VERSION = 5u32
 MIX_ROUNDS = 4u32
 FRONTIER_WIDTH = 64
 TILE_BLOCKS = 512
@@ -200,47 +200,54 @@ Let `Phantom[t]` be a `b`-byte buffer:
 
 ---
 
-## 10. Parent selection — CombinedFrontier (canonical)
+## 10. Parent selection — CombinedFrontier (canonical, construction v5)
 
 For node index `i = 0`, the parent set is empty; the engine uses phantoms instead (§11).
 
-For `i ≥ 1`, compute `Parents(S, i)` as follows (matches `graph::combined`).
+For `i ≥ 1`, CombinedFrontier is **two-phase**. Far parent indices are computed from the state *after* mixing local-frontier parents, so they cannot be prefetched or batched from the pre-node state. Scatter destinations are computed from the state *after* both mixes.
 
 Notation: `push_unique(addr)` adds `addr` if `addr < i`, not already present, and length `< 8`.
 
-1. Set `tile = max(tile_len, min(TILE_BLOCKS, 512))`, `tile_start = ⌊i / tile⌋ · tile`.
-2. `critical = (i % critical_period == 0) OR (i % FRONTIER_WIDTH == 0)`.
-3. **Local frontier (target 2 parents):**
-   - `push_unique(i−1)`
-   - `fw = min(FRONTIER_WIDTH, i)`
-   - `push_unique(i−1 − ((S[0] as usize) mod fw))`
-   - Fill remaining up to 2 with mixes:
-     \[
-     mix = S[\ell \bmod 4] \oplus (i\cdot GOLDEN),\quad
-     slot = (mix \bmod fw),\quad
-     push\_unique(i−1−slot)
-     \]
-     with a small guard loop as in source (break if no progress).
-4. If `i > tile_start + 1`:
+### 10.1 Phase 1 — local frontier `LocalParents(S, i)`
+
+- `push_unique(i−1)`
+- `fw = min(FRONTIER_WIDTH, i)`
+- `push_unique(i−1 − ((S[0] as usize) mod fw))`
+- Fill remaining up to 2 with mixes:
+  \[
+  mix = S[\ell \bmod 4] \oplus (i\cdot GOLDEN),\quad
+  slot = (mix \bmod fw),\quad
+  push\_unique(i−1−slot)
+  \]
+  with a small guard loop as in source (break if no progress).
+
+### 10.2 Phase 2 — remote `RemoteParents(S′, i)` (uses post-local state `S′`)
+
+1. Set `tile = max(tile_len, min(TILE_BLOCKS, 512))` (bound into seed; remote addressing is global).
+2. `critical = (i % critical_period == 0) OR (i % FRONTIER_WIDTH == 0)` (node class only).
+3. If `i > 1`:
    \[
-   push\_unique\big(tile\_start + ((S[1] \bmod (i-tile\_start)))\big)
+   push\_unique\big((S′[1] \bmod i)\big)
    \]
-5. If `i > fw + 1` with `remote_span = i − fw`:
-   - If `critical` OR `i` even: `push_unique(((S[1] ⊕ rotl(S[3],11)) mod remote_span))`
-   - If `critical`: `push_unique(((S[0] ⊕ GOLDEN) mod remote_span))`
-6. While `|Parents| < f` and guard `< 4`, add tile-local or `[0,i)` addresses from
+4. If `i > fw + 1` with `remote_span = i − fw`:
+   - Always: `push_unique(((S′[1] ⊕ rotl(S′[3],11)) mod remote_span))`
+   - Always: `push_unique(((S′[0] ⊕ GOLDEN) mod remote_span))`
+5. While `|Parents| < f` and guard `< 4`, add addresses from
    \[
-   mix = S[\ell \bmod 4] \oplus (i\cdot GOLDEN)
-   \]
-7. **Dual far-scatter destinations** (if `i > fw`, `span = i − fw`):
-   \[
-   \begin{aligned}
-   d_1 &= (S[2] \oplus GOLDEN) \bmod span \\
-   d_2 &= (S[3] \oplus \mathrm{rotl}(S[0],7)) \bmod span
-   \end{aligned}
+   mix = S′[\ell \bmod 4] \oplus (i\cdot GOLDEN),\quad push\_unique(mix \bmod i)
    \]
 
-Return parent index list (length between 1 and `f`, typically), plus optional `(d_1, d_2)`.
+### 10.3 Scatter destinations (post-mix state `S″`)
+
+If `i > fw`, `span = i − fw`:
+\[
+\begin{aligned}
+d_1 &= (S″[2] \oplus GOLDEN) \bmod span \\
+d_2 &= (S″[3] \oplus \mathrm{rotl}(S″[0],7)) \bmod span
+\end{aligned}
+\]
+
+> Other graph kinds remain single-shot as in `graph.rs` and are **not** the default review target.
 
 > Other graph kinds are defined in `crates/antech-kdf-core/src/graph.rs` but are **not** the default review target.
 
@@ -271,7 +278,7 @@ where `b1j = load64(B₁, 8j)`, `b2j = load64(B₂, 8j)` for `j ∈ {0,1,2,3}`, 
 - If `n = 1`: `MixPair(S, V[0], V[0])`.
 - Else: for `k = 0,2,4,…` while `k+1 < n`: `MixPair(S, V[k], V[k+1])`; if one view remains, `MixPair(S, V[last], V[last])`.
 
-### 11.3 Main loop
+### 11.3 Main loop (CombinedFrontier v5)
 
 ```
 S ← StateFromSeed(Seed)
@@ -279,10 +286,13 @@ allocate M[0 .. 1024*m) ← 0
 for i ← 0 .. N-1:
     if i = 0:
         V ← [Phantom[0], …, Phantom[f-1]]
+        MixViews(S, V)
     else:
-        (Parents, d1, d2) ← CombinedFrontierParents(S, i, f, …)
-        V ← [ M[p] for p in Parents ]   // current bytes of those blocks
-    MixViews(S, V)
+        L ← LocalParents(S, i)                 // §10.1
+        MixViews(S, [ M[p] for p in L ])
+        R ← RemoteParents(S, i, f, …)          // §10.2 (uses updated S)
+        MixViews(S, [ M[p] for p in R ])
+        (d1, d2) ← ScatterDests(S, i)          // §10.3
     // Write pristine block i from state
     M[i] ← LE-encode(S) truncated/padded to b bytes
     // Dual scatter: XOR state into historical blocks
@@ -292,7 +302,7 @@ for i ← 0 .. N-1:
         M[d2] ← M[d2] ⊕ LE-encode(S)
 ```
 
-After node `i`, the rolling state `S` is the state used for parent selection at node `i+1`.
+After node `i`, the rolling state `S` is the state used for local-parent selection at node `i+1`.
 
 **Important:** Scatters mutate previously written blocks. Any later read of those blocks sees the XOR-updated contents. A reduced-memory evaluator that discards blocks without replaying scatters is incorrect.
 
@@ -355,9 +365,11 @@ function Derive(P, Salt, Cfg):
     M ← zeros(Cfg.memory_bytes)
     Ph ← Phantoms(Seed, Cfg.fan_in, Cfg.block_size)
     for i in 0 .. N-1:
-        if i == 0: V ← Ph
-        else:      V ← gather(M, Parents(S,i))
-        S ← MixViews(S, V)                  // §11
+        if i == 0:
+            S ← MixViews(S, Ph)
+        else:
+            S ← MixViews(S, gather(M, LocalParents(S,i)))
+            S ← MixViews(S, gather(M, RemoteParents(S,i)))
         write_block(M, i, S)
         apply_scatters(M, S, scatter_dests(S,i))
     return Finalize(Seed, S, M[N-1], Cfg)   // §12
@@ -372,7 +384,7 @@ function Derive(P, Salt, Cfg):
 | Parameters | `antech-kdf-types` `AntechConfig` |
 | Seed / finalize | `antech-kdf-core` `state.rs` |
 | MixPair / phantoms | `antech-kdf-core` `mixing.rs` |
-| CombinedFrontier | `antech-kdf-core` `graph.rs` `combined` |
+| CombinedFrontier | `antech-kdf-core` `graph.rs` `combined_local_parents` / `combined_remote_parents` |
 | Main loop | `antech-kdf-core` `engine.rs` `AntechEngine::derive` |
 | Encoding | `antech-kdf-format` |
 | Public API | `antech-kdf` |

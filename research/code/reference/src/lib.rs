@@ -5,7 +5,7 @@
 
 use sha2::{Digest, Sha256};
 
-pub const CONSTRUCTION_VERSION: u32 = 4;
+pub const CONSTRUCTION_VERSION: u32 = 5;
 pub const MIX_ROUNDS: u32 = 4;
 pub const FRONTIER_WIDTH: usize = 64;
 pub const TILE_BLOCKS: usize = 512;
@@ -220,14 +220,8 @@ fn push_unique(indices: &mut Vec<usize>, addr: usize, i: usize) {
     indices.push(addr);
 }
 
-/// CombinedFrontier parent selection (canonical review graph).
-pub fn parents_combined_frontier(
-    state: &[u64; 4],
-    i: usize,
-    fan_in: u32,
-    critical_period: usize,
-    tile_len: usize,
-) -> ParentSet {
+/// CombinedFrontier two-phase parents (v5): local mix → state-dependent remote → post-mix scatter.
+pub fn parents_combined_frontier_local(state: &[u64; 4], i: usize) -> ParentSet {
     if i == 0 {
         return ParentSet {
             indices: Vec::new(),
@@ -235,15 +229,7 @@ pub fn parents_combined_frontier(
             scatter_dest2: None,
         };
     }
-
-    let tile = tile_len.max(TILE_BLOCKS.min(512));
-    let tile_start = (i / tile) * tile;
-    let critical =
-        (critical_period > 0 && i % critical_period == 0) || (i > 0 && i % FRONTIER_WIDTH == 0);
-
     let mut indices = Vec::new();
-
-    // Local frontier (aim for 2)
     indices.push(i - 1);
     let fw = FRONTIER_WIDTH.min(i);
     let slot = (state[0] as usize) % fw;
@@ -263,23 +249,40 @@ pub fn parents_combined_frontier(
             }
         }
     }
+    ParentSet {
+        indices,
+        scatter_dest: None,
+        scatter_dest2: None,
+    }
+}
 
-    if i > tile_start + 1 {
-        let span = i - tile_start;
-        let local_remote = tile_start + ((state[1] as usize) % span);
-        push_unique(&mut indices, local_remote, i);
+pub fn parents_combined_frontier_remote(
+    state: &[u64; 4],
+    i: usize,
+    fan_in: u32,
+    _critical_period: usize,
+    _tile_len: usize,
+) -> ParentSet {
+    if i == 0 {
+        return ParentSet {
+            indices: Vec::new(),
+            scatter_dest: None,
+            scatter_dest2: None,
+        };
+    }
+    let mut indices = Vec::new();
+    let fw = FRONTIER_WIDTH.min(i);
+
+    if i > 1 {
+        push_unique(&mut indices, (state[1] as usize) % i, i);
     }
 
     if i > fw + 1 {
         let remote_span = i - fw;
-        if critical || (i & 1) == 0 {
-            let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
-            push_unique(&mut indices, far, i);
-        }
-        if critical {
-            let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
-            push_unique(&mut indices, far2, i);
-        }
+        let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
+        push_unique(&mut indices, far, i);
+        let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
+        push_unique(&mut indices, far2, i);
     }
 
     let mut guard = 0usize;
@@ -287,18 +290,22 @@ pub fn parents_combined_frontier(
         guard += 1;
         let mix = state[indices.len() % 4] ^ (i as u64).wrapping_mul(GOLDEN);
         let before = indices.len();
-        let addr = if i > tile_start {
-            tile_start + ((mix as usize) % (i - tile_start).max(1))
-        } else {
-            (mix as usize) % i
-        };
-        push_unique(&mut indices, addr, i);
+        push_unique(&mut indices, (mix as usize) % i, i);
         if indices.len() == before {
             break;
         }
     }
 
-    let (scatter_dest, scatter_dest2) = if i > fw {
+    ParentSet {
+        indices,
+        scatter_dest: None,
+        scatter_dest2: None,
+    }
+}
+
+pub fn scatter_dests_from_state(state: &[u64; 4], i: usize) -> (Option<usize>, Option<usize>) {
+    let fw = FRONTIER_WIDTH.min(i);
+    if i > fw {
         let span = i - fw;
         (
             Some(((state[2] ^ GOLDEN) as usize) % span),
@@ -306,13 +313,26 @@ pub fn parents_combined_frontier(
         )
     } else {
         (None, None)
-    };
-
-    ParentSet {
-        indices,
-        scatter_dest,
-        scatter_dest2,
     }
+}
+
+/// CombinedFrontier parent selection (single-shot view for analysis tools).
+pub fn parents_combined_frontier(
+    state: &[u64; 4],
+    i: usize,
+    fan_in: u32,
+    critical_period: usize,
+    tile_len: usize,
+) -> ParentSet {
+    let mut local = parents_combined_frontier_local(state, i);
+    let remote = parents_combined_frontier_remote(state, i, fan_in, critical_period, tile_len);
+    for p in remote.indices {
+        push_unique(&mut local.indices, p, i);
+    }
+    let (s1, s2) = scatter_dests_from_state(state, i);
+    local.scatter_dest = s1;
+    local.scatter_dest2 = s2;
+    local
 }
 
 pub fn finalize(
@@ -360,35 +380,38 @@ pub fn derive(password: &[u8], salt: &[u8], cfg: &RefConfig) -> Vec<u8> {
     let tile_len = cfg.tile_len();
 
     for i in 0..n {
-        let parents = if i == 0 {
-            ParentSet {
-                indices: Vec::new(),
-                scatter_dest: None,
-                scatter_dest2: None,
-            }
-        } else {
-            parents_combined_frontier(&state, i, cfg.fan_in, period, tile_len)
-        };
-
-        let mut view_bufs: Vec<&[u8]> = Vec::new();
         if i == 0 {
-            for ph in &phantoms {
-                view_bufs.push(ph.as_slice());
-            }
+            let views: Vec<&[u8]> = phantoms.iter().map(|ph| ph.as_slice()).collect();
+            mix_views(&mut state, &views);
         } else {
-            for &p in &parents.indices {
-                let start = p * b;
-                view_bufs.push(&memory[start..start + b]);
+            let local = parents_combined_frontier_local(&state, i);
+            {
+                let views: Vec<&[u8]> = local
+                    .indices
+                    .iter()
+                    .map(|&p| &memory[p * b..p * b + b])
+                    .collect();
+                mix_views(&mut state, &views);
+            }
+            let remote =
+                parents_combined_frontier_remote(&state, i, cfg.fan_in, period, tile_len);
+            {
+                let views: Vec<&[u8]> = remote
+                    .indices
+                    .iter()
+                    .map(|&p| &memory[p * b..p * b + b])
+                    .collect();
+                mix_views(&mut state, &views);
             }
         }
-        mix_views(&mut state, &view_bufs);
 
         {
             let out = &mut memory[i * b..(i + 1) * b];
             state_to_block(&state, out);
         }
 
-        for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+        let (s1, s2) = scatter_dests_from_state(&state, i);
+        for dest_opt in [s1, s2] {
             if let Some(dest) = dest_opt {
                 if dest < n && dest != i {
                     let block = &mut memory[dest * b..(dest + 1) * b];

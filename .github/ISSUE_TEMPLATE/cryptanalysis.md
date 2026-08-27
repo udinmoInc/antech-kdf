@@ -11,7 +11,7 @@ labels: ["cryptanalysis"]
 
 ## Affected construction
 
-- [ ] Canonical default (16 MiB, CombinedFrontier, construction version 4, hash encoding v2)
+- [ ] Canonical default (16 MiB, CombinedFrontier, construction version 5, hash encoding v2)
 - [ ] Other parameters (specify memory / graph / fan-in / block size)
 - [ ] Implementation bug (parser, FFI, verify), not a KDF shortcut
 

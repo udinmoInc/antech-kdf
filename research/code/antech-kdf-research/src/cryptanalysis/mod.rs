@@ -100,18 +100,24 @@ pub fn full_eval_instrumented(
     let fw = antech_kdf_core::config::FRONTIER_WIDTH;
 
     for i in 0..num_blocks {
-        let parents =
-            graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
         let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
         let mut n_views = 0usize;
-        if i == 0 {
+        let (s1, s2) = if i == 0 {
             for slot in 0..fan {
                 views[slot] = &phantoms[slot][..block_size];
             }
             n_views = fan;
+            if n_views == 1 {
+                stats.mix_pairs += 1;
+            } else {
+                stats.mix_pairs += (n_views / 2) as u64 + u64::from(n_views % 2 == 1);
+            }
+            mix_parent_views(&mut state, &views[..n_views]);
+            (None, None)
         } else {
-            for k in 0..parents.len {
-                let p = parents.indices[k];
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
+                let p = local.indices[k];
                 touched.insert(p);
                 if i > p && i - p <= fw {
                     stats.frontier_parent_hits += 1;
@@ -122,18 +128,43 @@ pub fn full_eval_instrumented(
                 n_views += 1;
                 stats.parent_gathers += 1;
             }
-        }
-        if n_views == 1 {
-            stats.mix_pairs += 1;
-        } else {
-            stats.mix_pairs += (n_views / 2) as u64 + u64::from(n_views % 2 == 1);
-        }
-        mix_parent_views(&mut state, &views[..n_views]);
+            if n_views == 1 {
+                stats.mix_pairs += 1;
+            } else {
+                stats.mix_pairs += (n_views / 2) as u64 + u64::from(n_views % 2 == 1);
+            }
+            mix_parent_views(&mut state, &views[..n_views]);
+
+            let remote =
+                graph::combined_remote_parents(&state, i, cfg.fan_in.get(), period, tile_len);
+            n_views = 0;
+            for k in 0..remote.len {
+                let p = remote.indices[k];
+                touched.insert(p);
+                if i > p && i - p <= fw {
+                    stats.frontier_parent_hits += 1;
+                } else {
+                    stats.far_parent_hits += 1;
+                }
+                views[n_views] = &buffer[p * block_size..(p + 1) * block_size];
+                n_views += 1;
+                stats.parent_gathers += 1;
+            }
+            if n_views == 1 {
+                stats.mix_pairs += 1;
+            } else if n_views > 0 {
+                stats.mix_pairs += (n_views / 2) as u64 + u64::from(n_views % 2 == 1);
+            }
+            if n_views > 0 {
+                mix_parent_views(&mut state, &views[..n_views]);
+            }
+            graph::scatter_dests_from_state(&state, i)
+        };
         {
             let out = &mut buffer[i * block_size..(i + 1) * block_size];
             state_to_block_fast(&state, out);
         }
-        if let Some(dest) = parents.scatter_dest {
+        if let Some(dest) = s1 {
             if dest < num_blocks && dest != i {
                 xor_state_into_block_fast(
                     &state,
@@ -142,7 +173,7 @@ pub fn full_eval_instrumented(
                 stats.scatters += 1;
             }
         }
-        if let Some(dest) = parents.scatter_dest2 {
+        if let Some(dest) = s2 {
             if dest < num_blocks && dest != i {
                 xor_state_into_block_fast(
                     &state,
@@ -229,8 +260,6 @@ pub fn influence_analysis(cfg: &AntechConfig, password: &[u8], salt: &[u8]) -> I
     let mut scatter_into: Vec<Vec<usize>> = vec![Vec::new(); num_blocks];
 
     for i in 0..num_blocks {
-        let parents =
-            graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
         let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
         let mut n_views = 0usize;
         if i == 0 {
@@ -238,20 +267,40 @@ pub fn influence_analysis(cfg: &AntechConfig, password: &[u8], salt: &[u8]) -> I
                 views[slot] = &phantoms[slot][..block_size];
             }
             n_views = fan;
+            mix_parent_views(&mut state, &views[..n_views]);
         } else {
-            for k in 0..parents.len {
-                let p = parents.indices[k];
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
+                let p = local.indices[k];
                 parents_of[i].push(p);
                 views[n_views] = &buffer[p * block_size..(p + 1) * block_size];
                 n_views += 1;
             }
+            mix_parent_views(&mut state, &views[..n_views]);
+
+            let remote =
+                graph::combined_remote_parents(&state, i, cfg.fan_in.get(), period, tile_len);
+            n_views = 0;
+            for k in 0..remote.len {
+                let p = remote.indices[k];
+                parents_of[i].push(p);
+                views[n_views] = &buffer[p * block_size..(p + 1) * block_size];
+                n_views += 1;
+            }
+            if n_views > 0 {
+                mix_parent_views(&mut state, &views[..n_views]);
+            }
         }
-        mix_parent_views(&mut state, &views[..n_views]);
         {
             let out = &mut buffer[i * block_size..(i + 1) * block_size];
             state_to_block_fast(&state, out);
         }
-        for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+        let (s1, s2) = if i == 0 {
+            (None, None)
+        } else {
+            graph::scatter_dests_from_state(&state, i)
+        };
+        for dest_opt in [s1, s2] {
             if let Some(dest) = dest_opt {
                 if dest < num_blocks && dest != i {
                     xor_state_into_block_fast(
@@ -321,8 +370,6 @@ pub fn attack_skip_unreachable(
         if !needed.contains(&i) && i != num_blocks - 1 {
             continue;
         }
-        let parents =
-            graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
         let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
         let mut n_views = 0usize;
         if i == 0 {
@@ -330,19 +377,38 @@ pub fn attack_skip_unreachable(
                 views[slot] = &phantoms[slot][..block_size];
             }
             n_views = fan;
+            mix_parent_views(&mut state, &views[..n_views]);
         } else {
-            for k in 0..parents.len {
-                let p = parents.indices[k];
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
+                let p = local.indices[k];
                 views[n_views] = &buffer[p * block_size..(p + 1) * block_size];
                 n_views += 1;
             }
+            mix_parent_views(&mut state, &views[..n_views]);
+
+            let remote =
+                graph::combined_remote_parents(&state, i, cfg.fan_in.get(), period, tile_len);
+            n_views = 0;
+            for k in 0..remote.len {
+                let p = remote.indices[k];
+                views[n_views] = &buffer[p * block_size..(p + 1) * block_size];
+                n_views += 1;
+            }
+            if n_views > 0 {
+                mix_parent_views(&mut state, &views[..n_views]);
+            }
         }
-        mix_parent_views(&mut state, &views[..n_views]);
         {
             let out = &mut buffer[i * block_size..(i + 1) * block_size];
             state_to_block_fast(&state, out);
         }
-        for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+        let (s1, s2) = if i == 0 {
+            (None, None)
+        } else {
+            graph::scatter_dests_from_state(&state, i)
+        };
+        for dest_opt in [s1, s2] {
             if let Some(dest) = dest_opt {
                 if dest < num_blocks && dest != i {
                     xor_state_into_block_fast(
@@ -439,14 +505,24 @@ pub fn parent_prediction_probe(password: &[u8], salt: &[u8]) -> ParentPredictRes
     let mut matches = 0usize;
     let mut samples = 0usize;
     for i in 0..n {
-        let real = graph::parents_for_node(probe_cfg.graph, &state, i, 2, period, tile_len);
         if i > 0 {
             let partial = [state[0], 0, 0, 0];
-            let pred = graph::parents_for_node(probe_cfg.graph, &partial, i, 2, period, tile_len);
+            let local_real = graph::combined_local_parents(&state, i);
+            let local_pred = graph::combined_local_parents(&partial, i);
+            let mut views: [&[u8]; 8] = [&[]; 8];
+            let mut nv = 0;
+            for k in 0..local_real.len {
+                let p = local_real.indices[k];
+                views[nv] = &buffer[p * block_size..(p + 1) * block_size];
+                nv += 1;
+            }
+            let mut after_local = state;
+            mix_parent_views(&mut after_local, &views[..nv]);
+            let remote_real = graph::combined_remote_parents(&after_local, i, 2, period, tile_len);
+            let remote_pred = graph::combined_remote_parents(&partial, i, 2, period, tile_len);
             samples += 1;
-            if real.as_slice() == pred.as_slice()
-                && real.scatter_dest == pred.scatter_dest
-                && real.scatter_dest2 == pred.scatter_dest2
+            if local_real.as_slice() == local_pred.as_slice()
+                && remote_real.as_slice() == remote_pred.as_slice()
             {
                 matches += 1;
             }
@@ -458,16 +534,34 @@ pub fn parent_prediction_probe(password: &[u8], salt: &[u8]) -> ParentPredictRes
             views[0] = &phantoms[0][..block_size];
             views[1] = &phantoms[1][..block_size];
             nv = 2;
+            mix_parent_views(&mut state, &views[..nv]);
         } else {
-            for k in 0..real.len {
-                let p = real.indices[k];
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
+                let p = local.indices[k];
                 views[nv] = &buffer[p * block_size..(p + 1) * block_size];
                 nv += 1;
             }
+            mix_parent_views(&mut state, &views[..nv]);
+
+            let remote = graph::combined_remote_parents(&state, i, 2, period, tile_len);
+            nv = 0;
+            for k in 0..remote.len {
+                let p = remote.indices[k];
+                views[nv] = &buffer[p * block_size..(p + 1) * block_size];
+                nv += 1;
+            }
+            if nv > 0 {
+                mix_parent_views(&mut state, &views[..nv]);
+            }
         }
-        mix_parent_views(&mut state, &views[..nv]);
         state_to_block_fast(&state, &mut buffer[i * block_size..(i + 1) * block_size]);
-        for dest_opt in [real.scatter_dest, real.scatter_dest2] {
+        let (s1, s2) = if i == 0 {
+            (None, None)
+        } else {
+            graph::scatter_dests_from_state(&state, i)
+        };
+        for dest_opt in [s1, s2] {
             if let Some(dest) = dest_opt {
                 if dest < n && dest != i {
                     xor_state_into_block_fast(
@@ -483,7 +577,8 @@ pub fn parent_prediction_probe(password: &[u8], salt: &[u8]) -> ParentPredictRes
         samples,
         exact_matches_from_partial_state: matches,
         fraction_predictable: matches as f64 / samples.max(1) as f64,
-        notes: "Parents depend on full 256-bit state; partial prediction fails".into(),
+        notes: "Exact local+remote parent-set match using only state[0] from pre-node state (no local mix before far addresses)"
+            .into(),
     }
 }
 
@@ -563,25 +658,25 @@ impl CheckpointAttack {
         let was_recording = self.recording;
         self.recording = false;
         for j in base..=idx {
-            let parents =
-                graph::parents_for_node(self.cfg.graph, &state, j, fan_in, period, tile_len);
-            let parent_views: Vec<Vec<u8>> = if j == 0 {
-                (0..fan_in)
+            if j == 0 {
+                let parent_views: Vec<Vec<u8>> = (0..fan_in)
                     .map(|slot| {
                         let mut b = vec![0u8; block_size];
                         phantom_block(&self.seed, slot, block_size, &mut b);
                         b
                     })
-                    .collect()
+                    .collect();
+                let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+                mix_parent_views(&mut state, &refs);
             } else {
-                parents
+                let local = graph::combined_local_parents(&state, j);
+                let parent_views: Vec<Vec<u8>> = local
                     .as_slice()
                     .iter()
                     .map(|&p| {
                         if let Some(b) = self.blocks.get(&p) {
                             b.clone()
                         } else if p < base {
-                            // Nested get may re-enter; restore recording flag carefully.
                             let nested = {
                                 self.recording = false;
                                 self.get_block(p)
@@ -591,10 +686,32 @@ impl CheckpointAttack {
                             panic!("missing in-window parent {p} while recomputing {j}");
                         }
                     })
-                    .collect()
-            };
-            let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
-            mix_parent_views(&mut state, &refs);
+                    .collect();
+                let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+                mix_parent_views(&mut state, &refs);
+
+                let remote =
+                    graph::combined_remote_parents(&state, j, fan_in, period, tile_len);
+                let parent_views: Vec<Vec<u8>> = remote
+                    .as_slice()
+                    .iter()
+                    .map(|&p| {
+                        if let Some(b) = self.blocks.get(&p) {
+                            b.clone()
+                        } else if p < base {
+                            let nested = {
+                                self.recording = false;
+                                self.get_block(p)
+                            };
+                            nested
+                        } else {
+                            panic!("missing in-window parent {p} while recomputing {j}");
+                        }
+                    })
+                    .collect();
+                let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+                mix_parent_views(&mut state, &refs);
+            }
             if !self.blocks.contains_key(&j) {
                 let mut block = vec![0u8; block_size];
                 state_to_block_fast(&state, &mut block);
@@ -621,35 +738,45 @@ impl CheckpointAttack {
         self.recording = true;
 
         for i in 0..num_blocks {
-            let parents =
-                graph::parents_for_node(self.cfg.graph, &state, i, fan_in, period, tile_len);
-            let parent_views: Vec<Vec<u8>> = if i == 0 {
-                (0..fan_in)
+            if i == 0 {
+                let parent_views: Vec<Vec<u8>> = (0..fan_in)
                     .map(|slot| {
                         let mut b = vec![0u8; block_size];
                         phantom_block(&self.seed, slot, block_size, &mut b);
                         b
                     })
-                    .collect()
+                    .collect();
+                let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+                mix_parent_views(&mut state, &refs);
             } else {
-                parents
-                    .as_slice()
-                    .iter()
-                    .map(|&p| self.get_block(p))
-                    .collect()
-            };
-            let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
-            mix_parent_views(&mut state, &refs);
+                let local = graph::combined_local_parents(&state, i);
+                let parent_views: Vec<Vec<u8>> =
+                    local.as_slice().iter().map(|&p| self.get_block(p)).collect();
+                let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+                mix_parent_views(&mut state, &refs);
+
+                let remote =
+                    graph::combined_remote_parents(&state, i, fan_in, period, tile_len);
+                let parent_views: Vec<Vec<u8>> =
+                    remote.as_slice().iter().map(|&p| self.get_block(p)).collect();
+                let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+                mix_parent_views(&mut state, &refs);
+            }
             let mut block = vec![0u8; block_size];
             state_to_block_fast(&state, &mut block);
             self.blocks.insert(i, block);
             // First write of i: no prior scatters yet (scatters only target past indices).
-            if let Some(dest) = parents.scatter_dest {
+            let (s1, s2) = if i == 0 {
+                (None, None)
+            } else {
+                graph::scatter_dests_from_state(&state, i)
+            };
+            if let Some(dest) = s1 {
                 if dest != i {
                     self.apply_scatter(dest, &state);
                 }
             }
-            if let Some(dest) = parents.scatter_dest2 {
+            if let Some(dest) = s2 {
                 if dest != i {
                     self.apply_scatter(dest, &state);
                 }
@@ -687,17 +814,19 @@ pub fn tmto_naive_incorrect(
     let mut state = state_from_seed(&seed);
 
     for i in 0..num_blocks {
-        let parents = graph::parents_for_node(cfg.graph, &state, i, fan_in, period, tile_len);
-        let parent_views: Vec<Vec<u8>> = if i == 0 {
-            (0..fan_in)
+        if i == 0 {
+            let parent_views: Vec<Vec<u8>> = (0..fan_in)
                 .map(|slot| {
                     let mut b = vec![0u8; block_size];
                     phantom_block(&seed, slot, block_size, &mut b);
                     b
                 })
-                .collect()
+                .collect();
+            let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+            mix_parent_views(&mut state, &refs);
         } else {
-            parents
+            let local = graph::combined_local_parents(&state, i);
+            let parent_views: Vec<Vec<u8>> = local
                 .as_slice()
                 .iter()
                 .map(|&p| {
@@ -706,19 +835,38 @@ pub fn tmto_naive_incorrect(
                         .cloned()
                         .unwrap_or_else(|| vec![0u8; block_size])
                 })
-                .collect()
-        };
-        let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
-        mix_parent_views(&mut state, &refs);
+                .collect();
+            let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+            mix_parent_views(&mut state, &refs);
+
+            let remote = graph::combined_remote_parents(&state, i, fan_in, period, tile_len);
+            let parent_views: Vec<Vec<u8>> = remote
+                .as_slice()
+                .iter()
+                .map(|&p| {
+                    blocks
+                        .get(&p)
+                        .cloned()
+                        .unwrap_or_else(|| vec![0u8; block_size])
+                })
+                .collect();
+            let refs: Vec<&[u8]> = parent_views.iter().map(|v| v.as_slice()).collect();
+            mix_parent_views(&mut state, &refs);
+        }
         let mut block = vec![0u8; block_size];
         state_to_block_fast(&state, &mut block);
         blocks.insert(i, block);
-        if let Some(dest) = parents.scatter_dest {
+        let (s1, s2) = if i == 0 {
+            (None, None)
+        } else {
+            graph::scatter_dests_from_state(&state, i)
+        };
+        if let Some(dest) = s1 {
             if let Some(b) = blocks.get_mut(&dest) {
                 xor_state_into_block_fast(&state, b);
             }
         }
-        if let Some(dest) = parents.scatter_dest2 {
+        if let Some(dest) = s2 {
             if let Some(b) = blocks.get_mut(&dest) {
                 xor_state_into_block_fast(&state, b);
             }

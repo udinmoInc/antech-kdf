@@ -2,6 +2,10 @@
 //! Digests always come from `AntechEngine::derive`. Intermediates use the same
 //! core primitives as the engine loop.
 
+use antech_kdf::{
+    hash_with_config_and_salt, hash_with_inputs_and_salt, AntechConfig as PubConfig, DeriveInputs,
+    GraphKind as PubGraph, SecretBytes,
+};
 use antech_kdf_core::graph::{self, MAX_PARENTS};
 use antech_kdf_core::memory::FrontierRing;
 use antech_kdf_core::state::{
@@ -14,8 +18,81 @@ use serde_json::{json, Value};
 use std::fs;
 use std::path::PathBuf;
 
+fn hex_decode(s: &str) -> Vec<u8> {
+    if s.is_empty() {
+        return Vec::new();
+    }
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).expect("hex"))
+        .collect()
+}
+
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
+fn refresh_sdk_vectors() {
+    let path = PathBuf::from("sdk/conformance/vectors.json");
+    if !path.exists() {
+        eprintln!("skip sdk vectors (not found)");
+        return;
+    }
+    let mut v: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    for case in v["cases"].as_array_mut().unwrap() {
+        let password = hex_decode(case["password_hex"].as_str().unwrap_or(""));
+        let salt = hex_decode(case["salt_hex"].as_str().unwrap());
+        let cfgj = &case["config"];
+        let graph = PubGraph::from_tag(cfgj["graph"].as_u64().unwrap() as u32).unwrap();
+        let cfg = PubConfig::builder()
+            .memory_kib(cfgj["memory_kib"].as_u64().unwrap() as usize)
+            .salt_length(cfgj["salt_length"].as_u64().unwrap() as usize)
+            .block_size(cfgj["block_size"].as_u64().unwrap() as usize)
+            .fan_in(cfgj["fan_in"].as_u64().unwrap() as u32)
+            .graph(graph)
+            .output_length(cfgj["output_length"].as_u64().unwrap() as usize)
+            .build()
+            .unwrap();
+        let encoded = if case.get("secret_hex").is_some() || case.get("associated_data_hex").is_some()
+        {
+            let mut inputs = DeriveInputs::default();
+            if let Some(s) = case.get("secret_hex") {
+                inputs.secret = Some(SecretBytes::new(hex_decode(s.as_str().unwrap())).unwrap());
+            }
+            if let Some(a) = case.get("associated_data_hex") {
+                inputs.associated_data = Some(hex_decode(a.as_str().unwrap()));
+            }
+            hash_with_inputs_and_salt(&password, &salt, &cfg, &inputs).unwrap()
+        } else {
+            hash_with_config_and_salt(&password, &salt, &cfg).unwrap()
+        };
+        let digest = encoded.rsplit('$').next().unwrap();
+        case["digest_hex"] = json!(digest);
+    }
+    fs::write(&path, serde_json::to_string_pretty(&v).unwrap()).unwrap();
+    eprintln!("Updated {}", path.display());
+}
+
+fn gather_mix(
+    state: &mut [u64; 4],
+    buffer: &[u8],
+    ring: &FrontierRing,
+    block_size: usize,
+    parents: &[usize],
+) {
+    if parents.is_empty() {
+        return;
+    }
+    let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
+    let mut n_views = 0usize;
+    for &p in parents {
+        views[n_views] = match ring.get(p) {
+            Some(v) => v,
+            None => &buffer[p * block_size..(p + 1) * block_size],
+        };
+        n_views += 1;
+    }
+    mix_parent_views(state, &views[..n_views]);
 }
 
 fn state_hex(state: &[u64; 4]) -> [String; 4] {
@@ -86,29 +163,30 @@ fn derive_with_intermediates(
     let mut node_records: Vec<Value> = Vec::new();
 
     for i in 0..num_blocks {
-        let parents =
-            graph::parents_for_node(cfg.graph, &state, i, cfg.fan_in.get(), period, tile_len);
-
-        let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
-        let mut n_views = 0usize;
+        let mut parents_list: Vec<usize> = Vec::new();
+        let mut scatter_dest = None;
+        let mut scatter_dest2 = None;
 
         if i == 0 {
+            let mut views: [&[u8]; MAX_PARENTS] = [&[]; MAX_PARENTS];
             for slot in 0..fan {
                 views[slot] = &phantoms[slot][..block_size];
             }
-            n_views = fan;
+            mix_parent_views(&mut state, &views[..fan]);
         } else {
-            for k in 0..parents.len {
-                let p = parents.indices[k];
-                views[n_views] = match ring.get(p) {
-                    Some(v) => v,
-                    None => &buffer[p * block_size..(p + 1) * block_size],
-                };
-                n_views += 1;
-            }
-        }
+            let local = graph::combined_local_parents(&state, i);
+            parents_list.extend_from_slice(local.as_slice());
+            gather_mix(&mut state, &buffer, &ring, block_size, local.as_slice());
 
-        mix_parent_views(&mut state, &views[..n_views]);
+            let remote =
+                graph::combined_remote_parents(&state, i, cfg.fan_in.get(), period, tile_len);
+            parents_list.extend_from_slice(remote.as_slice());
+            gather_mix(&mut state, &buffer, &ring, block_size, remote.as_slice());
+
+            let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+            scatter_dest = s1;
+            scatter_dest2 = s2;
+        }
 
         {
             let out = &mut buffer[i * block_size..(i + 1) * block_size];
@@ -124,12 +202,8 @@ fn derive_with_intermediates(
             None
         };
 
-        let applied_scatter = parents
-            .scatter_dest
-            .filter(|&dest| dest < num_blocks && dest != i);
-        let applied_scatter2 = parents
-            .scatter_dest2
-            .filter(|&dest| dest < num_blocks && dest != i);
+        let applied_scatter = scatter_dest.filter(|&dest| dest < num_blocks && dest != i);
+        let applied_scatter2 = scatter_dest2.filter(|&dest| dest < num_blocks && dest != i);
 
         if let Some(dest) = applied_scatter {
             xor_state_into_block_fast(
@@ -145,17 +219,16 @@ fn derive_with_intermediates(
         }
 
         if capture {
-            let parents_list: Vec<usize> = parents.as_slice().to_vec();
             node_records.push(json!({
                 "i": i,
                 "parents": parents_list,
-                "scatter_dest": parents.scatter_dest,
-                "scatter_dest2": parents.scatter_dest2,
+                "scatter_dest": scatter_dest,
+                "scatter_dest2": scatter_dest2,
                 "scatter_dest_applied": applied_scatter,
                 "scatter_dest2_applied": applied_scatter2,
                 "state_after_mix": state_hex(&state),
                 "block_after_write_hex": hex_encode(pristine_block.as_ref().unwrap()),
-                "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter"
+                "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters"
             }));
         }
     }
@@ -400,7 +473,7 @@ fn main() {
     let doc = json!({
         "schema_version": 1,
         "generator": "antech-kdf-research/examples/gen_security_review_vectors.rs",
-        "construction": "antech-compute-memory-v4",
+        "construction": "antech-compute-memory-v5",
         "construction_version": antech_kdf_core::CONSTRUCTION_VERSION,
         "notes": engine_note,
         "canonical_default_16mib": default_vectors,
@@ -428,5 +501,5 @@ fn main() {
     };
     fs::write(&write_path, &pretty).expect("write test-vectors.json");
     eprintln!("Wrote {}", write_path.display());
-    println!("{}", pretty);
+    refresh_sdk_vectors();
 }

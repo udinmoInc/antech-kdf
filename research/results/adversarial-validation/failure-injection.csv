@@ -1,0 +1,8 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+scheduler_release,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,idle,,,0xad05a71ec4100001,1,1
+nested_acquire_failfast,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,rejected without hang,,,0xad05a71ec4100001,1,1
+usable_after_failures,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,hash/verify ok,,active=0 queue=0 alloc_kib=0,0xad05a71ec4100001,1,1
+ffi_null_password,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,InvalidInput,,,0xad05a71ec4100001,1,1
+ffi_free_null,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,noop,,,0xad05a71ec4100001,1,1
+thread_cancellation,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,"cooperative cancel not part of public API; soak stop-flag covers shutdown",,,0xad05a71ec4100001,0,0
+cuda_kernel_abort_inject,failure_injection,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,requires instrumented CUDA binary,,,0xad05a71ec4100001,0,0

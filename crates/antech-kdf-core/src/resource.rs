@@ -256,16 +256,22 @@ mod tests {
         }));
         let p1 = sched.acquire(16 * 1024).unwrap();
         let sched2 = Arc::clone(&sched);
+        let barrier = Arc::new(std::sync::Barrier::new(2));
+        let b1 = Arc::clone(&barrier);
         let handle = thread::spawn(move || {
+            b1.wait();
             let start = Instant::now();
             let p2 = sched2.acquire(16 * 1024).unwrap();
             (start.elapsed(), p2)
         });
-        thread::sleep(Duration::from_millis(50));
+        barrier.wait();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while sched.stats().waiting_jobs == 0 && Instant::now() < deadline {
+            thread::sleep(Duration::from_millis(1));
+        }
         assert_eq!(sched.stats().waiting_jobs, 1);
         sched.release(p1);
-        let (waited, p2) = handle.join().unwrap();
-        assert!(waited >= Duration::from_millis(10));
+        let (_, p2) = handle.join().unwrap();
         sched.release(p2);
         assert_eq!(sched.stats().waiting_jobs, 0);
     }

@@ -220,30 +220,43 @@ pub fn derive_full_packed(
     };
 
     for i in 0..n {
-        let parents = graph::parents_for_node(cfg.graph, &state, i, fan, period, tile);
         let mut views = [[0u64; 4]; 8];
         let mut nv = 0usize;
         if i == 0 {
             views[0] = phantoms[0];
             views[1] = phantoms[1];
             nv = 2;
+            stats.mix_pairs += 1;
+            mix_views(&mut state, &views, nv);
         } else {
-            for k in 0..parents.len {
-                views[nv] = buf[parents.indices[k]];
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
+                views[nv] = buf[local.indices[k]];
                 nv += 1;
                 stats.parent_gathers += 1;
             }
+            stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+            mix_views(&mut state, &views, nv);
+
+            let remote = graph::combined_remote_parents(&state, i, fan, period, tile);
+            nv = 0;
+            for k in 0..remote.len {
+                views[nv] = buf[remote.indices[k]];
+                nv += 1;
+                stats.parent_gathers += 1;
+            }
+            stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+            mix_views(&mut state, &views, nv);
         }
-        stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
-        mix_views(&mut state, &views, nv);
         buf[i] = state;
-        if let Some(d) = parents.scatter_dest {
+        let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+        if let Some(d) = s1 {
             if d < n && d != i {
                 xor_words(&mut buf[d], &state);
                 stats.scatters_logged += 1;
             }
         }
-        if let Some(d) = parents.scatter_dest2 {
+        if let Some(d) = s2 {
             if d < n && d != i {
                 xor_words(&mut buf[d], &state);
                 stats.scatters_logged += 1;
@@ -301,25 +314,39 @@ fn derive_scatter_log_full(
     };
 
     for i in 0..n {
-        let parents = graph::parents_for_node(cfg.graph, &state, i, fan, period, tile);
         let mut views = [[0u64; 4]; 8];
         let mut nv = 0usize;
         if i == 0 {
             views[0] = phantoms[0];
             views[1] = phantoms[1];
             nv = 2;
+            stats.mix_pairs += 1;
+            mix_views(&mut state, &views, nv);
         } else {
-            for k in 0..parents.len {
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
                 views[nv] =
-                    materialize(parents.indices[k], i, &pristine, &scatter_srcs, &mut stats);
+                    materialize(local.indices[k], i, &pristine, &scatter_srcs, &mut stats);
                 nv += 1;
                 stats.parent_gathers += 1;
             }
+            stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+            mix_views(&mut state, &views, nv);
+
+            let remote = graph::combined_remote_parents(&state, i, fan, period, tile);
+            nv = 0;
+            for k in 0..remote.len {
+                views[nv] =
+                    materialize(remote.indices[k], i, &pristine, &scatter_srcs, &mut stats);
+                nv += 1;
+                stats.parent_gathers += 1;
+            }
+            stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+            mix_views(&mut state, &views, nv);
         }
-        stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
-        mix_views(&mut state, &views, nv);
         pristine[i] = state;
-        for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+        let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+        for dest_opt in [s1, s2] {
             if let Some(dest) = dest_opt {
                 if dest < n && dest != i {
                     scatter_srcs[dest].push(i as u32);
@@ -357,26 +384,8 @@ pub fn probe_window_misses(
     stats.parent_misses = 0;
     stats.scatter_dest_misses = 0;
     for i in 0..n {
-        let parents = graph::parents_for_node(cfg.graph, &state, i, fan, period, tile);
-        if i > 0 {
-            for k in 0..parents.len {
-                let p = parents.indices[k];
-                if i.saturating_sub(p) > w {
-                    stats.parent_misses += 1;
-                }
-            }
-        }
         let mut views = [[0u64; 4]; 8];
         let mut nv = 0usize;
-        if i == 0 {
-            nv = 0;
-        } else {
-            for k in 0..parents.len {
-                views[nv] = buf[parents.indices[k]];
-                nv += 1;
-            }
-        }
-        // Recompute state the same way (buf already final; just advance state).
         if i == 0 {
             let mut ph = [[0u8; 32]; 2];
             phantom_block(&seed, 0, 32, &mut ph[0]);
@@ -384,9 +393,33 @@ pub fn probe_window_misses(
             views[0] = load_block_bytes(&ph[0]);
             views[1] = load_block_bytes(&ph[1]);
             nv = 2;
+            mix_views(&mut state, &views, nv);
+        } else {
+            let local = graph::combined_local_parents(&state, i);
+            for k in 0..local.len {
+                let p = local.indices[k];
+                if i.saturating_sub(p) > w {
+                    stats.parent_misses += 1;
+                }
+                views[nv] = buf[p];
+                nv += 1;
+            }
+            mix_views(&mut state, &views, nv);
+
+            let remote = graph::combined_remote_parents(&state, i, fan, period, tile);
+            nv = 0;
+            for k in 0..remote.len {
+                let p = remote.indices[k];
+                if i.saturating_sub(p) > w {
+                    stats.parent_misses += 1;
+                }
+                views[nv] = buf[p];
+                nv += 1;
+            }
+            mix_views(&mut state, &views, nv);
         }
-        mix_views(&mut state, &views, nv);
-        for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+        let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+        for dest_opt in [s1, s2] {
             if let Some(dest) = dest_opt {
                 if dest < n && dest != i && i.saturating_sub(dest) > w {
                     stats.scatter_dest_misses += 1;
@@ -483,24 +516,37 @@ impl<'a> SparseAttack<'a> {
         let mut state = seed_to_state(&self.seed);
         for j in 0..end {
             self.stats.nodes_recomputed += 1;
-            let parents = graph::parents_for_node(self.cfg.graph, &state, j, fan, period, tile);
             let mut views = [[0u64; 4]; 8];
             let mut nv = 0usize;
             if j == 0 {
                 views[0] = self.phantoms[0];
                 views[1] = self.phantoms[1];
                 nv = 2;
+                self.stats.mix_pairs += 1;
+                mix_views(&mut state, &views, nv);
             } else {
-                for k in 0..parents.len {
-                    views[nv] = local[parents.indices[k]];
+                let local_ps = graph::combined_local_parents(&state, j);
+                for k in 0..local_ps.len {
+                    views[nv] = local[local_ps.indices[k]];
                     nv += 1;
                     self.stats.parent_gathers += 1;
                 }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
+
+                let remote = graph::combined_remote_parents(&state, j, fan, period, tile);
+                nv = 0;
+                for k in 0..remote.len {
+                    views[nv] = local[remote.indices[k]];
+                    nv += 1;
+                    self.stats.parent_gathers += 1;
+                }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
             }
-            self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
-            mix_views(&mut state, &views, nv);
             local[j] = state;
-            for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+            let (s1, s2) = graph::scatter_dests_from_state(&state, j);
+            for dest_opt in [s1, s2] {
                 if let Some(dest) = dest_opt {
                     if dest < j {
                         xor_words(&mut local[dest], &state);
@@ -528,30 +574,52 @@ impl<'a> SparseAttack<'a> {
             if self.aborted {
                 break;
             }
-            let parents = graph::parents_for_node(self.cfg.graph, &state, i, fan, period, tile);
             let mut views = [[0u64; 4]; 8];
             let mut nv = 0usize;
             if i == 0 {
                 views[0] = self.phantoms[0];
                 views[1] = self.phantoms[1];
                 nv = 2;
+                self.stats.mix_pairs += 1;
+                mix_views(&mut state, &views, nv);
             } else {
-                for k in 0..parents.len {
-                    views[nv] = self.get_mutated(parents.indices[k], i);
+                let local_ps = graph::combined_local_parents(&state, i);
+                for k in 0..local_ps.len {
+                    views[nv] = self.get_mutated(local_ps.indices[k], i);
                     nv += 1;
                     self.stats.parent_gathers += 1;
                     if self.aborted {
                         break;
                     }
                 }
+                if self.aborted {
+                    break;
+                }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
+
+                let remote = graph::combined_remote_parents(&state, i, fan, period, tile);
+                nv = 0;
+                for k in 0..remote.len {
+                    views[nv] = self.get_mutated(remote.indices[k], i);
+                    nv += 1;
+                    self.stats.parent_gathers += 1;
+                    if self.aborted {
+                        break;
+                    }
+                }
+                if self.aborted {
+                    break;
+                }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
             }
             if self.aborted {
                 break;
             }
-            self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
-            mix_views(&mut state, &views, nv);
             self.put(i, state);
-            for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+            let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+            for dest_opt in [s1, s2] {
                 if let Some(dest) = dest_opt {
                     if dest < n && dest != i {
                         if let Some(b) = self.hot.get_mut(&dest) {
@@ -650,25 +718,39 @@ impl<'a> RegenAttack<'a> {
         let end = as_of.max(target + 1);
         for j in 0..end {
             self.stats.nodes_recomputed += 1;
-            let parents = graph::parents_for_node(self.cfg.graph, &state, j, fan, period, tile);
             let mut views = [[0u64; 4]; 8];
             let mut nv = 0usize;
             if j == 0 {
                 views[0] = self.phantoms[0];
                 views[1] = self.phantoms[1];
                 nv = 2;
+                self.stats.mix_pairs += 1;
+                mix_views(&mut state, &views, nv);
             } else {
-                for k in 0..parents.len {
-                    let p = parents.indices[k];
+                let local_ps = graph::combined_local_parents(&state, j);
+                for k in 0..local_ps.len {
+                    let p = local_ps.indices[k];
                     views[nv] = local.get(&p).copied().unwrap_or([0; 4]);
                     nv += 1;
                     self.stats.parent_gathers += 1;
                 }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
+
+                let remote = graph::combined_remote_parents(&state, j, fan, period, tile);
+                nv = 0;
+                for k in 0..remote.len {
+                    let p = remote.indices[k];
+                    views[nv] = local.get(&p).copied().unwrap_or([0; 4]);
+                    nv += 1;
+                    self.stats.parent_gathers += 1;
+                }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
             }
-            self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
-            mix_views(&mut state, &views, nv);
             local.insert(j, state);
-            for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+            let (s1, s2) = graph::scatter_dests_from_state(&state, j);
+            for dest_opt in [s1, s2] {
                 if let Some(dest) = dest_opt {
                     if let Some(b) = local.get_mut(&dest) {
                         xor_words(b, &state);
@@ -696,24 +778,37 @@ impl<'a> RegenAttack<'a> {
 
         for i in 0..n {
             self.as_of = i;
-            let parents = graph::parents_for_node(self.cfg.graph, &state, i, fan, period, tile);
             let mut views = [[0u64; 4]; 8];
             let mut nv = 0usize;
             if i == 0 {
                 views[0] = self.phantoms[0];
                 views[1] = self.phantoms[1];
                 nv = 2;
+                self.stats.mix_pairs += 1;
+                mix_views(&mut state, &views, nv);
             } else {
-                for k in 0..parents.len {
-                    views[nv] = self.materialize(parents.indices[k]);
+                let local_ps = graph::combined_local_parents(&state, i);
+                for k in 0..local_ps.len {
+                    views[nv] = self.materialize(local_ps.indices[k]);
                     nv += 1;
                     self.stats.parent_gathers += 1;
                 }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
+
+                let remote = graph::combined_remote_parents(&state, i, fan, period, tile);
+                nv = 0;
+                for k in 0..remote.len {
+                    views[nv] = self.materialize(remote.indices[k]);
+                    nv += 1;
+                    self.stats.parent_gathers += 1;
+                }
+                self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
+                mix_views(&mut state, &views, nv);
             }
-            self.stats.mix_pairs += if nv <= 1 { 1 } else { (nv as u64 + 1) / 2 };
-            mix_views(&mut state, &views, nv);
             self.cache_put(i, state);
-            for dest_opt in [parents.scatter_dest, parents.scatter_dest2] {
+            let (s1, s2) = graph::scatter_dests_from_state(&state, i);
+            for dest_opt in [s1, s2] {
                 if let Some(dest) = dest_opt {
                     if dest < n && dest != i {
                         if let Some(b) = self.cache.get_mut(&dest) {

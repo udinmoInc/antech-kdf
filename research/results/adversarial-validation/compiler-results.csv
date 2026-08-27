@@ -1,0 +1,6 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+release_runner,compiler,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,this binary is release-optimized when launched with --release,,,0xad05a71ec4100001,1,1
+debug_types_lib_tests,compiler,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.236,PASS,cargo test -p antech-kdf-types --lib (dev profile),,,0xad05a71ec4100001,1,1
+engine_determinism,compiler,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,identical,,,0xad05a71ec4100001,2,2
+lto_special_build,compiler,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,"LTO not separately built in this runner; workspace release uses Cargo defaults",,,0xad05a71ec4100001,0,0
+cross_aarch64,compiler,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,no aarch64 target executed in this process,,,0xad05a71ec4100001,0,0

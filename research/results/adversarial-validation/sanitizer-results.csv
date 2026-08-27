@@ -1,0 +1,5 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+miri,sanitizer,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,BLOCKED,"Miri not executed on this host (Windows or toolchain missing); CI: sanitizers.yml",,,0xad05a71ec4100001,0,0
+asan,sanitizer,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,ASan Linux-only in this project's CI,,,0xad05a71ec4100001,0,0
+ubsan,sanitizer,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,UBSan Linux-only in this project's CI,,,0xad05a71ec4100001,0,0
+tsan,sanitizer,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,BLOCKED,"ThreadSanitizer not configured in repo CI; race suite is the in-process substitute",,,0xad05a71ec4100001,0,0

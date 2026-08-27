@@ -1,0 +1,16 @@
+{
+  "master_seed": "0xa71ec4100cad1000",
+  "target_cases": 100000,
+  "executed_cases": 100000,
+  "pass": 100000,
+  "fail": 0,
+  "blocked": 3,
+  "not_run": 3,
+  "bugs_found": 0,
+  "bugs_fixed": 1,
+  "wall_secs": 49.0717049,
+  "reached_100k_executed": true,
+  "production_build": "antech-kdf / antech-kdf-core / antech-kdf-format (workspace)",
+  "reference_build": "antech-kdf-reference (research/code/reference)",
+  "verdict": "PASS"
+}

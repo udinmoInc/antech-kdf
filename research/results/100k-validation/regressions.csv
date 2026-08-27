@@ -1,0 +1,2 @@
+id,status,notes
+wrong_len_ad_rejected,PASS,Harness + boundary_fixed: wrong-length AD must not Ok(true)

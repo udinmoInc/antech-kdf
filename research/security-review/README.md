@@ -6,7 +6,7 @@ Antech KDF materials for **independent cryptanalysis**.
 
 | Document | Description |
 |---|---|
-| [specification.md](./specification.md) | Normative construction (CombinedFrontier, v2, construction version 4) |
+| [specification.md](./specification.md) | Normative construction (CombinedFrontier, v2, construction version 5) |
 | [threat-model.md](./threat-model.md) | Attacker model |
 | [review-questions.md](./review-questions.md) | Attack-oriented questions |
 | [evidence.md](./evidence.md) | Prior MEASURED / MODELED / UNKNOWN results |

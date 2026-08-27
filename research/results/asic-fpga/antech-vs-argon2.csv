@@ -1,0 +1,7 @@
+metric,antech,argon2id,kind,notes
+defender_p50_ms_16mib_cpu,96.3,n/a_at_16mib_in_table,MEASURED,compute-memory-v4/report.md CombinedFrontier
+attacker_16t_gps_cpu,40.56,22.94 (64 MiB campaign row),MEASURED,comparison.csv; Argon2id row is 64 MiB in that campaign
+gpu_gps_rtx3050,32.96,435.56,MEASURED,gpu/report.md — Argon2id much faster on GPU; Antech scatter hurts occupancy
+asic_full_sram_1pipe_gps,modeled_in_asic-model.csv,similar_order_if_equal_mem; fewer random RMWs,MODELED,Both memory-hard; Antech dual far-scatter adds irregular RMW vs Argon2 fill
+tmto_50pct_memory,wall ~15069× / abort,known_TMTO_exists_but_costly,MEASURED,Antech sparse_checkpoint MEASURED wall; do not claim ASIC-proof
+claim_asic_resistant,NOT_CLAIMED,NOT_CLAIMED,ASSUMED,Custom silicon removes CPU/GPU overhead; memory+sequential path remain

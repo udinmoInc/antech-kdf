@@ -1,0 +1,18 @@
+axis,value,relative_throughput,relative_energy,kind,notes
+sram_cost,0.5x_density,5.000000e-1,1.000000e0,ASSUMED,Halving on-chip SRAM budget halves parallel guesses under OnChipSram
+sram_cost,2x_density,2.000000e0,1.000000e0,ASSUMED,More pipelines if power allows
+external_bandwidth,0.5x_ddr,5.000000e-1,1.200000e0,MODELED,DDR-bound regime; traffic ≈ reads+writes including scatter RMW
+external_bandwidth,2x_hbm,1.800000e0,9.000000e-1,MODELED,Helps until sequential node chain dominates
+clock,0.5x,5.000000e-1,7.000000e-1,ASSUMED,Linear in compute-bound; less than linear if DDR latency fixed in ns
+clock,2x,1.600000e0,1.500000e0,ASSUMED,Capped by memory latency / power
+node_dependency,force_serial,1.000000e0,1.000000e0,MEASURED,Already serial within guess (state + data-dependent parents)
+node_dependency,hypothetical_ilp_4,1.150000e0,9.500000e-1,ASSUMED,Limited ILP inside mix_pair only; cannot overlap nodes deeply
+memory_compression,lossy_forbidden,1.000000e0,1.000000e0,MEASURED,tmto-advanced: no useful lossless block compression
+replication,10x_pipelines,1.000000e1,1.000000e0,MODELED,Independent guesses (multitarget MEASURED); needs 10× memory
+recomputation,50pct_working_set,6.636140e-5,1.506900e4,MEASURED,sparse_checkpoint @50% aborts; cost_factor from memory-sweep-16mib
+power_limit,0.5x_budget,5.000000e-1,1.000000e0,ASSUMED,Caps parallel pipelines
+attacker_regime,unlimited_mem_limited_compute,1.000000e0,1.000000e0,MODELED,Still bound by sequential N×cycles/node per pipeline
+attacker_regime,abundant_compute_limited_mem,1.000000e-4,1.000000e4,MEASURED,TMTO wall: cannot trade memory for time efficiently
+attacker_regime,abundant_onchip_sram,4.000000e0,8.000000e-1,MODELED,Best case: more independent pipelines; per-guess critical path unchanged
+attacker_regime,abundant_bandwidth,1.300000e0,9.000000e-1,MODELED,Removes DDR bottleneck; sequential dependency remains
+attacker_regime,many_parallel_cores,1.000000e2,1.000000e0,MODELED,Needs 100×16 MiB; no cross-guess sharing (MEASURED multitarget)

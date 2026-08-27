@@ -1,0 +1,2 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+isolation_64,cross_request,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.215,PASS,no cross contamination,rss_kib=0,active=0 queue=0 alloc_kib=0,0xad05a71ec4100001,1,64

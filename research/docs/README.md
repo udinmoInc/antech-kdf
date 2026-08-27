@@ -1,6 +1,6 @@
 # Research docs
 
-Chapters for the current Antech construction (combined-frontier / construction version 4). Early K1/K2 and v2/v3 campaign notes live under [`../archive/`](../archive/) and are not current claims.
+Chapters for the current Antech construction (combined-frontier / construction version 5). Early K1/K2 and v2/v3 campaign notes live under [`../archive/`](../archive/) and are not current claims.
 
 | | |
 |---|---|

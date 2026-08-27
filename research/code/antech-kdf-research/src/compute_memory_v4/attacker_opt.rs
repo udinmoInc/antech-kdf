@@ -10,7 +10,6 @@ const C2: u64 = 0x94D049BB133111EB;
 const GOLDEN: u64 = 0x9E3779B97F4A7C15;
 const MIX_ROUNDS: u32 = 4;
 const FW: usize = 64;
-const TILE: usize = 512;
 const FAN: usize = 2;
 pub const NUM_BLOCKS_16MIB: usize = 16 * 1024 * 1024 / 32;
 
@@ -72,22 +71,15 @@ fn push_unique(indices: &mut [u32; 8], len: &mut usize, addr: u32, i: u32) {
     *len += 1;
 }
 
-/// Exact CombinedFrontier parent selection (v4-C). Modulo uses full usize like core.
+/// v5 phase-1: sequential + frontier only.
 #[inline(always)]
-fn parents_combined(state: &[u64; 4], i: u32) -> ([u32; 8], usize, i32, i32) {
+fn parents_local(state: &[u64; 4], i: u32) -> ([u32; 8], usize) {
     let mut indices = [0u32; 8];
     let mut len = 0usize;
-    let mut scatter1 = -1i32;
-    let mut scatter2 = -1i32;
     if i == 0 {
-        return (indices, 0, scatter1, scatter2);
+        return (indices, 0);
     }
-
     let i_us = i as usize;
-    let tile = TILE;
-    let tile_start = (i_us / tile) * tile;
-    let critical = (i_us % 4 == 0) || (i_us % FW == 0);
-
     push_unique(&mut indices, &mut len, (i_us - 1) as u32, i);
     let fw = FW.min(i_us);
     let slot = (state[0] as usize) % fw;
@@ -107,47 +99,73 @@ fn parents_combined(state: &[u64; 4], i: u32) -> ([u32; 8], usize, i32, i32) {
             }
         }
     }
+    (indices, len)
+}
 
-    if i_us > tile_start + 1 {
-        let span = i_us - tile_start;
-        let local_remote = tile_start + ((state[1] as usize) % span);
-        push_unique(&mut indices, &mut len, local_remote as u32, i);
+/// v5 phase-2: global + always-2 far from *post-local* state. Scatter filled separately post-mix.
+#[inline(always)]
+fn parents_remote(state: &[u64; 4], i: u32) -> ([u32; 8], usize) {
+    let mut indices = [0u32; 8];
+    let mut len = 0usize;
+    if i == 0 {
+        return (indices, 0);
+    }
+    let i_us = i as usize;
+    let fw = FW.min(i_us);
+
+    if i_us > 1 {
+        push_unique(
+            &mut indices,
+            &mut len,
+            ((state[1] as usize) % i_us) as u32,
+            i,
+        );
     }
 
     if i_us > fw + 1 {
         let remote_span = i_us - fw;
-        if critical || (i_us & 1) == 0 {
-            let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
-            push_unique(&mut indices, &mut len, far as u32, i);
-        }
-        if critical {
-            let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
-            push_unique(&mut indices, &mut len, far2 as u32, i);
-        }
+        let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
+        push_unique(&mut indices, &mut len, far as u32, i);
+        let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
+        push_unique(&mut indices, &mut len, far2 as u32, i);
     }
 
-    guard = 0;
+    let mut guard = 0usize;
     while len < FAN && guard < 4 {
         guard += 1;
         let mix = state[len % 4] ^ (i as u64).wrapping_mul(GOLDEN);
         let before = len;
-        let addr = if i_us > tile_start {
-            tile_start + ((mix as usize) % (i_us - tile_start).max(1))
-        } else {
-            (mix as usize) % i_us
-        };
+        let addr = (mix as usize) % i_us;
         push_unique(&mut indices, &mut len, addr as u32, i);
         if len == before {
             break;
         }
     }
+    (indices, len)
+}
 
+#[inline(always)]
+fn scatter_from_state(state: &[u64; 4], i: u32) -> (i32, i32) {
+    let i_us = i as usize;
+    let fw = FW.min(i_us);
     if i_us > fw {
         let span = i_us - fw;
-        scatter1 = (((state[2] ^ GOLDEN) as usize) % span) as i32;
-        scatter2 = (((state[3] ^ state[0].rotate_left(7)) as usize) % span) as i32;
+        (
+            (((state[2] ^ GOLDEN) as usize) % span) as i32,
+            (((state[3] ^ state[0].rotate_left(7)) as usize) % span) as i32,
+        )
+    } else {
+        (-1, -1)
     }
-    (indices, len, scatter1, scatter2)
+}
+
+#[inline(always)]
+fn load_views(buf: &[[u64; 4]], indices: &[u32; 8], npar: usize) -> ([[u64; 4]; 8], usize) {
+    let mut views = [[0u64; 4]; 8];
+    for k in 0..npar {
+        views[k] = buf[indices[k] as usize];
+    }
+    (views, npar)
 }
 
 #[inline(always)]
@@ -254,16 +272,17 @@ pub fn derive_packed_ring(
     let mut count = 0u32;
 
     for i in 0..NUM_BLOCKS_16MIB as u32 {
-        let (indices, npar, s1, s2) = parents_combined(&state, i);
-        let mut views = [[0u64; 4]; 8];
-        let mut nv = 0usize;
         if i == 0 {
+            let mut views = [[0u64; 4]; 8];
             views[0] = ph[0];
             views[1] = ph[1];
-            nv = FAN;
+            mix_views(&mut state, &views, FAN);
         } else {
-            for k in 0..npar {
-                let p = indices[k];
+            let (li, ln) = parents_local(&state, i);
+            let mut views = [[0u64; 4]; 8];
+            let mut nv = 0usize;
+            for k in 0..ln {
+                let p = li[k];
                 let in_ring = newest >= 0
                     && (p as i32) <= newest
                     && ((newest as u32).wrapping_sub(p) < count.min(FW as u32));
@@ -274,12 +293,29 @@ pub fn derive_packed_ring(
                 };
                 nv += 1;
             }
+            mix_views(&mut state, &views, nv);
+
+            let (ri, rn) = parents_remote(&state, i);
+            nv = 0;
+            for k in 0..rn {
+                let p = ri[k];
+                let in_ring = newest >= 0
+                    && (p as i32) <= newest
+                    && ((newest as u32).wrapping_sub(p) < count.min(FW as u32));
+                views[nv] = if in_ring {
+                    ring[(p as usize) % FW]
+                } else {
+                    buf[p as usize]
+                };
+                nv += 1;
+            }
+            mix_views(&mut state, &views, nv);
         }
-        mix_views(&mut state, &views, nv);
         buf[i as usize] = state;
         ring[(i as usize) % FW] = state;
         newest = i as i32;
         count = (count + 1).min(FW as u32);
+        let (s1, s2) = scatter_from_state(&state, i);
         apply_scatter(buf, i, &state, s1, s2);
     }
     digest_from(&seed, &state, &buf[NUM_BLOCKS_16MIB - 1], cfg)
@@ -297,27 +333,27 @@ pub fn derive_packed_noring(
     let buf = &mut scratch.buf;
 
     for i in 0..NUM_BLOCKS_16MIB as u32 {
-        let (indices, npar, s1, s2) = parents_combined(&state, i);
-        let mut views = [[0u64; 4]; 8];
-        let mut nv = 0usize;
         if i == 0 {
+            let mut views = [[0u64; 4]; 8];
             views[0] = ph[0];
             views[1] = ph[1];
-            nv = FAN;
+            mix_views(&mut state, &views, FAN);
         } else {
-            for k in 0..npar {
-                views[nv] = buf[indices[k] as usize];
-                nv += 1;
-            }
+            let (li, ln) = parents_local(&state, i);
+            let (views, nv) = load_views(buf, &li, ln);
+            mix_views(&mut state, &views, nv);
+            let (ri, rn) = parents_remote(&state, i);
+            let (views, nv) = load_views(buf, &ri, rn);
+            mix_views(&mut state, &views, nv);
         }
-        mix_views(&mut state, &views, nv);
         buf[i as usize] = state;
+        let (s1, s2) = scatter_from_state(&state, i);
         apply_scatter(buf, i, &state, s1, s2);
     }
     digest_from(&seed, &state, &buf[NUM_BLOCKS_16MIB - 1], cfg)
 }
 
-/// Packed + prefetch of gathered parents before mix.
+/// Packed + prefetch of gathered parents before each phase mix.
 pub fn derive_packed_prefetch(
     password: &[u8],
     salt: &[u8],
@@ -329,32 +365,34 @@ pub fn derive_packed_prefetch(
     let buf = &mut scratch.buf;
 
     for i in 0..NUM_BLOCKS_16MIB as u32 {
-        let (indices, npar, s1, s2) = parents_combined(&state, i);
-        if i != 0 {
-            for k in 0..npar {
-                prefetch_block(buf, indices[k]);
-            }
-            if s1 >= 0 {
-                prefetch_block(buf, s1 as u32);
-            }
-            if s2 >= 0 {
-                prefetch_block(buf, s2 as u32);
-            }
-        }
-        let mut views = [[0u64; 4]; 8];
-        let mut nv = 0usize;
         if i == 0 {
+            let mut views = [[0u64; 4]; 8];
             views[0] = ph[0];
             views[1] = ph[1];
-            nv = FAN;
+            mix_views(&mut state, &views, FAN);
         } else {
-            for k in 0..npar {
-                views[nv] = buf[indices[k] as usize];
-                nv += 1;
+            let (li, ln) = parents_local(&state, i);
+            for k in 0..ln {
+                prefetch_block(buf, li[k]);
             }
+            let (views, nv) = load_views(buf, &li, ln);
+            mix_views(&mut state, &views, nv);
+
+            let (ri, rn) = parents_remote(&state, i);
+            for k in 0..rn {
+                prefetch_block(buf, ri[k]);
+            }
+            let (views, nv) = load_views(buf, &ri, rn);
+            mix_views(&mut state, &views, nv);
         }
-        mix_views(&mut state, &views, nv);
         buf[i as usize] = state;
+        let (s1, s2) = scatter_from_state(&state, i);
+        if s1 >= 0 {
+            prefetch_block(buf, s1 as u32);
+        }
+        if s2 >= 0 {
+            prefetch_block(buf, s2 as u32);
+        }
         apply_scatter(buf, i, &state, s1, s2);
     }
     digest_from(&seed, &state, &buf[NUM_BLOCKS_16MIB - 1], cfg)
@@ -388,26 +426,27 @@ pub fn derive_packed_dual(
 
 #[inline(always)]
 fn walk_one(i: u32, state: &mut [u64; 4], buf: &mut [[u64; 4]], ph: &[[u64; 4]; 2]) {
-    let (indices, npar, s1, s2) = parents_combined(state, i);
-    if i != 0 {
-        for k in 0..npar {
-            prefetch_block(buf, indices[k]);
-        }
-    }
-    let mut views = [[0u64; 4]; 8];
-    let mut nv = 0usize;
     if i == 0 {
+        let mut views = [[0u64; 4]; 8];
         views[0] = ph[0];
         views[1] = ph[1];
-        nv = FAN;
+        mix_views(state, &views, FAN);
     } else {
-        for k in 0..npar {
-            views[nv] = buf[indices[k] as usize];
-            nv += 1;
+        let (li, ln) = parents_local(state, i);
+        for k in 0..ln {
+            prefetch_block(buf, li[k]);
         }
+        let (views, nv) = load_views(buf, &li, ln);
+        mix_views(state, &views, nv);
+        let (ri, rn) = parents_remote(state, i);
+        for k in 0..rn {
+            prefetch_block(buf, ri[k]);
+        }
+        let (views, nv) = load_views(buf, &ri, rn);
+        mix_views(state, &views, nv);
     }
-    mix_views(state, &views, nv);
     buf[i as usize] = *state;
+    let (s1, s2) = scatter_from_state(state, i);
     apply_scatter(buf, i, state, s1, s2);
 }
 

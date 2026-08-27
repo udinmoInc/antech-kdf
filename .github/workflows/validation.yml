@@ -52,6 +52,26 @@ jobs:
           name: correctness-linux
           path: research/results/correctness
 
+  adversarial-validation:
+    name: Adversarial reliability (CI profile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Adversarial validation runner
+        env:
+          ANTECH_ADVERSARIAL_PROFILE: ci
+        run: |
+          cargo run --manifest-path research/code/Cargo.toml --release \
+            -p antech-kdf-research --example adversarial_validation_runner
+      - name: Upload adversarial results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adversarial-validation-linux
+          path: research/results/adversarial-validation
+
   cross-platform-build:
     name: Cross-OS production build/test
     strategy:

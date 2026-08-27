@@ -4,7 +4,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -16,7 +16,7 @@
         "salt_length": 8,
         "tile_len": 512
       },
-      "digest_hex": "2fde9d6e90260deb133d167d8bc411c27768bbcbb8eaf5a980853cbda8898d35",
+      "digest_hex": "b7e0e7eb94cee3ac033566ad69fff6921ef54dce625c5748fc73797d0063ac01",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-fan2-salt8",
       "notes": "fan_in=2, salt_length=8",
@@ -28,7 +28,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 4,
         "frontier_width": 64,
@@ -40,7 +40,7 @@
         "salt_length": 32,
         "tile_len": 512
       },
-      "digest_hex": "b4807491301968f77e19279ab5340666a509137c217158d5352a0069a93d9d15",
+      "digest_hex": "e7fc6fed76da364a04ff1f111794a82c290bac0d0735480b055ab2c8ac44574b",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-fan4-salt32",
       "notes": "fan_in=4, salt_length=32",
@@ -52,7 +52,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -64,7 +64,7 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "b650eba7297f198b0d58210fca6539c85923ff2bb83a0cc55ef6112a93ddfb89",
+      "digest_hex": "19715e7ed77495e3f8f3c40aaf4a54cf36a9b5c094d234eac156f044a5dfad8d",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-empty-password",
       "notes": "empty password",
@@ -76,7 +76,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -88,7 +88,7 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "d4e6c67d1c74fdcd9c1ea4e6ad40dfa03c35a655c45d929572887e78f8e050d5",
+      "digest_hex": "1eadb930f9a9904be58566150f6f3507e1cc6eedf3fec626904a6789997dd5f8",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-null-bytes-password",
       "notes": "binary password with embedded NUL bytes",
@@ -100,7 +100,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -112,7 +112,7 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "f168ad12e3909c11db4a5bdc32f9cf4cdd9b03188167ab5690f34a92dd6fbc27",
+      "digest_hex": "872d2d1c94187dc5e509d864effa809976e260fe9516ae9a2105837fb9eed9a0",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-long-password",
       "notes": "long password (200 bytes cycling A-Z)",
@@ -124,7 +124,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -136,7 +136,7 @@
         "salt_length": 32,
         "tile_len": 512
       },
-      "digest_hex": "8a299cbe2eb8f1fb375bae99ac8f4c2404618e136f3bb9c08c41aa2c1d5154f9",
+      "digest_hex": "6769f54f21b506805a9d00236a24407d019a3632fe156d06f744d18db8ee9a04",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-fan2-salt32",
       "notes": "fan_in=2, salt_length=32",
@@ -148,7 +148,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 4,
         "frontier_width": 64,
@@ -160,7 +160,7 @@
         "salt_length": 8,
         "tile_len": 512
       },
-      "digest_hex": "fd9805a0de05640c7c7397c7acb5005941ffa86eec39db39d03a3c1045e9b750",
+      "digest_hex": "7e6f6aae5f3da395443bff977724db693eed316840f5e1a614e3cf1c115fb2b7",
       "digest_source": "AntechEngine::derive",
       "id": "boundary-1mib-fan4-salt8",
       "notes": "fan_in=4, salt_length=8",
@@ -174,7 +174,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -186,7 +186,7 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "a29e8caff6c2854ea84e74f0794a27a2b92451624c7e8ec0786466c76465b87d",
+      "digest_hex": "5883af824313bbfbf61ac988382cd0d4de34a5f13ab41b25849df2a4ef4a275c",
       "digest_source": "AntechEngine::derive",
       "id": "default-16mib-pwd1",
       "notes": "canonical default config; ASCII password",
@@ -198,7 +198,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -210,7 +210,7 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "aeffecb7b9f6cb8354799f20c7a99c96bcfa3e3f527b7f1f408858134c7b42e4",
+      "digest_hex": "fd21733fa937406f8a0c1c4bc87e1e1705fc4df5c4ff3d14ee7634781e816135",
       "digest_source": "AntechEngine::derive",
       "id": "default-16mib-pwd2",
       "notes": "canonical default config; passphrase",
@@ -222,7 +222,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -234,7 +234,7 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "0aa26dca8eadeff4a053cb93a7a2866cbbc346ef807469ea3069f5bb95815d97",
+      "digest_hex": "9a4e89f12b88b75934e94e5186b7dd095f06b01dd59f37f37ae62fedca7d6cdd",
       "digest_source": "AntechEngine::derive",
       "id": "default-16mib-pwd3",
       "notes": "canonical default config; binary salt",
@@ -243,8 +243,8 @@
       "salt_hex": "000102030405060708090a0b0c0d0e0f"
     }
   ],
-  "construction": "antech-compute-memory-v4",
-  "construction_version": 4,
+  "construction": "antech-compute-memory-v5",
+  "construction_version": 5,
   "generator": "antech-kdf-research/examples/gen_security_review_vectors.rs",
   "notes": "All digests produced by antech_kdf_core::AntechEngine::derive. Intermediates use the same public core primitives as the production engine loop.",
   "schema_version": 1,
@@ -253,7 +253,7 @@
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -265,37 +265,38 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "c9ceed5f65a2ec7915e35228de5c7271b6ce8c6862ba73b1d08707c41ed65eb4",
+      "digest_hex": "21c36a0e2e844b8811f1ecf5c1803fb996b97655e8c5ac347e9cb9c0b27606c7",
       "digest_source": "AntechEngine::derive",
       "id": "small-1mib-intermediates-a",
       "initial_state": [
-        "e231abdfea755e67",
-        "f0e6260d772af2a5",
-        "24fdfccee87d2283",
-        "5d81d534f6ea2825"
+        "752d145b6b3c310c",
+        "29d7b0197fe7ff63",
+        "7752adc459b86264",
+        "9529f9391d5a30f8"
       ],
       "nodes": [
         {
-          "block_after_write_hex": "39849456425c6469761ba088f9e9be29fa89bf6dd04736c6c75dddcdc1aa56d7",
+          "block_after_write_hex": "b1f15db3aac5986f52da10e025aa4d96e86a4aa0d775224389acf24da03f5b92",
           "i": 0,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [],
           "scatter_dest": null,
           "scatter_dest2": null,
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "69645c4256948439",
-            "29bee9f988a01b76",
-            "c63647d06dbf89fa",
-            "d756aac1cddd5dc7"
+            "6f98c5aab35df1b1",
+            "964daa25e010da52",
+            "432275d7a04a6ae8",
+            "925b3fa04df2ac89"
           ]
         },
         {
-          "block_after_write_hex": "9ebb7ce7c08b9315c86032c75050cb6ed0f1d6eab793f842ee10da31589d3a93",
+          "block_after_write_hex": "1e822e612a8b6fa49940ff3030ad1d587f80eb236bf0bc240a01942dc8a34804",
           "i": 1,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
+            0,
             0
           ],
           "scatter_dest": null,
@@ -303,36 +304,39 @@
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "15938bc0e77cbb9e",
-            "6ecb5050c73260c8",
-            "42f893b7ead6f1d0",
-            "933a9d5831da10ee"
+            "a46f8b2a612e821e",
+            "581dad3030ff4099",
+            "24bcf06b23eb807f",
+            "0448a3c82d94010a"
           ]
         },
         {
-          "block_after_write_hex": "017b8a6b06c0d223f261f73e8342c6f43e02ca4dc38a1ff5ecdff4474d73fe49",
+          "block_after_write_hex": "b2622fc74e75edae5abe957bbb71876f66fcdd64a06ef515c8c1e6b33f9833af",
           "i": 2,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             1,
-            0
+            0,
+            1
           ],
           "scatter_dest": null,
           "scatter_dest2": null,
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "23d2c0066b8a7b01",
-            "f4c642833ef761f2",
-            "f51f8ac34dca023e",
-            "49fe734d47f4dfec"
+            "aeed754ec72f62b2",
+            "6f8771bb7b95be5a",
+            "15f56ea064ddfc66",
+            "af33983fb3e6c1c8"
           ]
         },
         {
-          "block_after_write_hex": "401fc243f02574bc14e85c3765e9db15a28924cb745ace1b6a07d86b074e68db",
+          "block_after_write_hex": "a1273a9973a23ef38e29e5c1b16075a667a5c409db059de73fc5c6537909e1c0",
           "i": 3,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
+            2,
+            0,
             2,
             0
           ],
@@ -341,72 +345,75 @@
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "bc7425f043c21f40",
-            "15dbe965375ce814",
-            "1bce5a74cb2489a2",
-            "db684e076bd8076a"
+            "f33ea273993a27a1",
+            "a67560b1c1e5298e",
+            "e79d05db09c4a567",
+            "c0e1097953c6c53f"
           ]
         },
         {
-          "block_after_write_hex": "66c0b5c861acad79c0b1c9e2f8f92745f4412aae7a58b540d301ba87fb2e5da8",
+          "block_after_write_hex": "a04603130a53aa51cbef5b014a79d248ee71f0243a85f8d9e85aa4ecf026f7c2",
           "i": 10,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             9,
-            4
+            2,
+            8,
+            0
           ],
           "scatter_dest": null,
           "scatter_dest2": null,
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "79adac61c8b5c066",
-            "4527f9f8e2c9b1c0",
-            "40b5587aae2a41f4",
-            "a85d2efb87ba01d3"
+            "51aa530a130346a0",
+            "48d2794a015befcb",
+            "d9f8853a24f071ee",
+            "c2f726f0eca45ae8"
           ]
         },
         {
-          "block_after_write_hex": "49625ce690db6bffabbcbc90c70ec648e308072e280548b4496828b98854234b",
+          "block_after_write_hex": "ae82713c2a18c3d1556a7107829e6c69e40a8ca6cff1914fca76020bb6ef1593",
           "i": 100,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             99,
-            54,
-            33,
-            12
+            81,
+            71,
+            23,
+            5
           ],
-          "scatter_dest": 24,
-          "scatter_dest2": 2,
-          "scatter_dest2_applied": 2,
-          "scatter_dest_applied": 24,
+          "scatter_dest": 17,
+          "scatter_dest2": 34,
+          "scatter_dest2_applied": 34,
+          "scatter_dest_applied": 17,
           "state_after_mix": [
-            "ff6bdb90e65c6249",
-            "48c60ec790bcbcab",
-            "b44805282e0708e3",
-            "4b235488b9286849"
+            "d1c3182a3c7182ae",
+            "696c9e8207716a55",
+            "4f91f1cfa68c0ae4",
+            "9315efb60b0276ca"
           ]
         },
         {
-          "block_after_write_hex": "d175d488ac4a7c73712b244c824575e867d4705b290f40fafd1213e508c454f4",
+          "block_after_write_hex": "d42c207fdf0360a1d1848d5613b0d13e630228cf36afe673b366b01a7c140352",
           "i": 1000,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             999,
-            978,
-            780,
-            602,
-            656
+            990,
+            93,
+            240,
+            376
           ],
-          "scatter_dest": 652,
-          "scatter_dest2": 68,
-          "scatter_dest2_applied": 68,
-          "scatter_dest_applied": 652,
+          "scatter_dest": 598,
+          "scatter_dest2": 419,
+          "scatter_dest2_applied": 419,
+          "scatter_dest_applied": 598,
           "state_after_mix": [
-            "737c4aac88d475d1",
-            "e87545824c242b71",
-            "fa400f295b70d467",
-            "f454c408e51312fd"
+            "a16003df7f202cd4",
+            "3ed1b013568d84d1",
+            "73e6af36cf280263",
+            "5203147c1ab066b3"
           ]
         }
       ],
@@ -414,13 +421,13 @@
       "password_hex": "766563746f722d696e7465722d61",
       "password_utf8": "vector-inter-a",
       "salt_hex": "73616c745f31365f62797465735f2121",
-      "seed_hex": "675e75eadfab31e2a5f22a770d26e6f083227de8cefcfd242528eaf634d5815d"
+      "seed_hex": "0c313c6b5b142d7563ffe77f19b0d7296462b859c4ad5277f8305a1d39f92995"
     },
     {
       "config": {
         "algorithm": "antech",
         "block_size": 32,
-        "construction_version": 4,
+        "construction_version": 5,
         "critical_period": 4,
         "fan_in": 2,
         "frontier_width": 64,
@@ -432,37 +439,38 @@
         "salt_length": 16,
         "tile_len": 512
       },
-      "digest_hex": "29157982e5188dfaf3b19f43a6b6a8a3fae4482ad09610a6b580b6347e7e370d",
+      "digest_hex": "dcb6b46dcaed8615ba07ebd4908914c814915180f7fa73973af8be18b5544d6f",
       "digest_source": "AntechEngine::derive",
       "id": "small-1mib-intermediates-b",
       "initial_state": [
-        "36c2fb0bbac9cd0e",
-        "cd9c277cc2b30a8f",
-        "b76782ff4f0f6944",
-        "081a2ae945196b07"
+        "43ff39e999d1f551",
+        "3531e982cfde3e91",
+        "a0bcb231ed6062f5",
+        "58b2f098423fb762"
       ],
       "nodes": [
         {
-          "block_after_write_hex": "288d964252a6a86ab1afbd7ace3eeb4b6752a20c50a1c089e83be61fc86e44a0",
+          "block_after_write_hex": "fd8332ac9b26a5cbb61f3677438da3905e67c62f1933fd658e558a4c8cb9041f",
           "i": 0,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [],
           "scatter_dest": null,
           "scatter_dest2": null,
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "6aa8a65242968d28",
-            "4beb3ece7abdafb1",
-            "89c0a1500ca25267",
-            "a0446ec81fe63be8"
+            "cba5269bac3283fd",
+            "90a38d4377361fb6",
+            "65fd33192fc6675e",
+            "1f04b98c4c8a558e"
           ]
         },
         {
-          "block_after_write_hex": "86ab3b277f45b6666f1d6a0e87ff28abed15f7ba4b307fcf2cf8e4ab23db8d27",
+          "block_after_write_hex": "b349d4f8e8a99a25b79f45e280ac11e9700d0e154a2b41d3bac39ff1bc9b82a5",
           "i": 1,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
+            0,
             0
           ],
           "scatter_dest": null,
@@ -470,36 +478,39 @@
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "66b6457f273bab86",
-            "ab28ff870e6a1d6f",
-            "cf7f304bbaf715ed",
-            "278ddb23abe4f82c"
+            "259aa9e8f8d449b3",
+            "e911ac80e2459fb7",
+            "d3412b4a150e0d70",
+            "a5829bbcf19fc3ba"
           ]
         },
         {
-          "block_after_write_hex": "e64fcf0b0595c9b5ec979c593a4fea25867c69245e8f25cd2357504c6a44548d",
+          "block_after_write_hex": "1503c50848cc21aefe9b1eb6c2f8dbccbe2c6a59c4e48a204fd3ba5087def30a",
           "i": 2,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             1,
-            0
+            0,
+            1
           ],
           "scatter_dest": null,
           "scatter_dest2": null,
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "b5c995050bcf4fe6",
-            "25ea4f3a599c97ec",
-            "cd258f5e24697c86",
-            "8d54446a4c505723"
+            "ae21cc4808c50315",
+            "ccdbf8c2b61e9bfe",
+            "208ae4c4596a2cbe",
+            "0af3de8750bad34f"
           ]
         },
         {
-          "block_after_write_hex": "6be2cd968529ccb4639c80e85617adb374675f8834190dca1550a0a233b1285f",
+          "block_after_write_hex": "48752bd40f498a59b723f51145d71656bbd08779ff7e7e63760d710f69932880",
           "i": 3,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
+            2,
+            1,
             2,
             1
           ],
@@ -508,74 +519,75 @@
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "b4cc298596cde26b",
-            "b3ad1756e8809c63",
-            "ca0d1934885f6774",
-            "5f28b133a2a05015"
+            "598a490fd42b7548",
+            "5616d74511f523b7",
+            "637e7eff7987d0bb",
+            "802893690f710d76"
           ]
         },
         {
-          "block_after_write_hex": "62bdaed20878d0317744870f07aded75e5596b2bd14d5e89cd0fd729a8e6e8ba",
+          "block_after_write_hex": "63e1fc3f7c34193201245bc2310cd184e282958098e9b3f4ae9bc0ef42744a13",
           "i": 10,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             9,
+            6,
             5,
-            6
+            7
           ],
           "scatter_dest": null,
           "scatter_dest2": null,
           "scatter_dest2_applied": null,
           "scatter_dest_applied": null,
           "state_after_mix": [
-            "31d07808d2aebd62",
-            "75edad070f874477",
-            "895e4dd12b6b59e5",
-            "bae8e6a829d70fcd"
+            "3219347c3ffce163",
+            "84d10c31c25b2401",
+            "f4b3e998809582e2",
+            "134a7442efc09bae"
           ]
         },
         {
-          "block_after_write_hex": "7fbac368c1744bb24c4025f7720a8ff420a21d2a7a133b24f768765b139e8054",
+          "block_after_write_hex": "58d198d9a4455767bb5ee2d27c5b3970328baba595b2f6212a8ccdc7d31af6d8",
           "i": 100,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             99,
-            80,
-            26,
-            16,
-            22
+            88,
+            71,
+            22,
+            35
           ],
-          "scatter_dest": 27,
-          "scatter_dest2": 9,
-          "scatter_dest2_applied": 9,
-          "scatter_dest_applied": 27,
+          "scatter_dest": 19,
+          "scatter_dest2": 13,
+          "scatter_dest2_applied": 13,
+          "scatter_dest_applied": 19,
           "state_after_mix": [
-            "b24b74c168c3ba7f",
-            "f48f0a72f725404c",
-            "243b137a2a1da220",
-            "54809e135b7668f7"
+            "675745a4d998d158",
+            "70395b7cd2e25ebb",
+            "21f6b295a5ab8b32",
+            "d8f61ad3c7cd8c2a"
           ]
         },
         {
-          "block_after_write_hex": "11ed9150e51e3e792bf6ae628fb68ea80d8c2fd9f64869a4bf3a51fedaa6543d",
+          "block_after_write_hex": "46255b2accdf79ecf5d973bc7fa7d0c90d01da198913db345be95c917bd640e4",
           "i": 1000,
-          "note": "block_after_write_hex is block i immediately after state_to_block, before this node's scatters; later nodes may XOR into earlier blocks via scatter",
+          "note": "v5 two-phase CombinedFrontier: local mix then remote mix; block_after_write_hex is block i immediately after state_to_block, before this node's scatters",
           "parents": [
             999,
-            958,
-            642,
-            439,
-            36
+            968,
+            26,
+            251,
+            52
           ],
-          "scatter_dest": 492,
-          "scatter_dest2": 102,
-          "scatter_dest2_applied": 102,
-          "scatter_dest_applied": 492,
+          "scatter_dest": 208,
+          "scatter_dest2": 285,
+          "scatter_dest2_applied": 285,
+          "scatter_dest_applied": 208,
           "state_after_mix": [
-            "793e1ee55091ed11",
-            "a88eb68f62aef62b",
-            "a46948f6d92f8c0d",
-            "3d54a6dafe513abf"
+            "ec79dfcc2a5b2546",
+            "c9d0a77fbc73d9f5",
+            "34db138919da010d",
+            "e440d67b915ce95b"
           ]
         }
       ],
@@ -583,7 +595,7 @@
       "password_hex": "766563746f722d696e7465722d62007461696c",
       "password_utf8": "vector-inter-b\u0000tail",
       "salt_hex": "61626364656630313233343536373839",
-      "seed_hex": "0ecdc9ba0bfbc2368f0ab3c27c279ccd44690f4fff8267b7076b1945e92a1a08"
+      "seed_hex": "51f5d199e939ff43913edecf82e93135f56260ed31b2bca062b73f4298f0b258"
     }
   ]
 }

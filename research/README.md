@@ -1,6 +1,6 @@
 # Research
 
-Antech asks whether a password KDF can stay useful at about **16 MiB** of defender memory without collapsing offline attacker cost relative to a conventional Argon2id profile. What shipped in production is the compute-memory **combined-frontier** graph (`AntechEngine` in `antech-kdf-core`, construction version 4, hash format `$antech$v2$`).
+Antech asks whether a password KDF can stay useful at about **16 MiB** of defender memory without collapsing offline attacker cost relative to a conventional Argon2id profile. What shipped in production is the compute-memory **combined-frontier** graph (`AntechEngine` in `antech-kdf-core`, construction version 5, hash format `$antech$v2$`).
 
 **Dependency rule:** production (`crates/`) never imports research. Research may import production for correct digests.
 
@@ -18,27 +18,28 @@ Every public table should cite one campaign and label each figure **MEASURED**, 
 
 | Campaign | Path | Status |
 |---|---|---|
-| CPU compute–memory v4-C | [`results/compute-memory-v4/`](results/compute-memory-v4/) | MEASURED |
-| GPU head-to-head (RTX 3050, 16 MiB) | [`results/compute-memory-v4/gpu/`](results/compute-memory-v4/gpu/) | MEASURED |
+| v5 cost tradeoff (current CombinedFrontier) | [`results/compute-memory-v4/v5-cost-tradeoff/`](results/compute-memory-v4/v5-cost-tradeoff/) | MEASURED |
+| CPU/GPU attacker-opt suite (v5, RTX 3050) | [`results/compute-memory-v4/attacker-optimization/`](results/compute-memory-v4/attacker-optimization/) | MEASURED |
+| CPU compute–memory v4-C (prior graph) | [`results/compute-memory-v4/`](results/compute-memory-v4/) | MEASURED (superseded graph) |
 | Cryptanalysis + TMTO | [`results/cryptanalysis/`](results/cryptanalysis/) | MEASURED / MODELED |
 | Correctness | [`results/correctness/`](results/correctness/) | PASS |
 | Stress | [`results/stress/`](results/stress/) | PASS |
 | Fuzz (fallback harness on Windows; libFuzzer in CI) | [`results/fuzz/`](results/fuzz/) | PASS |
 | Reliability matrix | [`results/reliability/`](results/reliability/) | MEASURED |
 
-Snapshot from the **v4-C** CPU campaign ([`results/compute-memory-v4/report.md`](results/compute-memory-v4/report.md)), **MEASURED**:
+Snapshot from the **v5** attacker-opt + defender microbench ([`results/compute-memory-v4/v5-cost-tradeoff/report.md`](results/compute-memory-v4/v5-cost-tradeoff/report.md)), **MEASURED**:
 
-| Profile | Memory | Defender p50 | Attacker 16t | Attacker 32t |
+| Profile | Memory | Defender p50 | Strongest CPU 16t | Strongest CPU 32t |
 |---|---:|---:|---:|---:|
-| Antech combined-frontier (C) | 16 MiB | 96.3 ms | 40.56 g/s | 38.27 g/s |
-| Argon2id (same host campaign) | 64 MiB | — | 22.94 g/s | 23.66 g/s |
+| Antech CombinedFrontier (construction v5) | 16 MiB | 128.9 ms | 52.39 g/s packed_prefetch | 49.93 g/s packed_prefetch |
+| Argon2id (same host, same runner) | 64 MiB | — | 21.84 g/s | 21.43 g/s |
 
-GPU head-to-head on **RTX 3050** @ 16 MiB ([`results/compute-memory-v4/gpu/report.md`](results/compute-memory-v4/gpu/report.md)), **MEASURED**:
+GPU head-to-head on **RTX 3050** @ 16 MiB (same attacker-opt run), **MEASURED**:
 
 | | Guesses/sec | Kernel p50 |
 |---|---:|---:|
-| Antech v4-C (best mode: 32 threads/block, batch 192) | 32.96 | 5820 ms |
-| Argon2id (same GPU) | 435.56 | 220 ms |
+| Antech v5 (best: packed_t32_b256) | 97.69 | 2617 ms |
+| Argon2id (same GPU, same session) | 434.87 | 221 ms |
 
 ## Build research
 

@@ -17,7 +17,7 @@
 #include <cuda_runtime.h>
 
 // ---- protocol constants (must match Rust v4-C) ----
-static const uint32_t V4_VERSION = 4;
+static const uint32_t V4_VERSION = 5;
 static const uint32_t GRAPH_TAG_C = 3;
 static const uint32_t MIX_ROUNDS = 4;
 static const uint32_t BLOCK_SIZE = 32;
@@ -26,9 +26,8 @@ static const uint32_t MEMORY_MIB = 16;
 static const uint32_t MEMORY_KIB = MEMORY_MIB * 1024;
 static const uint32_t NUM_BLOCKS = (MEMORY_KIB * 1024u) / BLOCK_SIZE; // 524288
 static const uint32_t FRONTIER_WIDTH = 64;
-static const uint32_t TILE_BLOCKS = 512;
 static const uint32_t CRITICAL_PERIOD = 4; // FRONTIER_WIDTH/16
-static const uint32_t TILE_LEN = 512;      // min(TILE_BLOCKS, NUM_BLOCKS)
+static const uint32_t TILE_LEN = 512;
 
 static const uint64_t C1 = 0xBF58476D1CE4E5B9ULL;
 static const uint64_t C2 = 0x94D049BB133111EBULL;
@@ -275,40 +274,33 @@ __device__ void d_local_frontier(DParents* out, const uint64_t state[4], uint32_
     }
 }
 
-// CombinedFrontier parent selection (exact port of graph.rs::combined)
-__device__ DParents d_parents_combined(const uint64_t state[4], uint32_t i) {
+// CombinedFrontier v5 phase-1: sequential + frontier only.
+__device__ DParents d_parents_local(const uint64_t state[4], uint32_t i) {
+    DParents out;
+    out.len = 0; out.scatter1 = -1; out.scatter2 = -1;
+    if (i == 0) return out;
+    d_local_frontier(&out, state, i, 2);
+    return out;
+}
+
+// CombinedFrontier v5 phase-2: global + always-2 far from post-local state.
+__device__ DParents d_parents_remote(const uint64_t state[4], uint32_t i) {
     DParents out;
     out.len = 0; out.scatter1 = -1; out.scatter2 = -1;
     if (i == 0) return out;
 
-    uint32_t tile = TILE_LEN > FRONTIER_WIDTH ? TILE_LEN : FRONTIER_WIDTH;
-    // tile = tile_len.max(TILE_BLOCKS.min(512)) with tile_len=512 → 512
-    tile = TILE_LEN;
-    if (tile < 512) { /* keep */ }
-    // In Rust: tile_len.max(TILE_BLOCKS.min(512)) = 512.max(512.min(512)) = 512
-    uint32_t tile_start = (i / tile) * tile;
-    int critical = ((CRITICAL_PERIOD > 0) && (i % CRITICAL_PERIOD == 0)) ||
-                   (i > 0 && (i % FRONTIER_WIDTH == 0));
+    uint32_t fw = FRONTIER_WIDTH < i ? FRONTIER_WIDTH : i;
 
-    d_local_frontier(&out, state, i, 2);
-
-    if (i > tile_start + 1) {
-        uint32_t span = i - tile_start;
-        uint32_t local_remote = tile_start + (uint32_t)(state[1] % span);
-        d_push_unique(&out, local_remote, i);
+    if (i > 1) {
+        d_push_unique(&out, (uint32_t)(state[1] % i), i);
     }
 
-    uint32_t fw = FRONTIER_WIDTH < i ? FRONTIER_WIDTH : i;
     if (i > fw + 1) {
         uint32_t remote_span = i - fw;
-        if (critical || ((i & 1u) == 0u)) {
-            uint32_t far = (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span);
-            d_push_unique(&out, far, i);
-        }
-        if (critical) {
-            uint32_t far2 = (uint32_t)((state[0] ^ GOLDEN) % remote_span);
-            d_push_unique(&out, far2, i);
-        }
+        uint32_t far = (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span);
+        d_push_unique(&out, far, i);
+        uint32_t far2 = (uint32_t)((state[0] ^ GOLDEN) % remote_span);
+        d_push_unique(&out, far2, i);
     }
 
     uint32_t guard = 0;
@@ -316,23 +308,44 @@ __device__ DParents d_parents_combined(const uint64_t state[4], uint32_t i) {
         guard++;
         uint64_t mix = state[out.len % 4] ^ ((uint64_t)i * GOLDEN);
         uint32_t before = out.len;
-        uint32_t addr;
-        if (i > tile_start) {
-            uint32_t den = (i - tile_start);
-            if (den == 0) den = 1;
-            addr = tile_start + (uint32_t)(mix % den);
-        } else {
-            addr = (uint32_t)(mix % i);
-        }
-        d_push_unique(&out, addr, i);
+        d_push_unique(&out, (uint32_t)(mix % i), i);
         if (out.len == before) break;
     }
+    return out;
+}
 
+__device__ void d_scatter_from_state(const uint64_t state[4], uint32_t i, int* s1, int* s2) {
+    uint32_t fw = FRONTIER_WIDTH < i ? FRONTIER_WIDTH : i;
     if (i > fw) {
         uint32_t span = i - fw;
-        out.scatter1 = (int)((state[2] ^ GOLDEN) % span);
-        out.scatter2 = (int)((state[3] ^ d_rotl(state[0], 7)) % span);
+        *s1 = (int)((state[2] ^ GOLDEN) % span);
+        *s2 = (int)((state[3] ^ d_rotl(state[0], 7)) % span);
+    } else {
+        *s1 = -1;
+        *s2 = -1;
     }
+}
+
+__device__ void d_mix_views_bytes(uint64_t state[4], const uint8_t* views[], uint32_t n_views) {
+    if (n_views == 0) return;
+    if (n_views == 1) {
+        d_mix_pair(state, views[0], views[0]);
+        return;
+    }
+    uint32_t vi = 0;
+    while (vi + 1 < n_views) {
+        d_mix_pair(state, views[vi], views[vi + 1]);
+        vi += 2;
+    }
+    if (vi < n_views) d_mix_pair(state, views[vi], views[vi]);
+}
+
+// CombinedFrontier parent selection (single-shot analysis view; walk uses two-phase).
+__device__ DParents d_parents_combined(const uint64_t state[4], uint32_t i) {
+    DParents out = d_parents_local(state, i);
+    DParents rem = d_parents_remote(state, i);
+    for (uint32_t k = 0; k < rem.len; k++) d_push_unique(&out, rem.indices[k], i);
+    d_scatter_from_state(state, i, &out.scatter1, &out.scatter2);
     return out;
 }
 
@@ -360,7 +373,7 @@ __device__ const uint8_t* ring_get(const FrontierRing* r, uint32_t idx) {
     return &r->data[(idx % FRONTIER_WIDTH) * BLOCK_SIZE];
 }
 
-// One full v4-C derive walk. buffer is NUM_BLOCKS*32 bytes, zeroed by caller.
+// One full v5 CombinedFrontier derive walk. buffer is NUM_BLOCKS*32 bytes, zeroed by caller.
 __device__ void v4c_walk(const uint8_t seed[32], const uint8_t phantoms[2][32],
                          uint8_t* buffer, uint64_t state_out[4], uint8_t last_out[32]) {
     uint64_t state[4];
@@ -371,41 +384,44 @@ __device__ void v4c_walk(const uint8_t seed[32], const uint8_t phantoms[2][32],
     ring_init(&ring);
 
     for (uint32_t i = 0; i < NUM_BLOCKS; i++) {
-        DParents parents = d_parents_combined(state, i);
-        const uint8_t* views[8];
-        uint32_t n_views = 0;
         if (i == 0) {
+            const uint8_t* views[8];
             views[0] = phantoms[0];
             views[1] = phantoms[1];
-            n_views = FAN_IN;
+            d_mix_views_bytes(state, views, FAN_IN);
         } else {
-            for (uint32_t k = 0; k < parents.len; k++) {
-                uint32_t p = parents.indices[k];
+            DParents local = d_parents_local(state, i);
+            const uint8_t* views[8];
+            uint32_t n_views = 0;
+            for (uint32_t k = 0; k < local.len; k++) {
+                uint32_t p = local.indices[k];
                 const uint8_t* v = ring_get(&ring, p);
                 views[n_views++] = v ? v : (buffer + (size_t)p * BLOCK_SIZE);
             }
-        }
-        if (n_views == 1) {
-            d_mix_pair(state, views[0], views[0]);
-        } else {
-            uint32_t vi = 0;
-            while (vi + 1 < n_views) {
-                d_mix_pair(state, views[vi], views[vi + 1]);
-                vi += 2;
+            d_mix_views_bytes(state, views, n_views);
+
+            DParents remote = d_parents_remote(state, i);
+            n_views = 0;
+            for (uint32_t k = 0; k < remote.len; k++) {
+                uint32_t p = remote.indices[k];
+                const uint8_t* v = ring_get(&ring, p);
+                views[n_views++] = v ? v : (buffer + (size_t)p * BLOCK_SIZE);
             }
-            if (vi < n_views) d_mix_pair(state, views[vi], views[vi]);
+            d_mix_views_bytes(state, views, n_views);
         }
 
         uint8_t* out = buffer + (size_t)i * BLOCK_SIZE;
         d_state_to_block(state, out);
         ring_push(&ring, i, out);
 
-        if (parents.scatter1 >= 0) {
-            uint32_t dest = (uint32_t)parents.scatter1;
+        int s1, s2;
+        d_scatter_from_state(state, i, &s1, &s2);
+        if (s1 >= 0) {
+            uint32_t dest = (uint32_t)s1;
             if (dest < NUM_BLOCKS && dest != i) d_xor_state(state, buffer + (size_t)dest * BLOCK_SIZE);
         }
-        if (parents.scatter2 >= 0) {
-            uint32_t dest = (uint32_t)parents.scatter2;
+        if (s2 >= 0) {
+            uint32_t dest = (uint32_t)s2;
             if (dest < NUM_BLOCKS && dest != i) d_xor_state(state, buffer + (size_t)dest * BLOCK_SIZE);
         }
     }
@@ -493,14 +509,10 @@ __device__ __forceinline__ void d_push_u(uint32_t* idx, uint32_t* len, uint32_t 
     idx[(*len)++] = addr;
 }
 
-__device__ DParents d_parents_combined_fast(const uint64_t state[4], uint32_t i) {
+__device__ DParents d_parents_local_fast(const uint64_t state[4], uint32_t i) {
     DParents out;
     out.len = 0; out.scatter1 = -1; out.scatter2 = -1;
     if (i == 0) return out;
-    uint32_t tile = TILE_LEN;
-    uint32_t tile_start = (i / tile) * tile;
-    int critical = ((i % CRITICAL_PERIOD) == 0) || ((i % FRONTIER_WIDTH) == 0);
-
     d_push_u(out.indices, &out.len, i - 1, i);
     uint32_t fw = FRONTIER_WIDTH < i ? FRONTIER_WIDTH : i;
     d_push_u(out.indices, &out.len, i - 1 - (uint32_t)(state[0] % fw), i);
@@ -515,37 +527,55 @@ __device__ DParents d_parents_combined_fast(const uint64_t state[4], uint32_t i)
             if (out.len == before) break;
         }
     }
-    if (i > tile_start + 1) {
-        uint32_t span = i - tile_start;
-        d_push_u(out.indices, &out.len, tile_start + (uint32_t)(state[1] % span), i);
+    return out;
+}
+
+__device__ DParents d_parents_remote_fast(const uint64_t state[4], uint32_t i) {
+    DParents out;
+    out.len = 0; out.scatter1 = -1; out.scatter2 = -1;
+    if (i == 0) return out;
+    uint32_t fw = FRONTIER_WIDTH < i ? FRONTIER_WIDTH : i;
+
+    if (i > 1) {
+        d_push_u(out.indices, &out.len, (uint32_t)(state[1] % i), i);
     }
     if (i > fw + 1) {
         uint32_t remote_span = i - fw;
-        if (critical || ((i & 1u) == 0u)) {
-            d_push_u(out.indices, &out.len,
-                     (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span), i);
-        }
-        if (critical) {
-            d_push_u(out.indices, &out.len, (uint32_t)((state[0] ^ GOLDEN) % remote_span), i);
-        }
+        d_push_u(out.indices, &out.len,
+                 (uint32_t)((state[1] ^ d_rotl(state[3], 11)) % remote_span), i);
+        d_push_u(out.indices, &out.len, (uint32_t)((state[0] ^ GOLDEN) % remote_span), i);
     }
-    guard = 0;
+    uint32_t guard = 0;
     while (out.len < FAN_IN && guard < 4) {
         guard++;
         uint64_t mix = state[out.len % 4] ^ ((uint64_t)i * GOLDEN);
         uint32_t before = out.len;
-        uint32_t addr = (i > tile_start)
-            ? tile_start + (uint32_t)(mix % ((i - tile_start) ? (i - tile_start) : 1))
-            : (uint32_t)(mix % i);
-        d_push_u(out.indices, &out.len, addr, i);
+        d_push_u(out.indices, &out.len, (uint32_t)(mix % i), i);
         if (out.len == before) break;
     }
-    if (i > fw) {
-        uint32_t span = i - fw;
-        out.scatter1 = (int)((state[2] ^ GOLDEN) % span);
-        out.scatter2 = (int)((state[3] ^ d_rotl(state[0], 7)) % span);
-    }
     return out;
+}
+
+__device__ DParents d_parents_combined_fast(const uint64_t state[4], uint32_t i) {
+    DParents out = d_parents_local_fast(state, i);
+    DParents rem = d_parents_remote_fast(state, i);
+    for (uint32_t k = 0; k < rem.len; k++) d_push_u(out.indices, &out.len, rem.indices[k], i);
+    d_scatter_from_state(state, i, &out.scatter1, &out.scatter2);
+    return out;
+}
+
+__device__ void d_mix_views_words(uint64_t state[4], uint64_t views[8][4], uint32_t n_views) {
+    if (n_views == 0) return;
+    if (n_views == 1) {
+        d_mix_words(state, views[0], views[0]);
+        return;
+    }
+    uint32_t vi = 0;
+    while (vi + 1 < n_views) {
+        d_mix_words(state, views[vi], views[vi + 1]);
+        vi += 2;
+    }
+    if (vi < n_views) d_mix_words(state, views[vi], views[vi]);
 }
 
 __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[2][4],
@@ -560,7 +590,6 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
     uint32_t count = 0;
 
     for (uint32_t i = 0; i < NUM_BLOCKS; i++) {
-        DParents parents = d_parents_combined_fast(state, i);
         uint64_t views[8][4];
         uint32_t n_views = 0;
         if (i == 0) {
@@ -570,9 +599,11 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
                 views[1][w] = phantoms[1][w];
             }
             n_views = FAN_IN;
+            d_mix_views_words(state, views, n_views);
         } else {
-            for (uint32_t k = 0; k < parents.len; k++) {
-                uint32_t p = parents.indices[k];
+            DParents local = d_parents_local_fast(state, i);
+            for (uint32_t k = 0; k < local.len; k++) {
+                uint32_t p = local.indices[k];
                 int from_ring = 0;
                 if (use_ring && newest >= 0 && (int)p <= newest) {
                     uint32_t age = (uint32_t)newest - p;
@@ -590,16 +621,30 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
                 }
                 n_views++;
             }
-        }
-        if (n_views == 1) {
-            d_mix_words(state, views[0], views[0]);
-        } else {
-            uint32_t vi = 0;
-            while (vi + 1 < n_views) {
-                d_mix_words(state, views[vi], views[vi + 1]);
-                vi += 2;
+            d_mix_views_words(state, views, n_views);
+
+            DParents remote = d_parents_remote_fast(state, i);
+            n_views = 0;
+            for (uint32_t k = 0; k < remote.len; k++) {
+                uint32_t p = remote.indices[k];
+                int from_ring = 0;
+                if (use_ring && newest >= 0 && (int)p <= newest) {
+                    uint32_t age = (uint32_t)newest - p;
+                    uint32_t window = count < FRONTIER_WIDTH ? count : FRONTIER_WIDTH;
+                    if (age < window) {
+#pragma unroll
+                        for (int w = 0; w < 4; w++) views[n_views][w] = ring[p % FRONTIER_WIDTH][w];
+                        from_ring = 1;
+                    }
+                }
+                if (!from_ring) {
+                    uint64_t* src = buf + (size_t)p * 4;
+#pragma unroll
+                    for (int w = 0; w < 4; w++) views[n_views][w] = src[w];
+                }
+                n_views++;
             }
-            if (vi < n_views) d_mix_words(state, views[vi], views[vi]);
+            d_mix_views_words(state, views, n_views);
         }
         uint64_t* out = buf + (size_t)i * 4;
 #pragma unroll
@@ -610,16 +655,18 @@ __device__ void v4c_walk_packed(const uint8_t seed[32], const uint64_t phantoms[
             newest = (int)i;
             count = count + 1 < FRONTIER_WIDTH ? count + 1 : FRONTIER_WIDTH;
         }
-        if (parents.scatter1 >= 0) {
-            uint32_t dest = (uint32_t)parents.scatter1;
+        int s1, s2;
+        d_scatter_from_state(state, i, &s1, &s2);
+        if (s1 >= 0) {
+            uint32_t dest = (uint32_t)s1;
             if (dest < NUM_BLOCKS && dest != i) {
                 uint64_t* d = buf + (size_t)dest * 4;
 #pragma unroll
                 for (int w = 0; w < 4; w++) d[w] ^= state[w];
             }
         }
-        if (parents.scatter2 >= 0) {
-            uint32_t dest = (uint32_t)parents.scatter2;
+        if (s2 >= 0) {
+            uint32_t dest = (uint32_t)s2;
             if (dest < NUM_BLOCKS && dest != i) {
                 uint64_t* d = buf + (size_t)dest * 4;
 #pragma unroll

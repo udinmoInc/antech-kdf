@@ -1,0 +1,9 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+probe_nvcc_presence,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,nvcc=true cl=false gpu=NVIDIA GeForce RTX 3050,,,0xad05a71ec4100001,1,1
+nvcc_present,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,nvcc found,,,0xad05a71ec4100001,1,1
+cuda_compile_host,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,BLOCKED,nvcc present but MSVC cl.exe missing — cannot compile CUDA attacker on this host,,,0xad05a71ec4100001,0,0
+cpu_empty_password_ok,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,ok,,,0xad05a71ec4100001,1,1
+live_cuda_correctness,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,"CUDA compile/run not available on this host; CI cuda-correctness job when enabled",,,0xad05a71ec4100001,0,0
+prior_gpu_correctness_csv,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,imported F:\Coding\experiments\antech-kdf\research\code\antech-kdf-research\../../results/compute-memory-v4/gpu/correctness.csv — 0 mismatches,,,0xad05a71ec4100001,1,481
+concurrent_gpu_jobs,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,"requires live CUDA binary + device; not executed",,,0xad05a71ec4100001,0,0
+invalid_device_soft_fail_documented,cuda,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,evaluate_cuda_attacker returns UNAVAILABLE status strings without panic when tooling missing,,,0xad05a71ec4100001,1,1

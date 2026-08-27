@@ -86,7 +86,7 @@ cargo test --workspace
 
 Independent review materials live in [`research/security-review/`](./research/security-review/). Start with [`REQUEST_FOR_REVIEW.md`](./research/security-review/REQUEST_FOR_REVIEW.md).
 
-Canonical construction: **construction version 4**, CombinedFrontier, `$antech$v2$`. Evidence is labeled **MEASURED** / **MODELED** / **BLOCKED** / **UNKNOWN** — do not mix campaigns.
+Canonical construction: **construction version 5**, CombinedFrontier, `$antech$v2$`. Evidence is labeled **MEASURED** / **MODELED** / **BLOCKED** / **UNKNOWN** — do not mix campaigns.
 
 ## Research (second)
 

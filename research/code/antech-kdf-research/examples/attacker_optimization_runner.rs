@@ -23,7 +23,14 @@ const CORRECT_SALT: &[u8] = b"v4_gpu_correct_salt";
 const THREADS: [usize; 6] = [1, 2, 4, 8, 16, 32];
 const WINDOW: Duration = Duration::from_millis(1200);
 const WARMUP: Duration = Duration::from_millis(400);
-const OUT: &str = "research/results/compute-memory-v4/attacker-optimization";
+/// Resolve results dir whether cwd is repo root or `research/code`.
+fn out_dir() -> PathBuf {
+    if Path::new("research/results").is_dir() {
+        PathBuf::from("research/results/compute-memory-v4/attacker-optimization")
+    } else {
+        PathBuf::from("../../results/compute-memory-v4/attacker-optimization")
+    }
+}
 
 fn corpus() -> Vec<Vec<u8>> {
     (0..256u32)
@@ -355,24 +362,23 @@ fn compile_cuda(src: &Path, dst: &Path) -> Result<String, String> {
             .to_string_lossy()
             .into_owned()
     };
-    let cmdline = if let Some(vc) = vcvars {
-        format!(
-            "call \"{vc}\" && \"{nvcc}\" -O3 -std=c++17 -arch=sm_86 -Xptxas -v -lineinfo \"{src}\" -o \"{dst}\"",
-            vc = vc,
-            nvcc = nvcc,
-            src = src.display(),
-            dst = dst.display()
-        )
+    // Write a .bat so cmd.exe does not mangle quoted vcvars paths (cmd /C + nested quotes fails).
+    let script = dst.parent().unwrap().join("compile_v4c.bat");
+    let mut body = String::new();
+    if let Some(vc) = vcvars {
+        body.push_str(&format!("@echo off\r\ncall \"{}\"\r\n", vc));
     } else {
-        format!(
-            "\"{nvcc}\" -O3 -std=c++17 -arch=sm_86 -Xptxas -v -lineinfo \"{src}\" -o \"{dst}\"",
-            nvcc = nvcc,
-            src = src.display(),
-            dst = dst.display()
-        )
-    };
-    let out = Command::new("cmd")
-        .args(["/C", &cmdline])
+        body.push_str("@echo off\r\n");
+    }
+    body.push_str(&format!(
+        "\"{}\" -O3 -std=c++17 -arch=sm_86 -Xptxas -v -lineinfo \"{}\" -o \"{}\"\r\n",
+        nvcc,
+        src.display(),
+        dst.display()
+    ));
+    fs::write(&script, &body).map_err(|e| e.to_string())?;
+    // Run the .bat directly (avoids cmd /C quote mangling on Windows).
+    let out = Command::new(&script)
         .output()
         .map_err(|e| e.to_string())?;
     let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
@@ -392,7 +398,7 @@ fn parse_kv(text: &str, key: &str) -> String {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let out = PathBuf::from(OUT);
+    let out = out_dir();
     fs::create_dir_all(&out)?;
     let cfg = ComputeMemoryV4Config::default()
         .with_memory_mib(16)

@@ -13,7 +13,11 @@ use std::time::Duration;
 const SALT: &[u8] = b"tmto_adv_salt_16b";
 
 fn out_dir() -> PathBuf {
-    PathBuf::from("research/results/cryptanalysis/tmto-advanced")
+    if PathBuf::from("research/results").is_dir() {
+        PathBuf::from("research/results/cryptanalysis/tmto-advanced")
+    } else {
+        PathBuf::from("../../results/cryptanalysis/tmto-advanced")
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -474,7 +478,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     writeln!(gpu, "mode,memory_frac,gps,correct,vram_note")?;
     writeln!(
         gpu,
-        "packed_t32_b256_full,1.0,100.53,true,prior verified RTX3050 full-memory DAG"
+        "packed_t32_b256_full,1.0,97.69,true,MEASURED v5 attacker-opt RTX3050 packed_t32_b256"
     )?;
     writeln!(
         gpu,
@@ -691,7 +695,7 @@ fn write_report(
     writeln!(f, "## GPU results\n")?;
     writeln!(
         f,
-        "- Full-memory **packed_t32_b256 ≈ 100.5 g/s** (prior RTX 3050 campaign).\n\
+        "- Full-memory **packed_t32_b256 ≈ 97.69 g/s** (v5 RTX 3050 attacker-opt, 100/100 digest match).\n\
          - Reduced-VRAM TMTO does not beat full-memory batching: prefix replay destroys occupancy; compact index ≈8 MiB/guess side structure.\n"
     )?;
 

@@ -15,7 +15,11 @@ use std::process::Command;
 use std::time::Duration;
 
 fn out_dir() -> PathBuf {
-    PathBuf::from("research/results/cryptanalysis")
+    if PathBuf::from("research/results").is_dir() {
+        PathBuf::from("research/results/cryptanalysis")
+    } else {
+        PathBuf::from("../../results/cryptanalysis")
+    }
 }
 
 fn production_cfg(mib: usize) -> AntechConfig {
@@ -470,7 +474,7 @@ fn write_report(
     )?;
     writeln!(
         f,
-        "3. **Can predecessor selection be predicted?** Partial-state prediction (only state[0]) matches ≈{:.1}% of nodes (A3) — far parents and scatters need the full state. Not enough to avoid the walk.\n",
+        "3. **Can predecessor selection be predicted?** Exact local+remote parent-set match from only `state[0]` (pre-node, no local mix) is ≈{:.2}% of nodes (A3). Far parents need post-local full state; not enough to skip the walk.\n",
         parent_prediction_probe(PASSWORD, SALT).fraction_predictable * 100.0
     )?;
     writeln!(

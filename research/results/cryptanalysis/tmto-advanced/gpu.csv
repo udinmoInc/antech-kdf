@@ -1,4 +1,4 @@
 mode,memory_frac,gps,correct,vram_note
-packed_t32_b256_full,1.0,100.53,true,prior verified RTX3050 full-memory DAG
+packed_t32_b256_full,1.0,97.69,true,MEASURED v5 attacker-opt RTX3050 packed_t32_b256
 reduced_vram_sparse,0.5,0,false,prefix-replay TMTO hits recompute wall; compact scatter index alone ≈4MiB at 16MiB KDF
 reduced_vram_compact_index,NA,0,not_advantageous,side structure fights batching density vs full_packed VRAM

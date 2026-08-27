@@ -1,0 +1,7 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+local_ref_match,platform,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.025,PASS,match,,active=0 queue=0 alloc_kib=0,0xad05a71ec4100001,1,1
+format_endian_roundtrip,platform,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,ok,,,0xad05a71ec4100001,1,1
+executed_on_windows_x86_64,platform,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.318,PASS,local host suite executed,,,0xad05a71ec4100001,1,1
+ubuntu_linux_host,platform,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,not executing on Linux in this process,,,0xad05a71ec4100001,0,0
+windows_host,platform,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,PASS,this host,,,0xad05a71ec4100001,1,1
+ci_matrix_ubuntu_macos,platform,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,"cross-OS matrix lives in .github/workflows/validation.yml; not executed in this process",,,0xad05a71ec4100001,0,0

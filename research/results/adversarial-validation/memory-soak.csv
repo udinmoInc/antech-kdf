@@ -1,0 +1,10 @@
+test_name,category,platform,compiler,architecture,duration_secs,result,errors,memory_metrics,resource_metrics,seed,repeats,executions
+soak_60s_conc_1,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,60.008,PASS,idle after soak,rss_kib=0 peak_active=1 peak_queue=0,active=0 queue=0 alloc_kib=0,0xad05a71ec42c0000,1,6767
+soak_60s_conc_10,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,60.026,PASS,idle after soak,rss_kib=0 peak_active=10 peak_queue=0,active=0 queue=0 alloc_kib=0,0xad05a71ec42c000b,1,32266
+soak_60s_conc_32,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,60.042,PASS,idle after soak,rss_kib=0 peak_active=32 peak_queue=0,active=0 queue=0 alloc_kib=0,0xad05a71ec42c0021,1,46877
+soak_60s_conc_100,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,60.123,PASS,idle after soak,rss_kib=0 peak_active=64 peak_queue=36,active=0 queue=0 alloc_kib=0,0xad05a71ec42c0065,1,53643
+soak_60s_conc_250,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,60.359,PASS,idle after soak,rss_kib=0 peak_active=64 peak_queue=186,active=0 queue=0 alloc_kib=0,0xad05a71ec42c00fb,1,38224
+soak_300s_conc_1,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,300.004,PASS,idle after soak,rss_kib=0 peak_active=1 peak_queue=0,active=0 queue=0 alloc_kib=0,0xad05a71ec53c0000,1,43723
+soak_300s_conc_32,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,300.029,PASS,idle after soak,rss_kib=0 peak_active=32 peak_queue=0,active=0 queue=0 alloc_kib=0,0xad05a71ec53c0021,1,241252
+soak_300s_conc_100,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,300.079,PASS,idle after soak,rss_kib=0 peak_active=64 peak_queue=36,active=0 queue=0 alloc_kib=0,0xad05a71ec53c0065,1,275274
+soak_900s,memory_soak,windows,rustc rustc 1.98.0 (88d9e12ae 2026-08-18),x86_64,0.000,NOT RUN,15-minute soak requires ANTECH_ADVERSARIAL_PROFILE=full,,,0xad05a71ec4100001,0,0

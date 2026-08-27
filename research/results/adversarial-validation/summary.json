@@ -1,0 +1,22 @@
+{
+  "master_seed": "0xad05a71ec4100001",
+  "platform": "windows",
+  "compiler": "rustc rustc 1.98.0 (88d9e12ae 2026-08-18)",
+  "architecture": "x86_64",
+  "profile": "standard",
+  "total_executions": 741725,
+  "total_repeated_runs": 71,
+  "total_failures": 0,
+  "total_crashes": 0,
+  "total_hangs": 0,
+  "total_panics": 0,
+  "total_races": 0,
+  "total_leaks": 0,
+  "total_bugs_found": 0,
+  "total_bugs_fixed": 1,
+  "total_regression_tests": 5,
+  "total_blocked": 3,
+  "total_not_run": 11,
+  "wall_secs": 1235.7952305,
+  "verdict": "PASS"
+}

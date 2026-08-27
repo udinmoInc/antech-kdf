@@ -1,0 +1,6 @@
+id,status,notes
+stress_regressions::malformed_verify_never_leaves_scheduler_busy,PASS,production test
+stress_regressions::wrong_password_and_resource_errors_release_permits,PASS,production test
+resource nested-acquire fail-fast,PASS,exercised in failure_injection
+wrong_len_ad_rejected,PASS,from 100k campaign boundary_fixed
+queue_below_limit_blocks_then_admits,PASS,barrier-sync scheduler queue depth test (was flaky under load)

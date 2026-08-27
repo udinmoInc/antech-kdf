@@ -224,40 +224,83 @@ fn cache_locality(state: &[u64; 4], i: usize, fan_in: u32, tile_len: usize) -> P
     out
 }
 
-fn combined(state: &[u64; 4], i: usize, fan_in: u32, period: usize, tile_len: usize) -> ParentSet {
-    let tile = tile_len.max(TILE_BLOCKS.min(512));
-    let tile_start = (i / tile) * tile;
-    let critical = is_critical(i, period.max(1)) || (i > 0 && i.is_multiple_of(FRONTIER_WIDTH));
+/// Phase-1 CombinedFrontier parents: sequential + frontier only (no far / scatter).
+/// Far addresses are intentionally deferred until after these are mixed (v5).
+pub fn combined_local_parents(state: &[u64; 4], i: usize) -> ParentSet {
+    if i == 0 {
+        return ParentSet::empty(NodeClass::Local);
+    }
+    let mut out = ParentSet::empty(NodeClass::Local);
+    local_frontier_parents(&mut out, state, i, 2);
+    out
+}
+
+/// Phase-2 CombinedFrontier parents: global + always-2 far gathers from *post-local* state.
+/// Scatter destinations are left unset; the engine fills them from the final post-mix state.
+pub fn combined_remote_parents(
+    state: &[u64; 4],
+    i: usize,
+    fan_in: u32,
+    period: usize,
+    tile_len: usize,
+) -> ParentSet {
+    if i == 0 {
+        return ParentSet::empty(NodeClass::Local);
+    }
+    let _tile = tile_len.max(TILE_BLOCKS.min(512));
+    let critical = is_critical(i, period.max(1)) || i.is_multiple_of(FRONTIER_WIDTH);
 
     let mut out = ParentSet::empty(if critical {
         NodeClass::Critical
     } else {
         NodeClass::Local
     });
-    local_frontier_parents(&mut out, state, i, 2);
-    push_tile_local(&mut out, state, i, tile_start);
+    // Global (not tile-local) secondary gather: reduces shared-cache friendliness under
+    // multi-guess load without dropping the far/scatter dependency structure.
+    if i > 1 {
+        out.push_unique((state[1] as usize) % i, i);
+    }
 
     let fw = FRONTIER_WIDTH.min(i);
     if i > fw + 1 {
         let remote_span = i - fw;
-        if critical || (i & 1) == 0 {
-            let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
-            out.push_unique(far, i);
-        }
-        if critical {
-            let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
-            out.push_unique(far2, i);
-        }
+        // Every node: two state-dependent far gathers from post-local state.
+        let far = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
+        out.push_unique(far, i);
+        let far2 = ((state[0] ^ GOLDEN) as usize) % remote_span;
+        out.push_unique(far2, i);
     }
 
-    fill_fan_in(&mut out, state, i, fan_in, |mix| {
-        tile_or_global_addr(mix, i, tile_start)
-    });
+    fill_fan_in(&mut out, state, i, fan_in, |mix| (mix as usize) % i);
+    out
+}
 
+#[inline(always)]
+pub fn scatter_dests_from_state(state: &[u64; 4], i: usize) -> (Option<usize>, Option<usize>) {
+    let fw = FRONTIER_WIDTH.min(i);
     if i > fw {
         let span = i - fw;
-        out.scatter_dest = Some(scatter_from_state2(state, span));
-        out.scatter_dest2 = Some(((state[3] ^ state[0].rotate_left(7)) as usize) % span);
+        (
+            Some(scatter_from_state2(state, span)),
+            Some(((state[3] ^ state[0].rotate_left(7)) as usize) % span),
+        )
+    } else {
+        (None, None)
+    }
+}
+
+fn combined(state: &[u64; 4], i: usize, fan_in: u32, period: usize, tile_len: usize) -> ParentSet {
+    // Single-shot view used by non-engine callers / tests. Engine uses two-phase APIs.
+    let mut out = combined_local_parents(state, i);
+    let remote = combined_remote_parents(state, i, fan_in, period, tile_len);
+    for k in 0..remote.len {
+        out.push_unique(remote.indices[k], i);
+    }
+    let (s1, s2) = scatter_dests_from_state(state, i);
+    out.scatter_dest = s1;
+    out.scatter_dest2 = s2;
+    if remote.class == NodeClass::Critical {
+        out.class = NodeClass::Critical;
     }
     out
 }

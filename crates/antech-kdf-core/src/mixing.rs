@@ -56,16 +56,9 @@ pub fn node0_material(seed: &[u8; 32], parent_slot: u32, block_size: usize) -> V
 }
 
 #[inline(always)]
-pub fn mix_pair(state: &mut [u64; 4], block1: &[u8], block2: &[u8]) {
-    let b10 = load_u64(block1, 0);
-    let b11 = load_u64(block1, 8);
-    let b12 = load_u64(block1, 16);
-    let b13 = load_u64(block1, 24);
-    let b20 = load_u64(block2, 0);
-    let b21 = load_u64(block2, 8);
-    let b22 = load_u64(block2, 16);
-    let b23 = load_u64(block2, 24);
-
+pub fn mix_pair_words(state: &mut [u64; 4], a: &[u64; 4], b: &[u64; 4]) {
+    let (b10, b11, b12, b13) = (a[0], a[1], a[2], a[3]);
+    let (b20, b21, b22, b23) = (b[0], b[1], b[2], b[3]);
     for r in 0..MIX_ROUNDS {
         let rr = r as u64;
         state[0] = state[0]
@@ -85,6 +78,44 @@ pub fn mix_pair(state: &mut [u64; 4], block1: &[u8], block2: &[u8]) {
             .rotate_left(23)
             ^ state[2];
     }
+}
+
+#[inline(always)]
+pub fn mix_parent_words(state: &mut [u64; 4], views: &[[u64; 4]], n: usize) {
+    if n == 0 {
+        return;
+    }
+    if n == 1 {
+        mix_pair_words(state, &views[0], &views[0]);
+        return;
+    }
+    let mut i = 0;
+    while i + 1 < n {
+        mix_pair_words(state, &views[i], &views[i + 1]);
+        i += 2;
+    }
+    if i < n {
+        mix_pair_words(state, &views[i], &views[i]);
+    }
+}
+
+#[inline(always)]
+pub fn mix_pair(state: &mut [u64; 4], block1: &[u8], block2: &[u8]) {
+    mix_pair_words(
+        state,
+        &[
+            load_u64(block1, 0),
+            load_u64(block1, 8),
+            load_u64(block1, 16),
+            load_u64(block1, 24),
+        ],
+        &[
+            load_u64(block2, 0),
+            load_u64(block2, 8),
+            load_u64(block2, 16),
+            load_u64(block2, 24),
+        ],
+    );
 }
 
 #[inline(always)]

@@ -1,0 +1,7 @@
+memory_frac,working_set_mib,strategy,correct,cpu_cost_factor,hw_recompute_factor,area_relative,power_relative,throughput_relative,kind,notes
+1,16.0000,full_packed,true,0.9300,1.0000,1.000000e0,1.000000e0,1.000000e0,MEASURED+MODELED,CPU TMTO MEASURED; HW maps cost_factor onto cycles/energy. Incorrect rows are walls.
+0.75,12.0000,sparse_checkpoint,false,5066.0000,5066.0000,7.500000e-1,1.520325e3,1.973944e-4,MEASURED,CPU TMTO MEASURED; HW maps cost_factor onto cycles/energy. Incorrect rows are walls.
+0.5,8.0000,sparse_checkpoint,false,15069.0000,15069.0000,5.000000e-1,4.521050e3,6.636140e-5,MEASURED,CPU TMTO MEASURED; HW maps cost_factor onto cycles/energy. Incorrect rows are walls.
+0.25,4.0000,sparse_checkpoint,false,19791.0000,19791.0000,2.500000e-1,5.937475e3,5.052802e-5,MEASURED,CPU TMTO MEASURED; HW maps cost_factor onto cycles/energy. Incorrect rows are walls.
+0.125,2.0000,sparse_checkpoint,false,15100.0000,15100.0000,1.250000e-1,4.530087e3,6.622517e-5,MEASURED,CPU TMTO MEASURED; HW maps cost_factor onto cycles/energy. Incorrect rows are walls.
+0.0625,1.0000,sparse_probe,false,178.0000,178.0000,6.250000e-2,5.344375e1,5.617978e-3,MEASURED,CPU TMTO MEASURED; HW maps cost_factor onto cycles/energy. Incorrect rows are walls.

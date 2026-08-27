@@ -1,0 +1,6 @@
+tool,status,notes
+libfuzzer,BLOCKED,Not executed on this Windows host
+miri,BLOCKED,Not available on this host
+asan,BLOCKED,Linux-only in CI
+ubsan,BLOCKED,Linux-only in CI
+property_fallback,PASS,Embedded in parser/config/crypto masses

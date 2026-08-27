@@ -1,6 +1,7 @@
 //! Engineering-complete research infrastructure (attackers, multitarget, side-channel,
 //! ASIC/FPGA models, stress, hardware metadata). Does **not** change the production KDF.
 
+pub mod adversarial_validation;
 pub mod asic_fpga;
 pub mod cpu_attacker;
 pub mod final_validation;
@@ -11,6 +12,7 @@ pub mod production_correctness;
 pub mod production_stress;
 pub mod side_channel;
 pub mod stress;
+pub mod validation_100k;
 
 use serde::{Deserialize, Serialize};
 use std::path::Path;

@@ -1,28 +1,29 @@
 # 04 — Evaluation
 
-Figures below are from the **current** v4 campaigns only. Source reports and CSVs sit beside each table. Labels: **MEASURED** unless noted.
+Figures below are from the **current** construction (**v5** CombinedFrontier) unless a row is labeled as the prior v4-C campaign. Source reports and CSVs sit beside each table. Labels: **MEASURED** unless noted.
 
 ## CPU — combined-frontier @ 16 MiB
 
-Source: [`../results/compute-memory-v4/report.md`](../results/compute-memory-v4/report.md) (**MEASURED**).
+Source: [`../results/compute-memory-v4/v5-cost-tradeoff/report.md`](../results/compute-memory-v4/v5-cost-tradeoff/report.md) and `attacker-optimization/` (**MEASURED**).
 
-| Variant | Defender p50 | Attacker 16t | Attacker 32t |
+| Variant | Defender p50 | Strongest attacker 16t | Strongest attacker 32t |
 |---|---:|---:|---:|
-| C combined-frontier | 96.3 ms | 40.56 g/s | 38.27 g/s |
-| Argon2id (64 MiB, same campaign) | — | 22.94 g/s | 23.66 g/s |
+| v5 CombinedFrontier (packed_prefetch) | 128.9 ms | 52.39 g/s | 49.93 g/s |
+| Argon2id (64 MiB, same attacker-opt run) | — | 21.84 g/s | 21.43 g/s |
+| v4-C CombinedFrontier (prior campaign, production engine table) | 96.3 ms | 40.56 g/s | 38.27 g/s |
 
-TMTO at 50% retained memory for the preferred variant in that campaign was about **16.45×** recomputation (**MEASURED** sweep; see `tmto.csv` in the same folder).
+v4-C’s *packed* attacker was higher (~74 / 70.5 g/s). Do not mix that row with the v5 packed numbers.
 
 ## GPU — RTX 3050 @ 16 MiB
 
-Source: [`../results/compute-memory-v4/gpu/report.md`](../results/compute-memory-v4/gpu/report.md) and `comparison.csv` (**MEASURED**).
+Source: [`../results/compute-memory-v4/attacker-optimization/gpu-profile.csv`](../results/compute-memory-v4/attacker-optimization/gpu-profile.csv) (**MEASURED**, v5 kernel).
 
 | | Guesses/sec | Kernel p50 | Notes |
 |---|---:|---:|---|
-| Antech v4-C best mode (32 th/block, batch 192) | 32.96 | 5820 ms | Occupancy ~0.33 |
-| Argon2id (same GPU) | 435.56 | 220 ms | Digests checked vs `argon2` crate |
+| Antech v5 best (`packed_t32_b256`) | 97.69 | 2617 ms | Occupancy ~0.33, 5137 MiB |
+| Argon2id (same GPU, same session) | 434.87 | 221 ms | |
 
-On that host, Antech’s best GPU rate stayed below its own multi-thread CPU attacker (~40.6 g/s @ 16 threads). Treat this as an attacker-side measurement, not as a proof that Antech is “more secure than Argon2id.”
+Prior v4-C GPU report (`gpu/report.md`) used a different kernel generation; cite v5 `gpu-profile.csv` for the current construction.
 
 ## Engineering campaigns (production surfaces)
 
