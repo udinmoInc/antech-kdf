@@ -202,18 +202,34 @@ mod integration_tests {
     use super::*;
     use antech_kdf_types::{AntechConfig, SecretBytes};
 
+    /// 1 MiB — Miri-compatible; production default remains 16 MiB.
+    fn small_cfg() -> AntechConfig {
+        AntechConfig::builder()
+            .memory_kib(1024)
+            .salt_length(16)
+            .block_size(32)
+            .fan_in(2)
+            .output_length(32)
+            .build()
+            .unwrap()
+    }
+
     #[test]
+    #[cfg_attr(
+        miri,
+        ignore = "1MiB hash+verify under Miri; see deterministic_small_config + normal cargo test"
+    )]
     fn hash_verify_roundtrip_releases_resources() {
-        let hash = core_hash_with_config(b"roundtrip", &AntechConfig::default()).unwrap();
+        let hash = core_hash_with_config(b"roundtrip", &small_cfg()).unwrap();
         assert!(core_verify(b"roundtrip", &hash).unwrap());
         assert!(!core_verify(b"wrong", &hash).unwrap());
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "1MiB derive; secret path covered by normal cargo test")]
     fn secret_bound_hash_requires_secret_on_plain_verify() {
         let inputs = DeriveInputs::default().with_secret(SecretBytes::new(b"app-secret").unwrap());
-        let hash =
-            core_hash_with_config_and_inputs(b"pw", &AntechConfig::default(), &inputs).unwrap();
+        let hash = core_hash_with_config_and_inputs(b"pw", &small_cfg(), &inputs).unwrap();
         assert!(hash.contains(",sk=1"));
         assert!(!hash.contains("app-secret"));
         assert!(matches!(
@@ -224,17 +240,60 @@ mod integration_tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "1MiB derive; AD path covered by normal cargo test")]
     fn associated_data_marker_and_roundtrip() {
         let inputs = DeriveInputs::default()
             .with_associated_data(b"tenant:42")
             .unwrap();
-        let hash =
-            core_hash_with_config_and_inputs(b"pw", &AntechConfig::default(), &inputs).unwrap();
+        let hash = core_hash_with_config_and_inputs(b"pw", &small_cfg(), &inputs).unwrap();
         assert!(hash.contains(",adl=9"));
         assert!(matches!(
             core_verify(b"pw", &hash),
             Err(KdfError::MissingAssociatedData)
         ));
         assert!(core_verify_with_inputs(b"pw", &hash, &inputs).unwrap());
+    }
+
+    #[test]
+    #[cfg_attr(
+        miri,
+        ignore = "multi 1MiB derive/verify; deterministic_small_config covers engine under Miri"
+    )]
+    fn repeated_hash_verify_and_failure_paths() {
+        let cfg = small_cfg();
+        let salt = b"salt_16_bytes!!!";
+        let h1 = core_hash_with_config_and_salt(b"pw", salt, &cfg).unwrap();
+        let h2 = core_hash_with_config_and_salt(b"pw", salt, &cfg).unwrap();
+        assert_eq!(h1, h2);
+        for _ in 0..3 {
+            assert!(core_verify(b"pw", &h1).unwrap());
+            assert!(!core_verify(b"no", &h1).unwrap());
+        }
+        assert!(core_verify(b"pw", "$not-a-hash").is_err());
+        assert!(
+            core_needs_rehash_with_policy(&h1, &antech_kdf_types::RehashPolicy::default()).is_ok()
+        );
+    }
+
+    #[test]
+    #[cfg_attr(
+        miri,
+        ignore = "full derive after error path; fast failure path covered below"
+    )]
+    fn permit_released_after_config_error() {
+        // Invalid salt length vs config must not leave scheduler permits stuck.
+        let cfg = small_cfg();
+        let err = core_hash_with_config_and_salt(b"pw", b"short", &cfg);
+        assert!(err.is_err());
+        // A subsequent valid hash must still admit.
+        let ok = core_hash_with_config_and_salt(b"pw", b"salt_16_bytes!!!", &cfg);
+        assert!(ok.is_ok());
+    }
+
+    #[test]
+    fn hash_verify_error_releases_permit_without_full_derive() {
+        let cfg = small_cfg();
+        assert!(core_hash_with_config_and_salt(b"pw", b"short", &cfg).is_err());
+        assert!(core_verify(b"pw", "$antech$v2$bad").is_err());
     }
 }

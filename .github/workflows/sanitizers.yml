@@ -3,9 +3,9 @@ name: Sanitizers
 # Research / security validation — separate from production CI.
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     - cron: "0 5 * * 1"
   workflow_dispatch:
@@ -14,103 +14,122 @@ jobs:
   miri:
     name: Miri (pure-Rust production crates)
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: miri, rust-src
-      - name: Miri setup
-        run: cargo miri setup
-      - name: Miri antech-kdf-types
+      - name: Make Miri CI script executable
+        run: chmod +x scripts/miri_ci.sh
+      - name: Run full Miri campaign
         env:
           MIRIFLAGS: -Zmiri-strict-provenance
-        run: cargo miri test -p antech-kdf-types --lib
-      - name: Miri antech-kdf-format
-        env:
-          MIRIFLAGS: -Zmiri-strict-provenance
-        run: cargo miri test -p antech-kdf-format --lib
-      - name: Miri antech-kdf-core (lib tests; Condvar/threads supported)
-        env:
-          MIRIFLAGS: -Zmiri-strict-provenance
-        run: cargo miri test -p antech-kdf-core --lib
-      - name: Explicit exclusions
+        run: ./scripts/miri_ci.sh
+      - name: Ensure report present
+        if: always()
         run: |
-          echo "EXCLUDED from Miri (document, do not silently skip):"
-          echo "  - antech-kdf-ffi (C ABI / unsafe FFI)"
-          echo "  - research CUDA / attackers"
-          echo "  - full antech-kdf integration suites that spawn OS subprocesses"
-          mkdir -p research/results/final-validation/sanitizers
-          cat > research/results/final-validation/sanitizers/miri-exclusions.md <<'EOF'
-          # Miri exclusions
-
-          | Target | Reason |
-          |---|---|
-          | `antech-kdf-ffi` | Unsafe C ABI / foreign memory |
-          | CUDA / GPU attackers | Non-Rust device code |
-          | Integration tests spawning `cargo` | Unsupported under Miri isolation |
-          EOF
-      - name: Upload Miri notes
+          mkdir -p research/results/miri
+          test -f research/results/miri/summary.md
+          test -f research/results/miri/tests.csv
+          if [[ ! -f research/results/miri/report.md ]]; then
+            OVERALL=$(grep -E 'Overall' research/results/miri/summary.md | head -1 | sed 's/.*\*\*//;s/\*\*.*//' || echo BLOCKED)
+            printf '# Miri validation report\n\n**Verdict: %s**\n\nSee summary.md, tests.csv, unsafe-audit.md, logs/.\n' "$OVERALL" > research/results/miri/report.md
+          fi
+      - name: Upload Miri results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: miri-notes
-          path: research/results/final-validation/sanitizers
+          name: miri-results
+          path: research/results/miri
 
   asan:
-    name: AddressSanitizer
+    name: AddressSanitizer (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src
-      - name: ASan tests (format / types / core / kdf lib)
-        env:
-          RUSTFLAGS: -Zsanitizer=address
-          RUSTDOCFLAGS: -Zsanitizer=address
+      - name: Run ASan campaign
         run: |
-          cargo test -Zbuild-std --target x86_64-unknown-linux-gnu \
-            -p antech-kdf-types -p antech-kdf-format -p antech-kdf-core -p antech-kdf \
-            --lib --tests
-      - name: Explicit exclusions
-        run: |
-          mkdir -p research/results/final-validation/sanitizers
-          cat > research/results/final-validation/sanitizers/asan-exclusions.md <<'EOF'
-          # ASan exclusions
-
-          | Target | Reason |
-          |---|---|
-          | `antech-kdf-ffi` cdylib link | Sanitizer + C ABI needs separate harness |
-          | CUDA kernels | Device sanitizers not wired here |
-          | Windows MSVC host | ASan CI is Linux-only (`-Zsanitizer=address`) |
-          EOF
+          chmod +x scripts/sanitizers_ci.sh
+          rm -f research/results/sanitizers/campaign-status.env
+          ./scripts/sanitizers_ci.sh asan
+      - name: Upload ASan logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asan-logs
+          path: research/results/sanitizers
 
   ubsan:
-    name: UndefinedBehaviorSanitizer
+    name: UndefinedBehaviorSanitizer (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src
-      - name: UBSan tests (format / types / core / kdf lib)
-        env:
-          RUSTFLAGS: -Zsanitizer=undefined
-          RUSTDOCFLAGS: -Zsanitizer=undefined
+      - name: Run UBSan campaign
         run: |
-          cargo test -Zbuild-std --target x86_64-unknown-linux-gnu \
-            -p antech-kdf-types -p antech-kdf-format -p antech-kdf-core -p antech-kdf \
-            --lib --tests
-      - name: Explicit exclusions
-        run: |
-          mkdir -p research/results/final-validation/sanitizers
-          cat > research/results/final-validation/sanitizers/ubsan-exclusions.md <<'EOF'
-          # UBSan exclusions
+          chmod +x scripts/sanitizers_ci.sh
+          rm -f research/results/sanitizers/campaign-status.env
+          ./scripts/sanitizers_ci.sh ubsan
+      - name: Upload UBSan logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubsan-logs
+          path: research/results/sanitizers
 
-          | Target | Reason |
-          |---|---|
-          | `antech-kdf-ffi` | Same as ASan — run under dedicated FFI sanitizer job later |
-          | CUDA | Not covered by host UBSan |
-          EOF
+  sanitizer-report:
+    name: Sanitizer report + artifacts
+    runs-on: ubuntu-latest
+    needs: [asan, ubsan]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download ASan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asan-logs
+          path: research/results/sanitizers-asan
+      - name: Download UBSan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ubsan-logs
+          path: research/results/sanitizers-ubsan
+      - name: Merge sanitizer results
+        run: |
+          mkdir -p research/results/sanitizers/logs
+          cp -a research/results/sanitizers-asan/* research/results/sanitizers/ 2>/dev/null || true
+          cp -a research/results/sanitizers-ubsan/* research/results/sanitizers/ 2>/dev/null || true
+          # Merge campaign-status.env from both runs
+          touch research/results/sanitizers/campaign-status.env
+          grep -h . research/results/sanitizers-asan/campaign-status.env research/results/sanitizers-ubsan/campaign-status.env >> research/results/sanitizers/campaign-status.env 2>/dev/null || true
+          chmod +x scripts/sanitizers_finalize.sh
+          ./scripts/sanitizers_finalize.sh
+      - name: Upload combined sanitizer results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanitizer-results
+          path: research/results/sanitizers
+
+  workspace-gates:
+    name: Workspace gates (no sanitizers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+      - name: cargo check --workspace
+        run: cargo check --workspace
+      - name: cargo test --workspace
+        run: cargo test --workspace
+      - name: cargo clippy -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings

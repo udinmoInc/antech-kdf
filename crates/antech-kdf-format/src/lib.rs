@@ -110,4 +110,122 @@ mod tests {
         assert!(!parsed.secret_required);
         assert_eq!(parsed.associated_data_length, None);
     }
+
+    fn digest32_hex() -> String {
+        "ab".repeat(32)
+    }
+
+    fn salt16_hex() -> String {
+        "cd".repeat(16)
+    }
+
+    #[test]
+    fn rejects_malformed_prefix_and_version() {
+        assert!(parse_hash("").is_err());
+        assert!(parse_hash("$bcrypt$").is_err());
+        assert!(parse_hash("$antech$").is_err());
+        assert!(parse_hash("$antech$v3$m=1024,s=16,b=32,f=2,g=3,l=32$x$y").is_err());
+        assert!(parse_hash(&format!(
+            "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32${}${}",
+            salt16_hex(),
+            digest32_hex()
+        ))
+        .is_ok());
+    }
+
+    #[test]
+    fn rejects_invalid_hex_nibbles() {
+        let bad_salt = format!("{}GG", "aa".repeat(15));
+        let encoded = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32${bad_salt}${}",
+            digest32_hex()
+        );
+        assert!(parse_hash(&encoded).is_err());
+    }
+
+    #[test]
+    fn rejects_odd_length_hex() {
+        let odd = format!("{}a", "bb".repeat(15)); // 31 chars
+        let encoded = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32${odd}${}",
+            digest32_hex()
+        );
+        assert!(parse_hash(&encoded).is_err());
+    }
+
+    #[test]
+    fn rejects_duplicate_sk_and_adl() {
+        let base = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32,sk=1,sk=1${}${}",
+            salt16_hex(),
+            digest32_hex()
+        );
+        assert!(parse_hash(&base).is_err());
+        let adl = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=32,adl=0,adl=0${}${}",
+            salt16_hex(),
+            digest32_hex()
+        );
+        assert!(parse_hash(&adl).is_err());
+    }
+
+    #[test]
+    fn rejects_oversized_encoded_string() {
+        let huge = format!("${}", "a".repeat(9000));
+        assert!(parse_hash(&huge).is_err());
+    }
+
+    #[test]
+    fn rejects_salt_and_output_boundary_params() {
+        // s=7 below min
+        let low_s = format!(
+            "$antech$v2$m=1024,s=7,b=32,f=2,g=3,l=32${}${}",
+            "aa".repeat(7),
+            digest32_hex()
+        );
+        assert!(parse_hash(&low_s).is_err());
+        // l=7 below min
+        let low_l = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=2,g=3,l=7${}${}",
+            salt16_hex(),
+            "aa".repeat(7)
+        );
+        assert!(parse_hash(&low_l).is_err());
+        // f=1 / f=9
+        let low_f = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=1,g=3,l=32${}${}",
+            salt16_hex(),
+            digest32_hex()
+        );
+        assert!(parse_hash(&low_f).is_err());
+        let high_f = format!(
+            "$antech$v2$m=1024,s=16,b=32,f=9,g=3,l=32${}${}",
+            salt16_hex(),
+            digest32_hex()
+        );
+        assert!(parse_hash(&high_f).is_err());
+        // b=24 not power of two
+        let bad_b = format!(
+            "$antech$v2$m=1024,s=16,b=24,f=2,g=3,l=32${}${}",
+            salt16_hex(),
+            digest32_hex()
+        );
+        assert!(parse_hash(&bad_b).is_err());
+    }
+
+    #[test]
+    fn salt_length_max_roundtrip() {
+        let cfg = AntechConfig::builder()
+            .memory_kib(1024)
+            .salt_length(256)
+            .output_length(32)
+            .build()
+            .unwrap();
+        let salt = [0x5Au8; 256];
+        let digest = [0xA5u8; 32];
+        let encoded = encode_hash(&cfg, &salt, &digest).unwrap();
+        let parsed = parse_hash(&encoded).unwrap();
+        assert_eq!(parsed.salt, salt.to_vec());
+        assert_eq!(parsed.salt_len, 256);
+    }
 }

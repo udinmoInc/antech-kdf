@@ -1,0 +1,7 @@
+suite,command,status,passed,failed,ignored,notes
+types,cargo +nightly-gnu miri test -p antech-kdf-types --lib,PASS,15,0,0,config/secret/AD/rehash boundaries
+format,cargo +nightly-gnu miri test -p antech-kdf-format --lib,PASS,15,0,0,v2 encode/parse + malformed/hex/duplicates
+format_tests,cargo +nightly-gnu miri test -p antech-kdf-format --test parser_property,PASS,4,0,0,32 UTF-8 fuzz iters under Miri (512 normally)
+core,cargo +nightly-gnu miri test -p antech-kdf-core --lib (skip 4 heavy Condvar queue tests),PASS,10,0,7,"scheduler + 1x1MiB deterministic derive + error paths; multi-derive ignored"
+kdf_lib,cargo +nightly-gnu miri test -p antech-kdf --lib,PASS,3,0,6,malformed/oversized/redaction without full derive
+cargo_test_workspace,cargo test --workspace (host stable),PASS,,,,"normal (non-Miri) production tests including ignored-under-Miri derives"

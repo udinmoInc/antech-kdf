@@ -1,0 +1,6 @@
+﻿rustc=rustc 1.100.0-nightly (bff8e12ff 2026-08-26)
+miri=miri 0.1.0 (bff8e12ff5 2026-08-26)
+target=x86_64-pc-windows-gnu
+date_utc=2026-08-27T16:58:27Z
+MIRIFLAGS=-Zmiri-strict-provenance
+host_note=MSVC miri setup BLOCKED (missing kernel32.lib / VS libs); used nightly-x86_64-pc-windows-gnu

@@ -18,6 +18,9 @@ pub use secret::{
     ASSOCIATED_DATA_MAX_BYTES, SECRET_MAX_BYTES,
 };
 
+#[cfg(test)]
+mod miri_tests;
+
 /// Parsed fields from a self-describing password hash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawHashComponents {

@@ -331,8 +331,13 @@ mod tests {
     use antech_kdf_types::GraphKind;
 
     #[test]
-    fn deterministic_default_config() {
-        let cfg = AntechConfig::default();
+    fn deterministic_small_config() {
+        // Use 1 MiB so Miri finishes in CI; digests remain deterministic.
+        let cfg = AntechConfig::builder()
+            .memory_kib(1024)
+            .salt_length(16)
+            .build()
+            .unwrap();
         let engine = AntechEngine::new();
         let a = engine.derive(b"pwd", b"salt_16_bytes!!", &cfg).unwrap();
         let b = engine.derive(b"pwd", b"salt_16_bytes!!", &cfg).unwrap();
@@ -341,6 +346,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        miri,
+        ignore = "2×1MiB derive paths; single-derive Miri covers prefetch unsafe"
+    )]
     fn word_path_matches_byte_path_1mib() {
         let cfg = AntechConfig::builder()
             .memory_mib(1)
@@ -358,6 +367,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        miri,
+        ignore = "3×1MiB derives; covered by normal cargo test + single-derive Miri paths"
+    )]
     fn graph_kinds_distinct() {
         let engine = AntechEngine::new();
         let salt = b"salt_16_bytes!!";

@@ -4,7 +4,8 @@ use rand::RngCore;
 #[test]
 fn parse_arbitrary_utf8_never_panics() {
     let mut rng = rand::thread_rng();
-    for _ in 0..512 {
+    let iters = if cfg!(miri) { 32 } else { 512 };
+    for _ in 0..iters {
         let len = (rng.next_u32() % 4096) as usize;
         let mut bytes = vec![0u8; len];
         rng.fill_bytes(&mut bytes);

@@ -331,6 +331,39 @@ mod tests {
     }
 
     #[test]
+    fn nested_acquire_then_release_allows_retry() {
+        let sched = BoundedResourceScheduler::new(ResourcePolicy {
+            max_memory_kib: 16 * 1024,
+            max_active_jobs: 1,
+            queue_limit: 4,
+        });
+        let p1 = sched.acquire(16 * 1024).unwrap();
+        assert!(sched.acquire(16 * 1024).is_err());
+        sched.release(p1);
+        let p2 = sched.acquire(16 * 1024).unwrap();
+        sched.release(p2);
+        assert_eq!(sched.stats().active_jobs, 0);
+    }
+
+    #[test]
+    fn double_release_semantics_via_separate_permits() {
+        // ResourcePermit is Copy-free owned token; releasing each once restores budget.
+        let sched = BoundedResourceScheduler::new(ResourcePolicy {
+            max_memory_kib: 32 * 1024,
+            max_active_jobs: 2,
+            queue_limit: 0,
+        });
+        let p1 = sched.acquire(16 * 1024).unwrap();
+        let p2 = sched.acquire(16 * 1024).unwrap();
+        sched.release(p1);
+        sched.release(p2);
+        assert_eq!(sched.stats().active_jobs, 0);
+        assert_eq!(sched.stats().allocated_kib, 0);
+        let p3 = sched.acquire(32 * 1024).unwrap();
+        sched.release(p3);
+    }
+
+    #[test]
     fn concurrent_admission_respects_global_budget() {
         let sched = Arc::new(BoundedResourceScheduler::new(ResourcePolicy {
             max_memory_kib: 64 * 1024,

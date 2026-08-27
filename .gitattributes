@@ -1,3 +1,6 @@
 # Keep shell scripts LF for Linux CI shebangs / bash.
 *.sh text eol=lf
 fuzz/ci_run_and_report.sh text eol=lf
+scripts/miri_ci.sh text eol=lf
+scripts/sanitizers_ci.sh text eol=lf
+scripts/sanitizers_finalize.sh text eol=lf
