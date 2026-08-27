@@ -10,6 +10,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 mkdir -p "$(dirname "$OUT")"
+mkdir -p "research/results/fuzz/ci/logs"
 CORPUS_DIR="fuzz/corpus/${TARGET}"
 case "$TARGET" in
   hash_parser|hash_verify|config_builder|malformed_v2|ffi_api|scheduler)
@@ -23,27 +24,34 @@ esac
 
 CORPUS_BEFORE=$(find "$CORPUS_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')
 START=$(date +%s)
-LOG=$(mktemp)
+LOG="research/results/fuzz/ci/logs/${TARGET}.log"
 
 set +e
-cargo fuzz run "$TARGET" -- -max_total_time="$SECS" -print_final_stats=1 2>&1 | tee "$LOG"
+cargo fuzz run "$TARGET" -- \
+  -max_total_time="$SECS" \
+  -print_final_stats=1 \
+  -rss_limit_mb=4096 \
+  -timeout=25 \
+  2>&1 | tee "$LOG"
 RC=${PIPESTATUS[0]}
 set -e
 END=$(date +%s)
 ELAPSED=$((END - START))
 
-# libFuzzer prints lines like: #12345	NEW ... or DONE ... exec/s
-EXECS=$(grep -Eo '([0-9]+) exec/s' "$LOG" | tail -1 | grep -Eo '^[0-9]+' || true)
-# Prefer final "Done" / "stat::number_of_executed_units"
-UNITS=$(grep -E 'stat::number_of_executed_units' "$LOG" | tail -1 | awk '{print $2}' || true)
+EXECS=$(grep -Eo '([0-9]+) exec/s' "$LOG" | tail -1 | grep -Eo '[0-9]+' | head -1 || true)
+UNITS=$(grep -E 'stat::number_of_executed_units' "$LOG" | tail -1 | awk '{print $NF}' || true)
 if [[ -z "${UNITS}" ]]; then
   UNITS=$(grep -Eo '^#[0-9]+' "$LOG" | tail -1 | tr -d '#' || echo 0)
 fi
-COV=$(grep -E 'stat::coverage|cov:' "$LOG" | tail -1 || true)
-CRASHES=$(find "fuzz/artifacts/${TARGET}" -type f 2>/dev/null | wc -l | tr -d ' ')
+COV=$(grep -E 'stat::coverage|cov:|ft:' "$LOG" | tail -1 || true)
+FEATURE=$(grep -E 'stat::feature_count|ft:' "$LOG" | tail -1 || true)
+CRASH_DIR="fuzz/artifacts/${TARGET}"
+CRASHES=$(find "$CRASH_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')
 CORPUS_AFTER=$(find "$CORPUS_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')
 HANGS=0
-if grep -qi 'timeout\|hang' "$LOG"; then HANGS=1; fi
+if grep -Eiq 'ERROR: libFuzzer: timeout|ALARM:|hang detected' "$LOG"; then HANGS=1; fi
+TIMEOUTS=$(find "$CRASH_DIR" -type f -name 'timeout-*' 2>/dev/null | wc -l | tr -d ' ')
+if [[ "${TIMEOUTS}" -gt 0 ]]; then HANGS=1; fi
 
 STATUS="PASS"
 if [[ "$RC" -ne 0 ]]; then STATUS="FAIL"; fi
@@ -62,11 +70,13 @@ print(json.dumps({
   "corpus_before": int("$CORPUS_BEFORE"),
   "corpus_after": int("$CORPUS_AFTER"),
   "artifact_files": int("$CRASHES"),
+  "timeout_artifacts": int("$TIMEOUTS"),
   "hangs_flagged": int("$HANGS"),
-  "coverage_line": """${COV}""".strip(),
+  "coverage_line": """${COV}""".replace("\\","\\\\").replace('"',"'").strip(),
+  "feature_line": """${FEATURE}""".replace("\\","\\\\").replace('"',"'").strip(),
   "engine": "libFuzzer",
+  "log_path": "research/results/fuzz/ci/logs/${TARGET}.log",
 }))
 PY
 
-rm -f "$LOG"
 exit "$RC"

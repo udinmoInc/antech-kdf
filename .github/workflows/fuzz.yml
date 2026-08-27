@@ -1,6 +1,7 @@
 name: Fuzz Testing
 
 # Research / security validation — separate from production CI.
+# Real libFuzzer on Ubuntu only. Fallback harness is explicitly non-libFuzzer.
 on:
   push:
     branches: [ main ]
@@ -9,12 +10,22 @@ on:
   schedule:
     - cron: "0 4 * * 1" # weekly deeper campaign
   workflow_dispatch:
+    inputs:
+      campaign:
+        description: "Campaign depth"
+        required: true
+        default: full
+        type: choice
+        options:
+          - quick
+          - full
+          - deep
 
 jobs:
   fuzz-libfuzzer:
     name: libFuzzer (cargo-fuzz)
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
@@ -22,43 +33,79 @@ jobs:
         run: cargo install cargo-fuzz --locked
       - name: Build all fuzz targets
         run: |
-          cargo fuzz build hash_parser
-          cargo fuzz build hash_verify
-          cargo fuzz build config_builder
-          cargo fuzz build malformed_v2
-          cargo fuzz build ffi_api
-          cargo fuzz build scheduler
-      - name: Seed corpora present
-        run: find fuzz/corpus -type f | head -80
+          set -euo pipefail
+          for t in hash_parser hash_verify config_builder malformed_v2 ffi_api scheduler; do
+            echo "== building $t =="
+            cargo fuzz build "$t"
+          done
+      - name: Seed corpora inventory
+        run: |
+          find fuzz/corpus -type f | sort | tee research/results/fuzz/corpus-inventory-ci.txt
+          echo "--- counts ---"
+          for d in fuzz/corpus/*; do echo "$(find "$d" -type f | wc -l) $d"; done
       - name: Prepare results dirs
-        run: mkdir -p research/results/final-validation/fuzz research/results/fuzz
+        run: |
+          mkdir -p research/results/fuzz/ci/{logs,artifacts}
+          mkdir -p research/results/final-validation/fuzz
+          : > research/results/fuzz/ci/libfuzzer.jsonl
       - name: Make CI helper executable
         run: chmod +x fuzz/ci_run_and_report.sh
       - name: Fuzz all targets (timed libFuzzer)
         env:
-          REPORT: research/results/final-validation/fuzz/libfuzzer.jsonl
+          REPORT: research/results/fuzz/ci/libfuzzer.jsonl
         run: |
-          PR_SECS_PARSER=120
-          PR_SECS_LIGHT=60
-          PR_SECS_HEAVY=90
+          set -euo pipefail
+          CAMPAIGN="${{ github.event.inputs.campaign || 'quick' }}"
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            PR_SECS_PARSER=1800
-            PR_SECS_LIGHT=900
-            PR_SECS_HEAVY=1800
+            CAMPAIGN=deep
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CAMPAIGN="${{ github.event.inputs.campaign }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            CAMPAIGN=quick
+          else
+            # push to main: meaningful but not deep
+            CAMPAIGN=full
           fi
-          : > "$REPORT"
-          ./fuzz/ci_run_and_report.sh hash_parser "$PR_SECS_PARSER" "$REPORT"
-          ./fuzz/ci_run_and_report.sh hash_verify "$PR_SECS_HEAVY" "$REPORT"
-          ./fuzz/ci_run_and_report.sh config_builder "$PR_SECS_LIGHT" "$REPORT"
-          ./fuzz/ci_run_and_report.sh malformed_v2 "$PR_SECS_LIGHT" "$REPORT"
-          ./fuzz/ci_run_and_report.sh ffi_api "$PR_SECS_LIGHT" "$REPORT"
-          ./fuzz/ci_run_and_report.sh scheduler "$PR_SECS_LIGHT" "$REPORT"
-      - name: Summarize libFuzzer campaign
+          echo "campaign=$CAMPAIGN event=${{ github.event_name }}" | tee research/results/fuzz/ci/campaign-meta.txt
+          case "$CAMPAIGN" in
+            quick)
+              SECS_PARSER=180; SECS_HEAVY=120; SECS_LIGHT=90 ;;
+            full)
+              SECS_PARSER=900; SECS_HEAVY=600; SECS_LIGHT=600 ;;
+            deep)
+              SECS_PARSER=1800; SECS_HEAVY=1800; SECS_LIGHT=900 ;;
+            *)
+              echo "unknown campaign $CAMPAIGN"; exit 2 ;;
+          esac
+          echo "SECS parser=$SECS_PARSER heavy=$SECS_HEAVY light=$SECS_LIGHT" | tee -a research/results/fuzz/ci/campaign-meta.txt
+          ./fuzz/ci_run_and_report.sh hash_parser "$SECS_PARSER" "$REPORT"
+          ./fuzz/ci_run_and_report.sh hash_verify "$SECS_HEAVY" "$REPORT"
+          ./fuzz/ci_run_and_report.sh config_builder "$SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh malformed_v2 "$SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh ffi_api "$SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh scheduler "$SECS_LIGHT" "$REPORT"
+      - name: Collect per-target artifacts and corpora
+        if: always()
+        run: |
+          set -euo pipefail
+          for t in hash_parser hash_verify config_builder malformed_v2 ffi_api scheduler; do
+            mkdir -p "research/results/fuzz/ci/artifacts/$t" "research/results/fuzz/ci/corpus/$t"
+            if [ -d "fuzz/artifacts/$t" ]; then
+              cp -a "fuzz/artifacts/$t/." "research/results/fuzz/ci/artifacts/$t/" || true
+            fi
+            if [ -d "fuzz/corpus/$t" ]; then
+              cp -a "fuzz/corpus/$t/." "research/results/fuzz/ci/corpus/$t/" || true
+            fi
+          done
+          find fuzz/artifacts -type f 2>/dev/null | tee research/results/fuzz/ci/artifact-list.txt || true
+      - name: Summarize libFuzzer campaign into research/results/fuzz
         if: always()
         run: |
           python3 <<'PY'
-          import json, pathlib
-          p = pathlib.Path("research/results/final-validation/fuzz/libfuzzer.jsonl")
+          import json, pathlib, datetime, os
+          root = pathlib.Path("research/results/fuzz")
+          ci = root / "ci"
+          p = ci / "libfuzzer.jsonl"
           rows = []
           if p.exists():
               for line in p.read_text().splitlines():
@@ -66,22 +113,80 @@ jobs:
                   if line:
                       rows.append(json.loads(line))
           fails = [r for r in rows if r.get("status") != "PASS"]
+          crashes = sum(int(r.get("artifact_files") or 0) for r in rows)
+          hangs = sum(int(r.get("hangs_flagged") or 0) for r in rows)
+          total_exec = sum(int(r.get("executions_approx") or 0) for r in rows)
+          status = "FAIL" if fails or crashes else ("PASS" if rows else "NOT_RUN")
+          meta = {}
+          mp = ci / "campaign-meta.txt"
+          if mp.exists():
+              meta["raw"] = mp.read_text()
           summary = {
               "engine": "libFuzzer",
-              "status": "FAIL" if fails else ("PASS" if rows else "NOT_RUN"),
+              "host": "GitHub Actions ubuntu-latest",
+              "distinction": "CI results — not local Windows fallback",
+              "status": status,
+              "generated_at_utc": datetime.datetime.utcnow().isoformat()+"Z",
+              "github_run_id": os.environ.get("GITHUB_RUN_ID"),
+              "github_sha": os.environ.get("GITHUB_SHA"),
+              "campaign_meta": meta,
+              "targets_executed": len(rows),
               "targets": rows,
-              "total_executions_approx": sum(int(r.get("executions_approx") or 0) for r in rows),
-              "total_artifact_files": sum(int(r.get("artifact_files") or 0) for r in rows),
+              "total_executions_approx": total_exec,
+              "total_artifact_files": crashes,
+              "total_hangs_flagged": hangs,
+              "bugs_found": crashes,
+              "bugs_fixed_this_run": 0,
+              "regression_tests_added_this_run": 0,
           }
-          out = pathlib.Path("research/results/final-validation/fuzz/summary.json")
-          out.write_text(json.dumps(summary, indent=2))
-          md = ["# libFuzzer campaign\n", f"**Status:** {summary['status']}\n", "| Target | Status | Execs | Corpus | Artifacts | Secs |\n|---|---|---:|---:|---:|---:|"]
+          (ci / "summary.json").write_text(json.dumps(summary, indent=2))
+          (root / "libfuzzer-ci-summary.json").write_text(json.dumps(summary, indent=2))
+          # Also mirror under final-validation for continuity
+          fv = pathlib.Path("research/results/final-validation/fuzz")
+          fv.mkdir(parents=True, exist_ok=True)
+          (fv / "libfuzzer.jsonl").write_text(p.read_text() if p.exists() else "")
+          (fv / "summary.json").write_text(json.dumps(summary, indent=2))
+          md = [
+              "# libFuzzer campaign (GitHub Actions / Ubuntu)",
+              "",
+              f"**Status:** {status}",
+              f"**Engine:** libFuzzer via cargo-fuzz (NOT the Windows fallback harness)",
+              f"**SHA:** `{summary.get('github_sha')}`",
+              f"**Run id:** `{summary.get('github_run_id')}`",
+              f"**Total executions (approx):** {total_exec}",
+              f"**Artifact files (crashes/timeouts):** {crashes}",
+              f"**Hangs flagged in logs:** {hangs}",
+              "",
+              "| Target | Status | Execs | Corpus before→after | Artifacts | Secs | Cov line |",
+              "|---|---|---:|---:|---:|---:|---|",
+          ]
           for r in rows:
-              md.append(f"| {r['target']} | {r['status']} | {r.get('executions_approx',0)} | {r.get('corpus_after',0)} | {r.get('artifact_files',0)} | {r.get('elapsed_secs',0)} |")
-          pathlib.Path("research/results/final-validation/fuzz/summary.md").write_text("\n".join(md)+"\n")
+              md.append(
+                  f"| {r['target']} | {r['status']} | {r.get('executions_approx',0)} | "
+                  f"{r.get('corpus_before',0)}→{r.get('corpus_after',0)} | {r.get('artifact_files',0)} | "
+                  f"{r.get('elapsed_secs',0)} | `{r.get('coverage_line','')}` |"
+              )
+          md.append("")
+          md.append("## Distinction")
+          md.append("- **CI / this file:** real libFuzzer on Ubuntu.")
+          md.append("- **Local Windows `research/results/fuzz/summary.md` (if present):** may be fallback-only — do not equate.")
+          (ci / "summary.md").write_text("\n".join(md) + "\n")
+          (root / "libfuzzer-ci-report.md").write_text("\n".join(md) + "\n")
+          (fv / "summary.md").write_text("\n".join(md) + "\n")
+          # Per-target CSV
+          csv_lines = ["target,status,exit_code,max_total_time_secs,elapsed_secs,executions_approx,exec_per_sec_last,corpus_before,corpus_after,artifact_files,hangs_flagged"]
+          for r in rows:
+              csv_lines.append(",".join(str(r.get(k,"")) for k in [
+                  "target","status","exit_code","max_total_time_secs","elapsed_secs",
+                  "executions_approx","exec_per_sec_last","corpus_before","corpus_after",
+                  "artifact_files","hangs_flagged"]))
+          (ci / "per-target.csv").write_text("\n".join(csv_lines)+"\n")
+          (root / "libfuzzer-ci-per-target.csv").write_text("\n".join(csv_lines)+"\n")
           print(json.dumps(summary, indent=2))
-          if fails:
+          if fails or crashes:
               raise SystemExit(1)
+          if not rows:
+              raise SystemExit(2)
           PY
       - name: Upload fuzz results
         if: always()
@@ -89,9 +194,11 @@ jobs:
         with:
           name: fuzz-libfuzzer-results
           path: |
+            research/results/fuzz
             research/results/final-validation/fuzz
             fuzz/artifacts
             fuzz/corpus
+          if-no-files-found: warn
 
   fuzz-fallback:
     name: Fallback harness (non-libFuzzer)
@@ -104,12 +211,13 @@ jobs:
         env:
           ANTECH_FUZZ_SECS: "120"
         run: cargo run --manifest-path fuzz/Cargo.toml -p antech-kdf-fuzz-harness --release
-      - name: Copy fallback summary into final-validation
+      - name: Label fallback outputs clearly
         if: always()
         run: |
           mkdir -p research/results/final-validation/fuzz
           if [ -f research/results/fuzz/summary.json ]; then
             cp research/results/fuzz/summary.json research/results/final-validation/fuzz/fallback-summary.json
+            echo '{"engine":"fallback-harness","note":"NOT libFuzzer"}' > research/results/final-validation/fuzz/fallback-label.json
           fi
       - name: Upload fallback results
         if: always()
