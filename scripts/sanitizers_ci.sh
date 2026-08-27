@@ -9,10 +9,11 @@ OUT="${ROOT}/research/results/sanitizers"
 mkdir -p "${OUT}/logs"
 
 TARGET="${SANITIZER_TARGET:-x86_64-unknown-linux-gnu}"
+TOOLCHAIN="${SANITIZER_TOOLCHAIN:-nightly}"
+TOOLCHAIN_PLUS="+${TOOLCHAIN}"
 COMMIT_SHA="$(git -C "${ROOT}" rev-parse HEAD 2>/dev/null || echo unknown)"
 DATE_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-RUSTC_VER="$(rustc +nightly --version)"
-TOOLCHAIN="nightly"
+RUSTC_VER="$(rustc "${TOOLCHAIN_PLUS}" --version)"
 
 case "${MODE}" in
   asan)
@@ -21,9 +22,9 @@ case "${MODE}" in
     export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1:abort_on_error=1:print_summary=1}"
     ;;
   ubsan)
-    # Nightly rustc 1.100+ dropped `-Zsanitizer=undefined`; drive UBSan via LLVM on the host libc.
-    SAN_FLAGS="-Cllvm-args=-fsanitize=undefined -Clink-args=-fsanitize=undefined"
-    USE_BUILD_STD=0
+    # nightly 1.100+ dropped `-Zsanitizer=undefined`; pin via SANITIZER_TOOLCHAIN in CI.
+    SAN_FLAGS="-Zsanitizer=undefined"
+    USE_BUILD_STD=1
     export UBSAN_OPTIONS="${UBSAN_OPTIONS:-print_stacktrace=1:halt_on_error=1}"
     ;;
   *)
@@ -60,15 +61,15 @@ run_cargo_test() {
   set +e
   if [[ "${USE_BUILD_STD}" == 1 ]]; then
     if [[ "${profile}" == "release" ]]; then
-      cargo +nightly test -Zbuild-std --target "${TARGET}" --release "$@" 2>&1 | tee -a "${log}"
+      cargo "${TOOLCHAIN_PLUS}" test -Zbuild-std --target "${TARGET}" --release "$@" 2>&1 | tee -a "${log}"
     else
-      cargo +nightly test -Zbuild-std --target "${TARGET}" "$@" 2>&1 | tee -a "${log}"
+      cargo "${TOOLCHAIN_PLUS}" test -Zbuild-std --target "${TARGET}" "$@" 2>&1 | tee -a "${log}"
     fi
   else
     if [[ "${profile}" == "release" ]]; then
-      cargo +nightly test --release "$@" 2>&1 | tee -a "${log}"
+      cargo "${TOOLCHAIN_PLUS}" test --release "$@" 2>&1 | tee -a "${log}"
     else
-      cargo +nightly test "$@" 2>&1 | tee -a "${log}"
+      cargo "${TOOLCHAIN_PLUS}" test "$@" 2>&1 | tee -a "${log}"
     fi
   fi
   local rc=${PIPESTATUS[0]}

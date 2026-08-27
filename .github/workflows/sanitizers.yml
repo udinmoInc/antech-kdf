@@ -72,8 +72,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
+          toolchain: nightly-2025-08-15
           components: rust-src
       - name: Run UBSan campaign
+        env:
+          SANITIZER_TOOLCHAIN: nightly-2025-08-15
         run: |
           chmod +x scripts/sanitizers_ci.sh
           rm -f research/results/sanitizers/campaign-status.env
