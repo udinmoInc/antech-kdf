@@ -1,0 +1,116 @@
+name: Sanitizers
+
+# Research / security validation — separate from production CI.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+jobs:
+  miri:
+    name: Miri (pure-Rust production crates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri, rust-src
+      - name: Miri setup
+        run: cargo miri setup
+      - name: Miri antech-kdf-types
+        env:
+          MIRIFLAGS: -Zmiri-strict-provenance
+        run: cargo miri test -p antech-kdf-types --lib
+      - name: Miri antech-kdf-format
+        env:
+          MIRIFLAGS: -Zmiri-strict-provenance
+        run: cargo miri test -p antech-kdf-format --lib
+      - name: Miri antech-kdf-core (lib tests; Condvar/threads supported)
+        env:
+          MIRIFLAGS: -Zmiri-strict-provenance
+        run: cargo miri test -p antech-kdf-core --lib
+      - name: Explicit exclusions
+        run: |
+          echo "EXCLUDED from Miri (document, do not silently skip):"
+          echo "  - antech-kdf-ffi (C ABI / unsafe FFI)"
+          echo "  - research CUDA / attackers"
+          echo "  - full antech-kdf integration suites that spawn OS subprocesses"
+          mkdir -p research/results/final-validation/sanitizers
+          cat > research/results/final-validation/sanitizers/miri-exclusions.md <<'EOF'
+          # Miri exclusions
+
+          | Target | Reason |
+          |---|---|
+          | `antech-kdf-ffi` | Unsafe C ABI / foreign memory |
+          | CUDA / GPU attackers | Non-Rust device code |
+          | Integration tests spawning `cargo` | Unsupported under Miri isolation |
+          EOF
+      - name: Upload Miri notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: miri-notes
+          path: research/results/final-validation/sanitizers
+
+  asan:
+    name: AddressSanitizer
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - name: ASan tests (format / types / core / kdf lib)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+          RUSTDOCFLAGS: -Zsanitizer=address
+        run: |
+          cargo test -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p antech-kdf-types -p antech-kdf-format -p antech-kdf-core -p antech-kdf \
+            --lib --tests
+      - name: Explicit exclusions
+        run: |
+          mkdir -p research/results/final-validation/sanitizers
+          cat > research/results/final-validation/sanitizers/asan-exclusions.md <<'EOF'
+          # ASan exclusions
+
+          | Target | Reason |
+          |---|---|
+          | `antech-kdf-ffi` cdylib link | Sanitizer + C ABI needs separate harness |
+          | CUDA kernels | Device sanitizers not wired here |
+          | Windows MSVC host | ASan CI is Linux-only (`-Zsanitizer=address`) |
+          EOF
+
+  ubsan:
+    name: UndefinedBehaviorSanitizer
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - name: UBSan tests (format / types / core / kdf lib)
+        env:
+          RUSTFLAGS: -Zsanitizer=undefined
+          RUSTDOCFLAGS: -Zsanitizer=undefined
+        run: |
+          cargo test -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p antech-kdf-types -p antech-kdf-format -p antech-kdf-core -p antech-kdf \
+            --lib --tests
+      - name: Explicit exclusions
+        run: |
+          mkdir -p research/results/final-validation/sanitizers
+          cat > research/results/final-validation/sanitizers/ubsan-exclusions.md <<'EOF'
+          # UBSan exclusions
+
+          | Target | Reason |
+          |---|---|
+          | `antech-kdf-ffi` | Same as ASan — run under dedicated FFI sanitizer job later |
+          | CUDA | Not covered by host UBSan |
+          EOF

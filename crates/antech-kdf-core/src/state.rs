@@ -2,7 +2,7 @@
 
 use crate::config::CONSTRUCTION_VERSION;
 use crate::mixing::{mix_pair, state_to_block};
-use antech_kdf_types::{AntechConfig, GraphKind};
+use antech_kdf_types::{AntechConfig, DeriveInputs, GraphKind};
 use sha2::{Digest, Sha256};
 
 pub use crate::mixing::{node0_material, state_from_seed as seed_to_state};
@@ -10,9 +10,24 @@ pub use crate::mixing::{node0_material, state_from_seed as seed_to_state};
 /// Domain separators mixed into seed/final digests. Byte values are protocol-fixed.
 pub const DOMAIN_SEED: &[u8] = b"antech-compute-memory-v4-seed";
 pub const DOMAIN_FINAL: &[u8] = b"antech-compute-memory-v4-final";
+/// Appended only when secret and/or associated data are supplied (not for legacy calls).
+pub const DOMAIN_SEED_EXTRAS: &[u8] = b"antech-compute-memory-v4-extras";
 
-/// Bind password, salt, and structural config into a 32-byte seed.
+/// Bind password, salt, and structural config into a 32-byte seed (no secret/AD).
 pub fn bind_seed(password: &[u8], salt: &[u8], cfg: &AntechConfig) -> [u8; 32] {
+    bind_seed_with_inputs(password, salt, cfg, &DeriveInputs::default())
+}
+
+/// Bind password, salt, config, and optional secret/AD.
+///
+/// When both secret and AD are [`None`], the digest matches [`bind_seed`] exactly
+/// (existing hashes unchanged). Empty `Some([])` is distinct from [`None`].
+pub fn bind_seed_with_inputs(
+    password: &[u8],
+    salt: &[u8],
+    cfg: &AntechConfig,
+    inputs: &DeriveInputs,
+) -> [u8; 32] {
     let mut hasher = Sha256::new();
     hasher.update(DOMAIN_SEED);
     hasher.update(CONSTRUCTION_VERSION.to_le_bytes());
@@ -27,6 +42,33 @@ pub fn bind_seed(password: &[u8], salt: &[u8], cfg: &AntechConfig) -> [u8; 32] {
     hasher.update(crate::config::MIX_ROUNDS.to_le_bytes());
     hasher.update((cfg.critical_period() as u32).to_le_bytes());
     hasher.update((cfg.tile_len() as u32).to_le_bytes());
+
+    if inputs.has_extras() {
+        hasher.update(DOMAIN_SEED_EXTRAS);
+        match &inputs.secret {
+            Some(secret) => {
+                hasher.update([1u8]);
+                hasher.update((secret.len() as u32).to_le_bytes());
+                hasher.update(secret.expose());
+            }
+            None => {
+                hasher.update([0u8]);
+                hasher.update(0u32.to_le_bytes());
+            }
+        }
+        match &inputs.associated_data {
+            Some(ad) => {
+                hasher.update([1u8]);
+                hasher.update((ad.len() as u32).to_le_bytes());
+                hasher.update(ad);
+            }
+            None => {
+                hasher.update([0u8]);
+                hasher.update(0u32.to_le_bytes());
+            }
+        }
+    }
+
     let digest = hasher.finalize();
     let mut out = [0u8; 32];
     out.copy_from_slice(&digest);
@@ -94,7 +136,6 @@ pub fn state_to_block_fast(state: &[u64; 4], block: &mut [u8]) {
     state_to_block(state, block);
 }
 
-/// Allocation-free parent fold.
 #[inline(always)]
 pub fn mix_parent_views(state: &mut [u64; 4], parents: &[&[u8]]) {
     if parents.is_empty() {

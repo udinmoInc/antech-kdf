@@ -27,6 +27,8 @@ const AntechRehashPolicyT = koffi.struct("AntechRehashPolicy", {
   preferred_memory_kib: "uint32",
   preferred_fan_in: "uint32",
   preferred_output_length: "uint32",
+  preferred_secret_required: "uint32",
+  preferred_associated_data: "uint32",
 });
 
 function nativeCandidates(): string[] {
@@ -92,10 +94,41 @@ const antech_hash_with_config_and_salt = lib.func("antech_hash_with_config_and_s
   koffi.pointer(AntechConfigT),
   koffi.out("void **"),
 ]);
+const antech_hash_with_inputs_bytes = lib.func("antech_hash_with_inputs_bytes", "int", [
+  "void *",
+  "size_t",
+  koffi.pointer(AntechConfigT),
+  "void *",
+  "size_t",
+  "void *",
+  "size_t",
+  koffi.out("void **"),
+]);
+const antech_hash_with_inputs_and_salt = lib.func("antech_hash_with_inputs_and_salt", "int", [
+  "void *",
+  "size_t",
+  "void *",
+  "size_t",
+  koffi.pointer(AntechConfigT),
+  "void *",
+  "size_t",
+  "void *",
+  "size_t",
+  koffi.out("void **"),
+]);
 const antech_verify_bytes = lib.func("antech_verify_bytes", "int", [
   "void *",
   "size_t",
   "str",
+]);
+const antech_verify_with_inputs_bytes = lib.func("antech_verify_with_inputs_bytes", "int", [
+  "void *",
+  "size_t",
+  "str",
+  "void *",
+  "size_t",
+  "void *",
+  "size_t",
 ]);
 const antech_needs_rehash = lib.func("antech_needs_rehash", "int", [
   "str",
@@ -116,9 +149,13 @@ function raise(st: number): void {
 }
 
 function takeString(ptr: any): string {
-  const s = koffi.decode(ptr, "str") as string;
+  // koffi.decode(ptr, "str") can AV on Windows when POD structs are registered
+  // (koffi 2.16.x). Read a bounded NUL-terminated byte view instead.
+  const bytes = koffi.decode(ptr, koffi.array("uint8", 4096)) as number[];
   antech_free(ptr);
-  return s;
+  const end = bytes.indexOf(0);
+  const slice = end >= 0 ? bytes.slice(0, end) : bytes;
+  return Buffer.from(slice).toString("utf8");
 }
 
 function asBuf(password: string | Buffer | Uint8Array): Buffer {
@@ -140,6 +177,23 @@ export interface RehashPolicy {
   preferred_memory_kib: number;
   preferred_fan_in: number;
   preferred_output_length: number;
+  preferred_secret_required?: number;
+  preferred_associated_data?: number;
+}
+
+/** undefined/null = absent; empty Buffer = present-but-empty. See antech_kdf.h. */
+export type OptionalBytes = Buffer | Uint8Array | null | undefined;
+
+function optBuf(data: OptionalBytes): { ptr: Buffer | null; len: number } {
+  if (data === null || data === undefined) {
+    return { ptr: null, len: 0 };
+  }
+  const buf = Buffer.from(data);
+  // Empty present: non-null zero-length needs a scratch buffer for FFI.
+  if (buf.length === 0) {
+    return { ptr: Buffer.alloc(1), len: 0 };
+  }
+  return { ptr: buf, len: buf.length };
 }
 
 export function defaultConfig(): Config {
@@ -187,12 +241,87 @@ export function hashWithConfigAndSalt(
   return takeString(out[0]);
 }
 
+export function hashWithInputs(
+  password: string | Buffer | Uint8Array,
+  config: Config,
+  options?: { secret?: OptionalBytes; associatedData?: OptionalBytes }
+): string {
+  const buf = asBuf(password);
+  const sec = optBuf(options?.secret);
+  const ad = optBuf(options?.associatedData);
+  const out: any = [null];
+  raise(
+    antech_hash_with_inputs_bytes(
+      buf,
+      buf.length,
+      config,
+      sec.ptr,
+      sec.len,
+      ad.ptr,
+      ad.len,
+      out
+    )
+  );
+  return takeString(out[0]);
+}
+
+export function hashWithInputsAndSalt(
+  password: string | Buffer | Uint8Array,
+  salt: Buffer | Uint8Array,
+  config: Config,
+  options?: { secret?: OptionalBytes; associatedData?: OptionalBytes }
+): string {
+  const buf = asBuf(password);
+  const s = Buffer.from(salt);
+  const sec = optBuf(options?.secret);
+  const ad = optBuf(options?.associatedData);
+  const out: any = [null];
+  raise(
+    antech_hash_with_inputs_and_salt(
+      buf,
+      buf.length,
+      s,
+      s.length,
+      config,
+      sec.ptr,
+      sec.len,
+      ad.ptr,
+      ad.len,
+      out
+    )
+  );
+  return takeString(out[0]);
+}
+
 export function verify(
   password: string | Buffer | Uint8Array,
   encodedHash: string
 ): boolean {
   const buf = asBuf(password);
   const st = antech_verify_bytes(buf, buf.length, encodedHash);
+  if (st === 0) return true;
+  if (st === 1) return false;
+  raise(st);
+  return false;
+}
+
+export function verifyWithInputs(
+  password: string | Buffer | Uint8Array,
+  encodedHash: string,
+  options?: { secret?: OptionalBytes; associatedData?: OptionalBytes }
+): boolean {
+  const buf = asBuf(password);
+  const sec = optBuf(options?.secret);
+  const ad = optBuf(options?.associatedData);
+  const st = antech_verify_with_inputs_bytes(
+    buf,
+    buf.length,
+    encodedHash,
+    sec.ptr,
+    sec.len,
+    ad.ptr,
+    ad.len
+  );
   if (st === 0) return true;
   if (st === 1) return false;
   raise(st);

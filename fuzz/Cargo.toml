@@ -56,3 +56,7 @@ name = "scheduler"
 path = "fuzz_targets/scheduler.rs"
 test = false
 doc = false
+
+# Isolated from the production workspace (`cargo fuzz` manages this package).
+[workspace]
+members = ["."]

@@ -47,6 +47,8 @@ public struct RehashPolicy {
   public var preferredMemoryKib: UInt32
   public var preferredFanIn: UInt32
   public var preferredOutputLength: UInt32
+  public var preferredSecretRequired: Bool
+  public var preferredAssociatedData: Bool
 
   public static func `default`() throws -> RehashPolicy {
     var p = AntechRehashPolicy()
@@ -55,7 +57,9 @@ public struct RehashPolicy {
       minimumMemoryKib: p.minimum_memory_kib,
       preferredMemoryKib: p.preferred_memory_kib,
       preferredFanIn: p.preferred_fan_in,
-      preferredOutputLength: p.preferred_output_length
+      preferredOutputLength: p.preferred_output_length,
+      preferredSecretRequired: p.preferred_secret_required != 0,
+      preferredAssociatedData: p.preferred_associated_data != 0
     )
   }
 }
@@ -138,11 +142,80 @@ public enum AntechKdf {
       minimum_memory_kib: policy.minimumMemoryKib,
       preferred_memory_kib: policy.preferredMemoryKib,
       preferred_fan_in: policy.preferredFanIn,
-      preferred_output_length: policy.preferredOutputLength
+      preferred_output_length: policy.preferredOutputLength,
+      preferred_secret_required: policy.preferredSecretRequired ? 1 : 0,
+      preferred_associated_data: policy.preferredAssociatedData ? 1 : 0
     )
     try encodedHash.withCString { c in
       try raise(antech_needs_rehash_with_policy(c, &p, &out))
     }
     return out != 0
+  }
+
+  // nil = absent; empty Data = present-but-empty. See antech_kdf.h.
+  public static func hashWithInputs(
+    _ password: Data,
+    config: Config,
+    secret: Data? = nil,
+    associatedData: Data? = nil
+  ) throws -> String {
+    var out: UnsafeMutablePointer<CChar>?
+    let st: AntechStatus = try config.withC { cfg in
+      try withOptional(secret) { secPtr, secLen in
+        try withOptional(associatedData) { adPtr, adLen in
+          password.withUnsafeBytes { raw in
+            let base = raw.bindMemory(to: UInt8.self).baseAddress
+            return antech_hash_with_inputs_bytes(
+              base, password.count, &cfg, secPtr, secLen, adPtr, adLen, &out
+            )
+          }
+        }
+      }
+    }
+    try raise(st)
+    return try takeString(out)
+  }
+
+  public static func verifyWithInputs(
+    _ password: Data,
+    encodedHash: String,
+    secret: Data? = nil,
+    associatedData: Data? = nil
+  ) throws -> Bool {
+    let st: AntechStatus = try withOptional(secret) { secPtr, secLen in
+      try withOptional(associatedData) { adPtr, adLen in
+        password.withUnsafeBytes { raw in
+          let base = raw.bindMemory(to: UInt8.self).baseAddress
+          return encodedHash.withCString { cHash in
+            antech_verify_with_inputs_bytes(
+              base, password.count, cHash, secPtr, secLen, adPtr, adLen
+            )
+          }
+        }
+      }
+    }
+    if st == ANTECH_OK { return true }
+    if st == ANTECH_VERIFICATION_FAILED { return false }
+    try raise(st)
+    return false
+  }
+}
+
+private func withOptional<R>(
+  _ data: Data?,
+  _ body: (UnsafePointer<UInt8>?, Int) throws -> R
+) rethrows -> R {
+  guard let data else {
+    return try body(nil, 0)
+  }
+  if data.isEmpty {
+    var scratch: UInt8 = 0
+    return try withUnsafePointer(to: &scratch) { ptr in
+      try body(ptr, 0)
+    }
+  }
+  return try data.withUnsafeBytes { raw in
+    let base = raw.bindMemory(to: UInt8.self).baseAddress
+    return try body(base, data.count)
   }
 }

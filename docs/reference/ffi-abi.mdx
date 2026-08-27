@@ -35,8 +35,23 @@ typedef struct AntechRehashPolicy {
     uint32_t preferred_memory_kib;
     uint32_t preferred_fan_in;
     uint32_t preferred_output_length;
+    uint32_t preferred_secret_required;
+    uint32_t preferred_associated_data;
 } AntechRehashPolicy;
 ```
+
+## Optional secret / AD
+
+`antech_hash_with_inputs_bytes`, `antech_hash_with_inputs_and_salt`, `antech_verify_with_inputs_bytes`:
+
+| Pointer | Length | Meaning |
+|---|---|---|
+| `NULL` | `0` | Absent |
+| non-`NULL` | `0` | Present but empty |
+| non-`NULL` | `N` | Present with `N` bytes |
+| `NULL` | `>0` | `ANTECH_INVALID_INPUT` |
+
+Secret and AD bytes are never written into the encoded hash.
 
 ## Ownership
 
@@ -50,5 +65,6 @@ Entry points are thread-safe. Concurrent calls share the host resource scheduler
 
 <Related links={[
   { href: '../architecture/ffi', title: 'FFI architecture' },
-  { href: './errors', title: 'Error mapping' }
+  { href: './errors', title: 'Error mapping' },
+  { href: '../guides/secret-and-associated-data', title: 'Secret and AD' }
 ]} />

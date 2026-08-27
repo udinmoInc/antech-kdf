@@ -15,14 +15,19 @@ Keep error taxonomies aligned across languages so operators and conformance runn
 - `Encoding(String)` — parse / encode
 - `Derivation(String)` — engine
 - `ResourceExhausted(String)` — scheduler
+- `MissingSecret` — stored hash requires a secret; none provided
+- `MissingAssociatedData` — stored hash requires AD; none provided
+- `AssociatedDataLengthMismatch` — AD length ≠ stored `adl=`
 
 `verify` returns `Ok(false)` on password mismatch. That is not an `Err`.
+Missing secret/AD on a bound hash is an `Err` (fail closed), not `Ok(false)`.
 
 ## FFI mapping
 
 | Rust-ish cause | FFI |
 |---|---|
 | Bad pointers / UTF-8 | `INVALID_INPUT` |
+| Missing secret / AD / AD length mismatch | `INVALID_INPUT` |
 | Parse / encoding | `INVALID_HASH` |
 | Config validate | `INVALID_CONFIG` |
 | Panic / other | `INTERNAL_ERROR` |

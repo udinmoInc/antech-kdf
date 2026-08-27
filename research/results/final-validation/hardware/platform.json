@@ -1,0 +1,14 @@
+{
+  "collected_at_unix": 1787764887,
+  "os": "windows",
+  "arch": "x86_64",
+  "cpu_model": "AMD Ryzen 5 4600G with Radeon Graphics",
+  "logical_cpus": 12,
+  "ram_gib": 31.87,
+  "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+  "cargo": "cargo 1.98.0 (797e8a9bc 2026-08-05)",
+  "gpu_model": "NVIDIA GeForce RTX 3050",
+  "gpu_vram_mib": 8192,
+  "cuda_version": "Cuda compilation tools, release 13.3, V13.3.73",
+  "profile": "full"
+}

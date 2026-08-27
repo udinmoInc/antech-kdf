@@ -12,31 +12,33 @@ LibFuzzer targets under `fuzz_targets/` (via **cargo-fuzz** on Linux/macOS/CI).
 | `ffi_api` | C ABI nulls, lengths, tiny config, panic containment |
 | `scheduler` | `BoundedResourceScheduler` admit/queue/release |
 
-## Linux / CI (libFuzzer)
+## Linux / CI (real libFuzzer)
 
 ```bash
 rustup toolchain install nightly
 cargo install cargo-fuzz
-cargo fuzz run hash_parser -- -max_total_time=600
-# … same for other targets
+./fuzz/ci_run_and_report.sh hash_parser 600 research/results/final-validation/fuzz/libfuzzer.jsonl
 ```
 
-Workflow: `.github/workflows/fuzz.yml` (PR: minutes; weekly schedule: longer).
+Workflow: `.github/workflows/fuzz.yml`  
+- PR: timed libFuzzer per target + JSONL metrics under `research/results/final-validation/fuzz/`  
+- Weekly schedule: longer campaigns  
 
-## Windows fallback
+**Do not claim libFuzzer PASS unless the Ubuntu `fuzz-libfuzzer` job executed.**
 
-`cargo-fuzz` / libFuzzer are **not** available on this Windows host (install fails: missing `dlltool.exe` on GNU toolchain; missing `link.exe`/VS Build Tools on MSVC nightly). Use:
+## Windows fallback (not libFuzzer)
+
+`cargo-fuzz` is **BLOCKED** on this Windows host (missing `dlltool.exe` / `link.exe`). Use:
 
 ```bash
-# default 300s per target; raise for deeper campaigns
-set ANTECH_FUZZ_SECS=600
+set ANTECH_FUZZ_SECS=180
 cargo run --manifest-path fuzz/harness/Cargo.toml --release
 ```
 
-Results: `research/results/fuzz/`.
+Results: `research/results/fuzz/` (and copied into `research/results/final-validation/fuzz/fallback-summary.json`).
 
-Campaign findings fixed in-tree: **R14** (non-ASCII hex panic in parser), **R15** (nested acquire-while-holding Condvar hang in scheduler).
+Campaign findings fixed in-tree: **R14** (non-ASCII hex panic), **R15** (nested acquire Condvar hang).
 
 ## Corpora
 
-Seed inputs live in `fuzz/corpus/<target>/` (valid/invalid hashes, vectors, boundary blobs).
+Seed inputs live in `fuzz/corpus/<target>/` (valid/invalid hashes, vectors, R14 regression seed).

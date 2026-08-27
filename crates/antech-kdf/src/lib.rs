@@ -1,15 +1,14 @@
 //! Antech KDF — password hashing and verification.
 //!
-//! # Overview
-//!
-//! This crate exposes a stable API for hashing and verifying passwords using the
-//! current Antech compute-memory construction.
+//! Advanced optional inputs (application secret and associated data) are available
+//! via [`hash_with_inputs`] / [`verify_with_inputs`]. They do not change the simple
+//! [`hash`] / [`verify`] / [`needs_rehash`] path when unused.
 //!
 //! # Security status
 //!
-//! The implementation reflects the project's latest validated construction and
-//! benchmark results. **It has not undergone independent cryptographic review**
-//! and must not be treated as production-proven merely because benchmarks pass.
+//! The implementation reflects the project's latest validated construction.
+//! **It has not undergone independent cryptographic review** and must not be treated
+//! as production-proven merely because benchmarks pass.
 //!
 //! # Examples
 //!
@@ -20,13 +19,16 @@
 //! ```
 
 pub use antech_kdf_types::{
-    AntechConfig, AntechConfigBuilder, BlockSize, ConfigError, FanIn, GraphKind, KdfError as Error,
-    MemorySize, OutputLength, RehashPolicy, RehashPolicyBuilder, SaltLength,
+    validate_associated_data_len, validate_secret_len, AntechConfig, AntechConfigBuilder,
+    BlockSize, ConfigError, DeriveInputs, FanIn, GraphKind, KdfError as Error, MemorySize,
+    OutputLength, RehashPolicy, RehashPolicyBuilder, SaltLength, SecretBytes,
+    ASSOCIATED_DATA_MAX_BYTES, SECRET_MAX_BYTES,
 };
 
 use antech_kdf_core::{
-    core_hash_with_config, core_hash_with_config_and_salt, core_needs_rehash_with_policy,
-    core_verify,
+    core_hash_with_config, core_hash_with_config_and_inputs, core_hash_with_config_and_salt,
+    core_hash_with_config_salt_and_inputs, core_needs_rehash_with_policy, core_verify,
+    core_verify_with_inputs,
 };
 
 /// Hashes a password using default parameters (16 MiB, combined-frontier graph).
@@ -34,7 +36,6 @@ pub fn hash(password: impl AsRef<[u8]>) -> Result<String, Error> {
     hash_with_config(password, &AntechConfig::default())
 }
 
-/// Hashes a password using an explicit configuration profile.
 pub fn hash_with_config(
     password: impl AsRef<[u8]>,
     config: &AntechConfig,
@@ -42,10 +43,17 @@ pub fn hash_with_config(
     core_hash_with_config(password.as_ref(), config)
 }
 
-/// Hashes a password with an explicit salt (must match `config.salt_length`).
-///
-/// Prefer [`hash_with_config`] for production use (random salt). This helper is for
-/// deterministic test vectors and interoperability checks.
+/// When both inputs are [`None`], behavior matches [`hash_with_config`].
+/// Present inputs set public markers (`sk=1`, `adl=n`); bytes themselves are never stored.
+pub fn hash_with_inputs(
+    password: impl AsRef<[u8]>,
+    config: &AntechConfig,
+    inputs: &DeriveInputs,
+) -> Result<String, Error> {
+    core_hash_with_config_and_inputs(password.as_ref(), config, inputs)
+}
+
+/// Prefer [`hash_with_config`] for production (random salt). This helper is for KATs.
 pub fn hash_with_config_and_salt(
     password: impl AsRef<[u8]>,
     salt: impl AsRef<[u8]>,
@@ -54,20 +62,156 @@ pub fn hash_with_config_and_salt(
     core_hash_with_config_and_salt(password.as_ref(), salt.as_ref(), config)
 }
 
-/// Verifies a password against a stored self-describing hash string in constant time.
+pub fn hash_with_inputs_and_salt(
+    password: impl AsRef<[u8]>,
+    salt: impl AsRef<[u8]>,
+    config: &AntechConfig,
+    inputs: &DeriveInputs,
+) -> Result<String, Error> {
+    core_hash_with_config_salt_and_inputs(password.as_ref(), salt.as_ref(), config, inputs)
+}
+
+/// Hashes created with secret/AD requirements return
+/// [`Error::MissingSecret`] / [`Error::MissingAssociatedData`] — use
+/// [`verify_with_inputs`] instead.
 pub fn verify(password: impl AsRef<[u8]>, encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     core_verify(password.as_ref(), encoded_hash.as_ref())
 }
 
-/// Evaluates whether a stored hash satisfies the default rehash policy.
+pub fn verify_with_inputs(
+    password: impl AsRef<[u8]>,
+    encoded_hash: impl AsRef<str>,
+    inputs: &DeriveInputs,
+) -> Result<bool, Error> {
+    core_verify_with_inputs(password.as_ref(), encoded_hash.as_ref(), inputs)
+}
+
 pub fn needs_rehash(encoded_hash: impl AsRef<str>) -> Result<bool, Error> {
     needs_rehash_with_policy(encoded_hash, &RehashPolicy::default())
 }
 
-/// Evaluates whether a stored hash satisfies a caller-defined rehash policy.
+/// Policy may require `sk=1` / `adl=` markers; it never compares secret bytes.
 pub fn needs_rehash_with_policy(
     encoded_hash: impl AsRef<str>,
     policy: &RehashPolicy,
 ) -> Result<bool, Error> {
     core_needs_rehash_with_policy(encoded_hash.as_ref(), policy)
+}
+
+#[cfg(test)]
+mod api_tests {
+    use super::*;
+
+    fn small_cfg() -> AntechConfig {
+        AntechConfig::builder()
+            .memory_kib(1024)
+            .salt_length(16)
+            .block_size(32)
+            .fan_in(2)
+            .output_length(32)
+            .build()
+            .unwrap()
+    }
+
+    #[test]
+    fn legacy_path_unchanged_shape() {
+        let salt = b"salt_16_bytes!!!";
+        let h = hash_with_config_and_salt(b"pw", salt, &small_cfg()).unwrap();
+        assert!(h.starts_with("$antech$v2$"));
+        assert!(!h.contains(",sk="));
+        assert!(!h.contains(",adl="));
+        assert!(verify(b"pw", &h).unwrap());
+    }
+
+    #[test]
+    fn secret_and_ad_vectors() {
+        let cfg = small_cfg();
+        let salt = b"salt_16_bytes!!!";
+        let pw = b"password";
+        let engine = antech_kdf_core::AntechEngine::new();
+
+        let none = DeriveInputs::default();
+        let secret_only =
+            DeriveInputs::default().with_secret(SecretBytes::new(b"secret-key").unwrap());
+        let ad_only = DeriveInputs::default()
+            .with_associated_data(b"context")
+            .unwrap();
+        let both = DeriveInputs::default()
+            .with_secret(SecretBytes::new(b"secret-key").unwrap())
+            .with_associated_data(b"context")
+            .unwrap();
+
+        let d_none = engine.derive_with_inputs(pw, salt, &cfg, &none).unwrap();
+        let d_secret = engine
+            .derive_with_inputs(pw, salt, &cfg, &secret_only)
+            .unwrap();
+        let d_ad = engine.derive_with_inputs(pw, salt, &cfg, &ad_only).unwrap();
+        let d_both = engine.derive_with_inputs(pw, salt, &cfg, &both).unwrap();
+
+        assert_ne!(d_none, d_secret);
+        assert_ne!(d_none, d_ad);
+        assert_ne!(d_secret, d_ad);
+        assert_ne!(d_both, d_secret);
+        assert_ne!(d_both, d_ad);
+
+        let h_both = hash_with_inputs_and_salt(pw, salt, &cfg, &both).unwrap();
+        assert!(!h_both.contains("secret-key"));
+        assert!(verify_with_inputs(pw, &h_both, &both).unwrap());
+        assert!(matches!(
+            verify_with_inputs(pw, &h_both, &secret_only),
+            Err(Error::MissingAssociatedData)
+        ));
+        let wrong_secret = DeriveInputs::default()
+            .with_secret(SecretBytes::new(b"other-secret").unwrap())
+            .with_associated_data(b"context")
+            .unwrap();
+        assert!(!verify_with_inputs(pw, &h_both, &wrong_secret).unwrap());
+        let wrong_ad = DeriveInputs::default()
+            .with_secret(SecretBytes::new(b"secret-key").unwrap())
+            .with_associated_data(b"contExt")
+            .unwrap();
+        assert!(!verify_with_inputs(pw, &h_both, &wrong_ad).unwrap());
+    }
+
+    #[test]
+    fn empty_secret_differs_from_absent() {
+        let cfg = small_cfg();
+        let salt = b"salt_16_bytes!!!";
+        let engine = antech_kdf_core::AntechEngine::new();
+        let absent = DeriveInputs::default();
+        let empty = DeriveInputs::default().with_secret(SecretBytes::new(b"").unwrap());
+        let a = engine
+            .derive_with_inputs(b"pw", salt, &cfg, &absent)
+            .unwrap();
+        let b = engine
+            .derive_with_inputs(b"pw", salt, &cfg, &empty)
+            .unwrap();
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn empty_ad_differs_from_absent() {
+        let cfg = small_cfg();
+        let salt = b"salt_16_bytes!!!";
+        let engine = antech_kdf_core::AntechEngine::new();
+        let absent = DeriveInputs::default();
+        let empty = DeriveInputs::default().with_associated_data(b"").unwrap();
+        let a = engine
+            .derive_with_inputs(b"pw", salt, &cfg, &absent)
+            .unwrap();
+        let b = engine
+            .derive_with_inputs(b"pw", salt, &cfg, &empty)
+            .unwrap();
+        assert_ne!(a, b);
+        let h = hash_with_inputs_and_salt(b"pw", salt, &cfg, &empty).unwrap();
+        assert!(h.contains(",adl=0"));
+    }
+
+    #[test]
+    fn secret_redacted_in_debug() {
+        let s = SecretBytes::new(b"super-secret-value").unwrap();
+        let dbg = format!("{s:?}");
+        assert!(!dbg.contains("super-secret"));
+        assert!(dbg.contains("redacted"));
+    }
 }

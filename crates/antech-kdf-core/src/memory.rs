@@ -2,7 +2,6 @@
 
 use crate::config::FRONTIER_WIDTH;
 
-/// In-process copy of the most recent frontier blocks for one derivation.
 pub struct FrontierRing {
     width: usize,
     block_size: usize,

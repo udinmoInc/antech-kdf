@@ -2,7 +2,6 @@
 
 use crate::config::{AntechConfig, FanIn, MemorySize, OutputLength};
 
-/// Policy used by `needs_rehash_with_policy`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RehashPolicy {
@@ -10,6 +9,8 @@ pub struct RehashPolicy {
     pub preferred_memory: MemorySize,
     pub preferred_fan_in: FanIn,
     pub preferred_output_length: OutputLength,
+    pub preferred_secret_required: bool,
+    pub preferred_associated_data: bool,
 }
 
 impl Default for RehashPolicy {
@@ -19,6 +20,8 @@ impl Default for RehashPolicy {
             preferred_memory: MemorySize::mib(16),
             preferred_fan_in: FanIn::new(2),
             preferred_output_length: OutputLength::bytes(32),
+            preferred_secret_required: false,
+            preferred_associated_data: false,
         }
     }
 }
@@ -29,11 +32,15 @@ impl RehashPolicy {
     }
 
     /// Returns true when stored parameters are below this policy's targets.
+    ///
+    /// Does not inspect or compare any secret material — only public flags on the config.
     pub fn needs_rehash(&self, config: &AntechConfig) -> bool {
         config.memory.as_kib() < self.minimum_memory.as_kib()
             || config.memory.as_kib() < self.preferred_memory.as_kib()
             || config.fan_in.get() < self.preferred_fan_in.get()
             || config.output_length.as_bytes() < self.preferred_output_length.as_bytes()
+            || (self.preferred_secret_required && !config.secret_required)
+            || (self.preferred_associated_data && config.associated_data_length.is_none())
     }
 }
 
@@ -65,6 +72,16 @@ impl RehashPolicyBuilder {
 
     pub fn preferred_output_length(mut self, bytes: usize) -> Self {
         self.policy.preferred_output_length = OutputLength::bytes(bytes);
+        self
+    }
+
+    pub fn preferred_secret_required(mut self, required: bool) -> Self {
+        self.policy.preferred_secret_required = required;
+        self
+    }
+
+    pub fn preferred_associated_data(mut self, required: bool) -> Self {
+        self.policy.preferred_associated_data = required;
         self
     }
 

@@ -6,6 +6,15 @@
  * Ownership: strings from hash helpers must be freed with antech_free().
  * Thread safety: all entry points are thread-safe and stateless.
  * Platforms: Windows / Linux / macOS (cdylib); mobile via cargo-ndk / XCFramework builds.
+ *
+ * Optional secret / associated data (antech_*_with_inputs*):
+ *   - pointer NULL and length 0  → input absent
+ *   - non-NULL pointer, length 0 → present but empty (distinct from absent)
+ *   - non-NULL pointer, length N → present with N bytes
+ *   - NULL with length > 0       → ANTECH_INVALID_INPUT
+ *
+ * Secret bytes are never stored in the encoded hash. Associated data is not stored
+ * either; only public markers sk=1 / adl=n appear when those inputs were used.
  */
 
 #ifndef ANTECH_KDF_H
@@ -45,6 +54,10 @@ typedef struct AntechRehashPolicy {
     uint32_t preferred_memory_kib;
     uint32_t preferred_fan_in;
     uint32_t preferred_output_length;
+    /** Non-zero: prefer hashes that record sk=1. Does not compare secret bytes. */
+    uint32_t preferred_secret_required;
+    /** Non-zero: prefer hashes that record an adl= requirement. */
+    uint32_t preferred_associated_data;
 } AntechRehashPolicy;
 
 const char* antech_version(void);
@@ -75,11 +88,45 @@ AntechStatus antech_hash_with_config_and_salt(
     char** out_hash
 );
 
+AntechStatus antech_hash_with_inputs_bytes(
+    const uint8_t* password,
+    size_t password_len,
+    const AntechConfig* config,
+    const uint8_t* secret,
+    size_t secret_len,
+    const uint8_t* associated_data,
+    size_t associated_data_len,
+    char** out_hash
+);
+
+AntechStatus antech_hash_with_inputs_and_salt(
+    const uint8_t* password,
+    size_t password_len,
+    const uint8_t* salt,
+    size_t salt_len,
+    const AntechConfig* config,
+    const uint8_t* secret,
+    size_t secret_len,
+    const uint8_t* associated_data,
+    size_t associated_data_len,
+    char** out_hash
+);
+
 AntechStatus antech_verify(const char* password, const char* encoded_hash);
 AntechStatus antech_verify_bytes(
     const uint8_t* password,
     size_t password_len,
     const char* encoded_hash
+);
+
+AntechStatus antech_verify_with_inputs_bytes(
+    const uint8_t* password,
+    size_t password_len,
+    const char* encoded_hash,
+    const uint8_t* secret,
+    size_t secret_len,
+    const uint8_t* associated_data,
+    size_t associated_data_len
 );
 
 AntechStatus antech_needs_rehash(const char* encoded_hash, int* out_needs_rehash);

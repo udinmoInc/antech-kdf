@@ -1,0 +1,12 @@
+area,name,status,detail
+conformance,prod_vs_ref_1mib_ascii,Pass,digest_len=32
+conformance,prod_vs_ref_1mib_bytes,Pass,digest_len=32
+conformance,prod_vs_ref_16mib_default,Pass,digest_len=32
+conformance,v2_parse,Pass,Ok(RawHashComponents { version: V2; algorithm: Antech; memory_kib: 1024; salt_len: 16; block_size: 32; fan_in: 2; graph: CombinedFrontier; output_len: 32; salt: [115; 97; 108; 116; 95; 49; 54; 95; 98; 121; 116; 101; 115; 95; 33; 33]; digest: [78; 144; 188; 138; 26; 218; 170; 18; 187; 129; 202; 59; 45; 115; 108; 248; 191; 167; 87; 175; 227; 101; 150; 118; 18; 70; 212; 111; 211; 233; 231; 154] })
+conformance,v2_reencode,Pass,stable
+conformance,v2_verify,Pass,ok=true bad_rejected=true
+conformance,randomized_cross_32,Pass,mismatches=0
+hardware,gpu_cpu_digest_cross,Pass,MEASURED GPU CSV rows=480 ok=480 (host GPU present)
+ci,libfuzzer_local,Blocked,cargo-fuzz/libFuzzer not runnable on this Windows host (toolchain); Linux CI job owns PASS/FAIL
+sanitizers,asan_ubsan_local,Blocked,Host ASan/UBSan via -Zsanitizer requires Linux nightly + build-std; see .github/workflows/sanitizers.yml
+sanitizers,miri,Blocked,Recorded from ANTECH_MIRI_STATUS=blocked

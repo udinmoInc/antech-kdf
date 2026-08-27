@@ -5,10 +5,7 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
-/** Thin JNA wrapper over antech-kdf-ffi. */
 public final class AntechKdf {
   private AntechKdf() {}
 
@@ -37,13 +34,16 @@ public final class AntechKdf {
   }
 
   @Structure.FieldOrder({
-      "minimum_memory_kib", "preferred_memory_kib", "preferred_fan_in", "preferred_output_length"
+      "minimum_memory_kib", "preferred_memory_kib", "preferred_fan_in",
+      "preferred_output_length", "preferred_secret_required", "preferred_associated_data"
   })
   public static class RehashPolicy extends Structure {
     public int minimum_memory_kib;
     public int preferred_memory_kib;
     public int preferred_fan_in;
     public int preferred_output_length;
+    public int preferred_secret_required;
+    public int preferred_associated_data;
 
     public static RehashPolicy defaults() {
       RehashPolicy p = new RehashPolicy();
@@ -65,7 +65,25 @@ public final class AntechKdf {
         Pointer password, NativeLong passwordLen,
         Pointer salt, NativeLong saltLen,
         Config config, PointerByReference out);
+    int antech_hash_with_inputs_bytes(
+        Pointer password, NativeLong passwordLen,
+        Config config,
+        Pointer secret, NativeLong secretLen,
+        Pointer associatedData, NativeLong associatedDataLen,
+        PointerByReference out);
+    int antech_hash_with_inputs_and_salt(
+        Pointer password, NativeLong passwordLen,
+        Pointer salt, NativeLong saltLen,
+        Config config,
+        Pointer secret, NativeLong secretLen,
+        Pointer associatedData, NativeLong associatedDataLen,
+        PointerByReference out);
     int antech_verify_bytes(Pointer password, NativeLong len, String encoded);
+    int antech_verify_with_inputs_bytes(
+        Pointer password, NativeLong passwordLen,
+        String encoded,
+        Pointer secret, NativeLong secretLen,
+        Pointer associatedData, NativeLong associatedDataLen);
     int antech_needs_rehash(String encoded, IntByReference out);
     int antech_needs_rehash_with_policy(String encoded, RehashPolicy policy, IntByReference out);
   }
@@ -73,9 +91,6 @@ public final class AntechKdf {
   private static String libName() {
     String env = System.getenv("ANTECH_KDF_LIB");
     if (env != null && !env.isEmpty()) return env;
-    String os = System.getProperty("os.name", "").toLowerCase();
-    if (os.contains("win")) return "antech_kdf_ffi";
-    if (os.contains("mac")) return "antech_kdf_ffi";
     return "antech_kdf_ffi";
   }
 
@@ -100,6 +115,31 @@ public final class AntechKdf {
     Memory m = new Memory(b.length);
     m.write(0, b, 0, b.length);
     return m;
+  }
+
+  // null = absent; empty array = present empty (non-null scratch). See antech_kdf.h.
+  private static class OptBuf {
+    final Pointer ptr;
+    final long len;
+    final Memory keep;
+
+    OptBuf(byte[] data) {
+      if (data == null) {
+        ptr = null;
+        len = 0;
+        keep = null;
+      } else if (data.length == 0) {
+        keep = new Memory(1);
+        keep.setByte(0, (byte) 0);
+        ptr = keep;
+        len = 0;
+      } else {
+        keep = new Memory(data.length);
+        keep.write(0, data, 0, data.length);
+        ptr = keep;
+        len = data.length;
+      }
+    }
   }
 
   public static String version() {
@@ -134,13 +174,49 @@ public final class AntechKdf {
     return take(out);
   }
 
-  public static boolean verify(byte[] password, String encodedHash) {
-    int st = NativeLib.INSTANCE.antech_verify_bytes(
-        mem(password), new NativeLong(password.length), encodedHash);
+  public static String hashWithInputs(
+      byte[] password, Config config, byte[] secret, byte[] associatedData) {
+    PointerByReference out = new PointerByReference();
+    OptBuf sec = new OptBuf(secret);
+    OptBuf ad = new OptBuf(associatedData);
+    raise(NativeLib.INSTANCE.antech_hash_with_inputs_bytes(
+        mem(password), new NativeLong(password.length), config,
+        sec.ptr, new NativeLong(sec.len), ad.ptr, new NativeLong(ad.len), out));
+    return take(out);
+  }
+
+  public static String hashWithInputsAndSalt(
+      byte[] password, byte[] salt, Config config, byte[] secret, byte[] associatedData) {
+    PointerByReference out = new PointerByReference();
+    OptBuf sec = new OptBuf(secret);
+    OptBuf ad = new OptBuf(associatedData);
+    raise(NativeLib.INSTANCE.antech_hash_with_inputs_and_salt(
+        mem(password), new NativeLong(password.length),
+        mem(salt), new NativeLong(salt.length),
+        config,
+        sec.ptr, new NativeLong(sec.len), ad.ptr, new NativeLong(ad.len), out));
+    return take(out);
+  }
+
+  private static boolean asVerified(int st) {
     if (st == 0) return true;
     if (st == 1) return false;
     raise(st);
     return false;
+  }
+
+  public static boolean verify(byte[] password, String encodedHash) {
+    return asVerified(NativeLib.INSTANCE.antech_verify_bytes(
+        mem(password), new NativeLong(password.length), encodedHash));
+  }
+
+  public static boolean verifyWithInputs(
+      byte[] password, String encodedHash, byte[] secret, byte[] associatedData) {
+    OptBuf sec = new OptBuf(secret);
+    OptBuf ad = new OptBuf(associatedData);
+    return asVerified(NativeLib.INSTANCE.antech_verify_with_inputs_bytes(
+        mem(password), new NativeLong(password.length), encodedHash,
+        sec.ptr, new NativeLong(sec.len), ad.ptr, new NativeLong(ad.len)));
   }
 
   public static boolean verify(String password, String encodedHash) {

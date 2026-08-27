@@ -1,8 +1,4 @@
 #pragma once
-/**
- * Antech KDF — C++ wrapper (header-only) over the C ABI.
- * Thread-safe. Does not own cryptographic logic.
- */
 
 #include "../c/antech_kdf.h"
 
@@ -70,16 +66,91 @@ inline std::string hash_with_config_and_salt(
   return take_string(out);
 }
 
-inline bool verify(std::string_view password, std::string_view encoded_hash) {
-  std::string hash_nul(encoded_hash);
-  AntechStatus st = antech_verify_bytes(
-      reinterpret_cast<const uint8_t*>(password.data()),
+// nullptr = absent; empty vector with scratch pointer = present empty. See antech_kdf.h.
+struct OptionalBytes {
+  const uint8_t* data = nullptr;
+  size_t len = 0;
+  bool present = false;
+};
+
+inline OptionalBytes absent() { return {}; }
+
+inline OptionalBytes present(const std::vector<uint8_t>& v) {
+  static const uint8_t scratch = 0;
+  if (v.empty()) {
+    return OptionalBytes{&scratch, 0, true};
+  }
+  return OptionalBytes{v.data(), v.size(), true};
+}
+
+inline std::string hash_with_inputs(
+    const std::vector<uint8_t>& password,
+    const AntechConfig& config,
+    OptionalBytes secret = absent(),
+    OptionalBytes associated_data = absent()) {
+  char* out = nullptr;
+  check(antech_hash_with_inputs_bytes(
+      password.data(),
       password.size(),
-      hash_nul.c_str());
+      &config,
+      secret.present ? secret.data : nullptr,
+      secret.present ? secret.len : 0,
+      associated_data.present ? associated_data.data : nullptr,
+      associated_data.present ? associated_data.len : 0,
+      &out));
+  return take_string(out);
+}
+
+inline std::string hash_with_inputs_and_salt(
+    const std::vector<uint8_t>& password,
+    const std::vector<uint8_t>& salt,
+    const AntechConfig& config,
+    OptionalBytes secret = absent(),
+    OptionalBytes associated_data = absent()) {
+  char* out = nullptr;
+  check(antech_hash_with_inputs_and_salt(
+      password.data(),
+      password.size(),
+      salt.data(),
+      salt.size(),
+      &config,
+      secret.present ? secret.data : nullptr,
+      secret.present ? secret.len : 0,
+      associated_data.present ? associated_data.data : nullptr,
+      associated_data.present ? associated_data.len : 0,
+      &out));
+  return take_string(out);
+}
+
+inline bool verify_status(AntechStatus st) {
   if (st == ANTECH_OK) return true;
   if (st == ANTECH_VERIFICATION_FAILED) return false;
   check(st);
   return false;
+}
+
+inline bool verify(std::string_view password, std::string_view encoded_hash) {
+  std::string hash_nul(encoded_hash);
+  return verify_status(antech_verify_bytes(
+      reinterpret_cast<const uint8_t*>(password.data()),
+      password.size(),
+      hash_nul.c_str()));
+}
+
+inline bool verify_with_inputs(
+    const std::vector<uint8_t>& password,
+    std::string_view encoded_hash,
+    OptionalBytes secret = absent(),
+    OptionalBytes associated_data = absent()) {
+  std::string hash_nul(encoded_hash);
+  return verify_status(antech_verify_with_inputs_bytes(
+      password.data(),
+      password.size(),
+      hash_nul.c_str(),
+      secret.present ? secret.data : nullptr,
+      secret.present ? secret.len : 0,
+      associated_data.present ? associated_data.data : nullptr,
+      associated_data.present ? associated_data.len : 0));
 }
 
 inline bool needs_rehash(std::string_view encoded_hash) {

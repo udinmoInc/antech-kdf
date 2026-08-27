@@ -12,22 +12,35 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 
 /// Encodes salt and digest:
-/// `$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>`
+/// `$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>[,sk=1][,adl=<n>]$<salt_hex>$<digest_hex>`
+///
+/// Optional `sk=1` / `adl=<n>` are omitted when unused so legacy hashes stay byte-compatible
+/// when re-encoded without secret/AD requirements. Secret bytes are never written.
 pub fn encode_hash(
     config: &AntechConfig,
     salt: &[u8],
     digest: &[u8],
 ) -> Result<String, ConfigError> {
     config.validate()?;
-    Ok(format!(
-        "${}$v2$m={},s={},b={},f={},g={},l={}${}${}",
-        config.algorithm.as_str(),
+    let mut params = format!(
+        "m={},s={},b={},f={},g={},l={}",
         config.memory.as_kib(),
         salt.len(),
         config.block_size.as_bytes(),
         config.fan_in.get(),
         config.graph.tag(),
         digest.len(),
+    );
+    if config.secret_required {
+        params.push_str(",sk=1");
+    }
+    if let Some(adl) = config.associated_data_length {
+        let _ = write!(params, ",adl={adl}");
+    }
+    Ok(format!(
+        "${}$v2${}${}${}",
+        config.algorithm.as_str(),
+        params,
         hex_encode(salt),
         hex_encode(digest)
     ))

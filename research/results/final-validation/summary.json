@@ -1,0 +1,85 @@
+{
+  "platform": {
+    "collected_at_unix": 1787764887,
+    "os": "windows",
+    "arch": "x86_64",
+    "cpu_model": "AMD Ryzen 5 4600G with Radeon Graphics",
+    "logical_cpus": 12,
+    "ram_gib": 31.87,
+    "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+    "cargo": "cargo 1.98.0 (797e8a9bc 2026-08-05)",
+    "gpu_model": "NVIDIA GeForce RTX 3050",
+    "gpu_vram_mib": 8192,
+    "cuda_version": "Cuda compilation tools, release 13.3, V13.3.73",
+    "profile": "full"
+  },
+  "checks": [
+    {
+      "area": "conformance",
+      "name": "prod_vs_ref_1mib_ascii",
+      "status": "PASS",
+      "detail": "digest_len=32"
+    },
+    {
+      "area": "conformance",
+      "name": "prod_vs_ref_1mib_bytes",
+      "status": "PASS",
+      "detail": "digest_len=32"
+    },
+    {
+      "area": "conformance",
+      "name": "prod_vs_ref_16mib_default",
+      "status": "PASS",
+      "detail": "digest_len=32"
+    },
+    {
+      "area": "conformance",
+      "name": "v2_parse",
+      "status": "PASS",
+      "detail": "Ok(RawHashComponents { version: V2, algorithm: Antech, memory_kib: 1024, salt_len: 16, block_size: 32, fan_in: 2, graph: CombinedFrontier, output_len: 32, salt: [115, 97, 108, 116, 95, 49, 54, 95, 98, 121, 116, 101, 115, 95, 33, 33], digest: [78, 144, 188, 138, 26, 218, 170, 18, 187, 129, 202, 59, 45, 115, 108, 248, 191, 167, 87, 175, 227, 101, 150, 118, 18, 70, 212, 111, 211, 233, 231, 154] })"
+    },
+    {
+      "area": "conformance",
+      "name": "v2_reencode",
+      "status": "PASS",
+      "detail": "stable"
+    },
+    {
+      "area": "conformance",
+      "name": "v2_verify",
+      "status": "PASS",
+      "detail": "ok=true bad_rejected=true"
+    },
+    {
+      "area": "conformance",
+      "name": "randomized_cross_32",
+      "status": "PASS",
+      "detail": "mismatches=0"
+    },
+    {
+      "area": "hardware",
+      "name": "gpu_cpu_digest_cross",
+      "status": "PASS",
+      "detail": "MEASURED GPU CSV rows=480 ok=480 (host GPU present)"
+    },
+    {
+      "area": "ci",
+      "name": "libfuzzer_local",
+      "status": "BLOCKED",
+      "detail": "cargo-fuzz/libFuzzer not runnable on this Windows host (toolchain); Linux CI job owns PASS/FAIL"
+    },
+    {
+      "area": "sanitizers",
+      "name": "asan_ubsan_local",
+      "status": "BLOCKED",
+      "detail": "Host ASan/UBSan via -Zsanitizer requires Linux nightly + build-std; see .github/workflows/sanitizers.yml"
+    },
+    {
+      "area": "sanitizers",
+      "name": "miri",
+      "status": "BLOCKED",
+      "detail": "Recorded from ANTECH_MIRI_STATUS=blocked"
+    }
+  ],
+  "verdict": "PASS"
+}

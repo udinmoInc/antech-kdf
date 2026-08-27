@@ -14,13 +14,16 @@ Canonical crate: `antech-kdf`. Language SDKs mirror this surface through FFI.
 | `hash` | `password -> Result<String, Error>` |
 | `hash_with_config` | `password, &AntechConfig -> Result<String, Error>` |
 | `hash_with_config_and_salt` | `password, salt, &AntechConfig -> Result<String, Error>` |
+| `hash_with_inputs` | `password, &AntechConfig, &DeriveInputs -> Result<String, Error>` |
+| `hash_with_inputs_and_salt` | `password, salt, &AntechConfig, &DeriveInputs -> Result<String, Error>` |
 | `verify` | `password, encoded -> Result<bool, Error>` |
+| `verify_with_inputs` | `password, encoded, &DeriveInputs -> Result<bool, Error>` |
 | `needs_rehash` | `encoded -> Result<bool, Error>` |
 | `needs_rehash_with_policy` | `encoded, &RehashPolicy -> Result<bool, Error>` |
 
 ## Re-exported types
 
-`AntechConfig`, `AntechConfigBuilder`, `RehashPolicy`, `RehashPolicyBuilder`, `GraphKind`, `MemorySize`, `SaltLength`, `BlockSize`, `FanIn`, `OutputLength`, `Error` (`KdfError`), `ConfigError`.
+`AntechConfig`, `AntechConfigBuilder`, `RehashPolicy`, `RehashPolicyBuilder`, `GraphKind`, `MemorySize`, `SaltLength`, `BlockSize`, `FanIn`, `OutputLength`, `DeriveInputs`, `SecretBytes`, `Error` (`KdfError`), `ConfigError`.
 
 ```rust
 use antech_kdf::{hash, verify, needs_rehash, Error};
@@ -37,7 +40,9 @@ fn main() -> Result<(), Error> {
 
 - Passwords are `AsRef<[u8]>`
 - `verify` returns `Ok(false)` on mismatch; malformed strings return `Err`
-- `hash_with_config_and_salt` is for tests and KATs only
+- Secret-bound / AD-bound hashes: plain `verify` returns `MissingSecret` / `MissingAssociatedData` — use `verify_with_inputs`
+- `hash_with_config_and_salt` / `hash_with_inputs_and_salt` are for tests and KATs only
+- See [Secret and associated data](../guides/secret-and-associated-data)
 
 <Related links={[
   { href: './configuration-reference', title: 'Configuration bounds' },

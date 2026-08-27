@@ -1,0 +1,94 @@
+name: Research Validation
+
+# Correctness / reference / hardware matrix — separate from production CI.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+jobs:
+  reference-conformance:
+    name: Reference == production
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Reference crate tests (vectors + production cross-check)
+        run: cargo test --manifest-path research/code/Cargo.toml -p antech-kdf-reference --release
+      - name: Final-validation conformance runner (CI profile)
+        env:
+          ANTECH_FINAL_VALIDATION_PROFILE: ci
+        run: |
+          cargo run --manifest-path research/code/Cargo.toml --release \
+            -p antech-kdf-research --example final_validation_runner
+      - name: Upload conformance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-validation-conformance-linux
+          path: research/results/final-validation
+
+  correctness-matrix:
+    name: Production correctness campaign (CI subset)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Correctness runner
+        env:
+          ANTECH_CORRECTNESS_PROFILE: ci
+        run: |
+          cargo run --manifest-path research/code/Cargo.toml --release \
+            -p antech-kdf-research --example production_correctness_runner
+      - name: Upload correctness
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: correctness-linux
+          path: research/results/correctness
+
+  cross-platform-build:
+    name: Cross-OS production build/test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Production test
+        run: cargo test --workspace --release
+      - name: Reference cross-check
+        run: cargo test --manifest-path research/code/Cargo.toml -p antech-kdf-reference --release
+
+  cuda-correctness:
+    name: CUDA correctness (self-hosted / optional)
+    # Only runs when a self-hosted runner with the `cuda` label is available.
+    # On GitHub-hosted agents this job is skipped via `if: false` unless overridden.
+    if: ${{ vars.ANTECH_CUDA_RUNNER == 'true' }}
+    runs-on: [self-hosted, cuda]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: GPU digest conformance
+        env:
+          ANTECH_FINAL_VALIDATION_PROFILE: full
+          ANTECH_REQUIRE_CUDA: "1"
+        run: |
+          cargo run --manifest-path research/code/Cargo.toml --release \
+            -p antech-kdf-research --example final_validation_runner
+      - name: Upload GPU results
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-validation-cuda
+          path: research/results/final-validation

@@ -6,12 +6,10 @@
 use crate::algorithm::{Algorithm, GraphKind};
 use crate::errors::ConfigError;
 
-/// Protocol constants for the compute-memory construction.
 pub const FRONTIER_WIDTH: usize = 64;
 pub const TILE_BLOCKS: usize = FRONTIER_WIDTH * 8;
 pub const MIX_ROUNDS: u32 = 4;
 
-/// Working memory allocation size in KiB.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MemorySize(pub usize);
@@ -83,15 +81,13 @@ impl SaltLength {
     }
 }
 
-/// Memory block size in bytes. Must be a power of two in **16..=64**
-/// (matches the production engine stack scratch limit).
+/// Must be a power of two in 16..=64 (matches engine stack scratch).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BlockSize(pub usize);
 
 impl BlockSize {
     pub const MIN_BYTES: usize = 16;
-    /// Production engine scratch arrays are sized to this limit.
     pub const MAX_BYTES: usize = 64;
 
     pub fn bytes(size: usize) -> Self {
@@ -111,7 +107,6 @@ impl BlockSize {
     }
 }
 
-/// Parent fan-in mixed into each DAG node (2..=8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FanIn(pub u32);
@@ -137,7 +132,6 @@ impl FanIn {
     }
 }
 
-/// Output digest length in bytes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OutputLength(pub usize);
@@ -167,7 +161,6 @@ impl OutputLength {
     }
 }
 
-/// Canonical hashing configuration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AntechConfig {
@@ -178,6 +171,10 @@ pub struct AntechConfig {
     pub fan_in: FanIn,
     pub graph: GraphKind,
     pub output_length: OutputLength,
+    /// When true, encoded hash records `sk=1`; secret bytes are never stored.
+    pub secret_required: bool,
+    /// When `Some(n)`, encoded hash records `adl=n` (`n` may be 0). `None` = unused.
+    pub associated_data_length: Option<u32>,
 }
 
 impl Default for AntechConfig {
@@ -190,6 +187,8 @@ impl Default for AntechConfig {
             fan_in: FanIn::new(2),
             graph: GraphKind::CombinedFrontier,
             output_length: OutputLength::bytes(32),
+            secret_required: false,
+            associated_data_length: None,
         }
     }
 }
@@ -203,12 +202,10 @@ impl AntechConfig {
         self.memory.as_bytes() / self.block_size.as_bytes().max(1)
     }
 
-    /// Critical-node period derived from frontier width (not a user work knob).
     pub fn critical_period(&self) -> usize {
         (FRONTIER_WIDTH / 16).max(2)
     }
 
-    /// Tile length in blocks for locality variants.
     pub fn tile_len(&self) -> usize {
         TILE_BLOCKS.min(self.num_blocks().max(1))
     }
@@ -244,6 +241,9 @@ impl AntechConfig {
         self.block_size.validate()?;
         self.fan_in.validate()?;
         self.output_length.validate()?;
+        if let Some(adl) = self.associated_data_length {
+            crate::secret::validate_associated_data_len(adl as usize)?;
+        }
         if self.num_blocks() < 64 {
             return Err(ConfigError::InvalidParameterValue(
                 "memory/block_size must yield at least 64 blocks".into(),
@@ -301,6 +301,21 @@ impl AntechConfigBuilder {
 
     pub fn output_length(mut self, bytes: usize) -> Self {
         self.config.output_length = OutputLength::bytes(bytes);
+        self
+    }
+
+    pub fn secret_required(mut self, required: bool) -> Self {
+        self.config.secret_required = required;
+        self
+    }
+
+    pub fn associated_data_length(mut self, len: u32) -> Self {
+        self.config.associated_data_length = Some(len);
+        self
+    }
+
+    pub fn clear_associated_data_requirement(mut self) -> Self {
+        self.config.associated_data_length = None;
         self
     }
 

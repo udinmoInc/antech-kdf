@@ -80,6 +80,54 @@ fn is_critical(i: usize, period: usize) -> bool {
 }
 
 #[inline(always)]
+fn mix_index(state: &[u64; 4], i: usize, slot: usize) -> u64 {
+    state[slot % 4] ^ (i as u64).wrapping_mul(GOLDEN)
+}
+
+#[inline(always)]
+fn scatter_from_state2(state: &[u64; 4], span: usize) -> usize {
+    ((state[2] ^ GOLDEN) as usize) % span
+}
+
+/// Fill remaining parent slots via `addr_fn(mix)`. Stops early if a push is a no-op.
+#[inline(always)]
+fn fill_fan_in(
+    out: &mut ParentSet,
+    state: &[u64; 4],
+    i: usize,
+    fan_in: u32,
+    mut addr_fn: impl FnMut(u64) -> usize,
+) {
+    let mut guard = 0usize;
+    while out.len < fan_in as usize && guard < 4 {
+        guard += 1;
+        let mix = mix_index(state, i, out.len);
+        let before = out.len;
+        out.push_unique(addr_fn(mix), i);
+        if out.len == before {
+            break;
+        }
+    }
+}
+
+#[inline(always)]
+fn push_tile_local(out: &mut ParentSet, state: &[u64; 4], i: usize, tile_start: usize) {
+    if i > tile_start + 1 {
+        let span = i - tile_start;
+        out.push_unique(tile_start + ((state[1] as usize) % span), i);
+    }
+}
+
+#[inline(always)]
+fn tile_or_global_addr(mix: u64, i: usize, tile_start: usize) -> usize {
+    if i > tile_start {
+        tile_start + ((mix as usize) % (i - tile_start).max(1))
+    } else {
+        (mix as usize) % i
+    }
+}
+
+#[inline(always)]
 fn local_frontier_parents(out: &mut ParentSet, state: &[u64; 4], i: usize, fan_in: u32) {
     out.push_unique(i - 1, i);
     let fw = FRONTIER_WIDTH.min(i);
@@ -88,7 +136,7 @@ fn local_frontier_parents(out: &mut ParentSet, state: &[u64; 4], i: usize, fan_i
     let mut guard = 0usize;
     while out.len < fan_in as usize && guard < fan_in as usize + 4 {
         guard += 1;
-        let mix = state[out.len % 4] ^ (i as u64).wrapping_mul(GOLDEN);
+        let mix = mix_index(state, i, out.len);
         let slot = (mix as usize) % fw;
         let before = out.len;
         out.push_unique(i - 1 - slot, i);
@@ -111,16 +159,7 @@ fn local_with_light_remote(out: &mut ParentSet, state: &[u64; 4], i: usize, fan_
         let remote = ((state[1] ^ state[3].rotate_left(11)) as usize) % remote_span;
         out.push_unique(remote, i);
     }
-    let mut guard = 0usize;
-    while out.len < fan_in as usize && guard < 4 {
-        guard += 1;
-        let mix = state[out.len % 4] ^ (i as u64).wrapping_mul(GOLDEN);
-        let before = out.len;
-        out.push_unique((mix as usize) % i, i);
-        if out.len == before {
-            break;
-        }
-    }
+    fill_fan_in(out, state, i, fan_in, |mix| (mix as usize) % i);
 }
 
 fn reduced_critical(state: &[u64; 4], i: usize, fan_in: u32, period: usize) -> ParentSet {
@@ -135,15 +174,13 @@ fn reduced_critical(state: &[u64; 4], i: usize, fan_in: u32, period: usize) -> P
     let fw = FRONTIER_WIDTH.min(i);
     if i > fw + 1 {
         let remote_span = i - fw;
-        let remote2 = ((state[2] ^ GOLDEN) as usize) % remote_span;
-        out.push_unique(remote2, i);
+        out.push_unique(scatter_from_state2(state, remote_span), i);
         let remote3 = ((state[0] ^ state[1].rotate_left(19)) as usize) % remote_span;
         out.push_unique(remote3, i);
     }
 
     out.scatter_dest = if i > fw {
-        let span = i - fw;
-        Some(((state[2] ^ GOLDEN) as usize) % span)
+        Some(scatter_from_state2(state, i - fw))
     } else {
         None
     };
@@ -165,16 +202,14 @@ fn cache_locality(state: &[u64; 4], i: usize, fan_in: u32, tile_len: usize) -> P
     local_frontier_parents(&mut out, state, i, 2);
 
     if i > tile_start + 1 {
-        let span = i - tile_start;
-        let local_remote = tile_start + ((state[1] as usize) % span);
-        out.push_unique(local_remote, i);
+        push_tile_local(&mut out, state, i, tile_start);
     } else if i > 1 {
         out.push_unique((state[1] as usize) % i, i);
     }
 
     if i > fw {
         let far_span = i - fw;
-        out.scatter_dest = Some(((state[2] ^ GOLDEN) as usize) % far_span);
+        out.scatter_dest = Some(scatter_from_state2(state, far_span));
         if on_far || on_boundary {
             let far = ((state[3] ^ state[0].rotate_left(7)) as usize) % far_span;
             out.push_unique(far, i);
@@ -183,21 +218,9 @@ fn cache_locality(state: &[u64; 4], i: usize, fan_in: u32, tile_len: usize) -> P
         }
     }
 
-    let mut guard = 0usize;
-    while out.len < fan_in as usize && guard < 4 {
-        guard += 1;
-        let mix = state[out.len % 4] ^ (i as u64).wrapping_mul(GOLDEN);
-        let addr = if i > tile_start {
-            tile_start + ((mix as usize) % (i - tile_start).max(1))
-        } else {
-            (mix as usize) % i
-        };
-        let before = out.len;
-        out.push_unique(addr, i);
-        if out.len == before {
-            break;
-        }
-    }
+    fill_fan_in(&mut out, state, i, fan_in, |mix| {
+        tile_or_global_addr(mix, i, tile_start)
+    });
     out
 }
 
@@ -212,12 +235,7 @@ fn combined(state: &[u64; 4], i: usize, fan_in: u32, period: usize, tile_len: us
         NodeClass::Local
     });
     local_frontier_parents(&mut out, state, i, 2);
-
-    if i > tile_start + 1 {
-        let span = i - tile_start;
-        let local_remote = tile_start + ((state[1] as usize) % span);
-        out.push_unique(local_remote, i);
-    }
+    push_tile_local(&mut out, state, i, tile_start);
 
     let fw = FRONTIER_WIDTH.min(i);
     if i > fw + 1 {
@@ -232,25 +250,13 @@ fn combined(state: &[u64; 4], i: usize, fan_in: u32, period: usize, tile_len: us
         }
     }
 
-    let mut guard = 0usize;
-    while out.len < fan_in as usize && guard < 4 {
-        guard += 1;
-        let mix = state[out.len % 4] ^ (i as u64).wrapping_mul(GOLDEN);
-        let before = out.len;
-        let addr = if i > tile_start {
-            tile_start + ((mix as usize) % (i - tile_start).max(1))
-        } else {
-            (mix as usize) % i
-        };
-        out.push_unique(addr, i);
-        if out.len == before {
-            break;
-        }
-    }
+    fill_fan_in(&mut out, state, i, fan_in, |mix| {
+        tile_or_global_addr(mix, i, tile_start)
+    });
 
     if i > fw {
         let span = i - fw;
-        out.scatter_dest = Some(((state[2] ^ GOLDEN) as usize) % span);
+        out.scatter_dest = Some(scatter_from_state2(state, span));
         out.scatter_dest2 = Some(((state[3] ^ state[0].rotate_left(7)) as usize) % span);
     }
     out

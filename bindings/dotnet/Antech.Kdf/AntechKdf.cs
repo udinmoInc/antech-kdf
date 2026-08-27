@@ -31,6 +31,8 @@ public struct AntechRehashPolicy
     public uint PreferredMemoryKib;
     public uint PreferredFanIn;
     public uint PreferredOutputLength;
+    public uint PreferredSecretRequired;
+    public uint PreferredAssociatedData;
 }
 
 public sealed class AntechException : Exception
@@ -38,7 +40,6 @@ public sealed class AntechException : Exception
     public AntechException(string message) : base(message) { }
 }
 
-/// <summary>Thin P/Invoke wrapper over antech-kdf-ffi. Thread-safe.</summary>
 public static class AntechKdf
 {
     public const uint GraphCombinedFrontier = 3;
@@ -71,7 +72,31 @@ public static class AntechKdf
         in AntechConfig config, out IntPtr outHash);
 
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+    static extern AntechStatus antech_hash_with_inputs_bytes(
+        byte[]? password, UIntPtr passwordLen,
+        in AntechConfig config,
+        byte[]? secret, UIntPtr secretLen,
+        byte[]? associatedData, UIntPtr associatedDataLen,
+        out IntPtr outHash);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+    static extern AntechStatus antech_hash_with_inputs_and_salt(
+        byte[]? password, UIntPtr passwordLen,
+        byte[]? salt, UIntPtr saltLen,
+        in AntechConfig config,
+        byte[]? secret, UIntPtr secretLen,
+        byte[]? associatedData, UIntPtr associatedDataLen,
+        out IntPtr outHash);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
     static extern AntechStatus antech_verify_bytes(byte[]? password, UIntPtr len, [MarshalAs(UnmanagedType.LPUTF8Str)] string encoded);
+
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+    static extern AntechStatus antech_verify_with_inputs_bytes(
+        byte[]? password, UIntPtr passwordLen,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string encoded,
+        byte[]? secret, UIntPtr secretLen,
+        byte[]? associatedData, UIntPtr associatedDataLen);
 
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
     static extern AntechStatus antech_needs_rehash([MarshalAs(UnmanagedType.LPUTF8Str)] string encoded, out int outNeeds);
@@ -139,6 +164,36 @@ public static class AntechKdf
         return Take(outHash);
     }
 
+    // null = absent; empty = present-but-empty. See antech_kdf.h.
+    public static string HashWithInputs(
+        byte[] password,
+        AntechConfig config,
+        byte[]? secret = null,
+        byte[]? associatedData = null)
+    {
+        var (sec, secLen) = Opt(secret);
+        var (ad, adLen) = Opt(associatedData);
+        Raise(antech_hash_with_inputs_bytes(
+            password, (UIntPtr)password.Length, in config,
+            sec, secLen, ad, adLen, out var outHash));
+        return Take(outHash);
+    }
+
+    public static string HashWithInputsAndSalt(
+        byte[] password,
+        byte[] salt,
+        AntechConfig config,
+        byte[]? secret = null,
+        byte[]? associatedData = null)
+    {
+        var (sec, secLen) = Opt(secret);
+        var (ad, adLen) = Opt(associatedData);
+        Raise(antech_hash_with_inputs_and_salt(
+            password, (UIntPtr)password.Length, salt, (UIntPtr)salt.Length, in config,
+            sec, secLen, ad, adLen, out var outHash));
+        return Take(outHash);
+    }
+
     public static bool Verify(string password, string encodedHash) =>
         Verify(Encoding.UTF8.GetBytes(password), encodedHash);
 
@@ -149,6 +204,29 @@ public static class AntechKdf
         if (st == AntechStatus.VerificationFailed) return false;
         Raise(st);
         return false;
+    }
+
+    public static bool VerifyWithInputs(
+        byte[] password,
+        string encodedHash,
+        byte[]? secret = null,
+        byte[]? associatedData = null)
+    {
+        var (sec, secLen) = Opt(secret);
+        var (ad, adLen) = Opt(associatedData);
+        var st = antech_verify_with_inputs_bytes(
+            password, (UIntPtr)password.Length, encodedHash, sec, secLen, ad, adLen);
+        if (st == AntechStatus.Ok) return true;
+        if (st == AntechStatus.VerificationFailed) return false;
+        Raise(st);
+        return false;
+    }
+
+    static (byte[]?, UIntPtr) Opt(byte[]? data)
+    {
+        if (data is null) return (null, UIntPtr.Zero);
+        if (data.Length == 0) return (new byte[1], UIntPtr.Zero); // non-null empty
+        return (data, (UIntPtr)data.Length);
     }
 
     public static bool NeedsRehash(string encodedHash)

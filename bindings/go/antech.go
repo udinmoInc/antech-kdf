@@ -1,6 +1,4 @@
-// Package antech provides a thin Go wrapper over the Antech KDF C ABI.
-//
-// Build with CGO enabled and link against libantech_kdf (see README).
+// Package antech wraps the Antech KDF C ABI (CGO; see README for linking).
 package antech
 
 /*
@@ -84,10 +82,12 @@ func (c Config) c() C.AntechConfig {
 
 // RehashPolicy mirrors AntechRehashPolicy.
 type RehashPolicy struct {
-	MinimumMemoryKiB       uint32
-	PreferredMemoryKiB     uint32
-	PreferredFanIn         uint32
-	PreferredOutputLength  uint32
+	MinimumMemoryKiB          uint32
+	PreferredMemoryKiB        uint32
+	PreferredFanIn            uint32
+	PreferredOutputLength     uint32
+	PreferredSecretRequired   bool
+	PreferredAssociatedData   bool
 }
 
 func DefaultRehashPolicy() RehashPolicy {
@@ -96,20 +96,57 @@ func DefaultRehashPolicy() RehashPolicy {
 		panic(err)
 	}
 	return RehashPolicy{
-		MinimumMemoryKiB:      uint32(p.minimum_memory_kib),
-		PreferredMemoryKiB:    uint32(p.preferred_memory_kib),
-		PreferredFanIn:        uint32(p.preferred_fan_in),
-		PreferredOutputLength: uint32(p.preferred_output_length),
+		MinimumMemoryKiB:        uint32(p.minimum_memory_kib),
+		PreferredMemoryKiB:      uint32(p.preferred_memory_kib),
+		PreferredFanIn:          uint32(p.preferred_fan_in),
+		PreferredOutputLength:   uint32(p.preferred_output_length),
+		PreferredSecretRequired: p.preferred_secret_required != 0,
+		PreferredAssociatedData: p.preferred_associated_data != 0,
 	}
 }
 
 func (p RehashPolicy) c() C.AntechRehashPolicy {
-	return C.AntechRehashPolicy{
-		minimum_memory_kib:      C.uint32_t(p.MinimumMemoryKiB),
-		preferred_memory_kib:    C.uint32_t(p.PreferredMemoryKiB),
-		preferred_fan_in:        C.uint32_t(p.PreferredFanIn),
-		preferred_output_length: C.uint32_t(p.PreferredOutputLength),
+	var sk, ad C.uint32_t
+	if p.PreferredSecretRequired {
+		sk = 1
 	}
+	if p.PreferredAssociatedData {
+		ad = 1
+	}
+	return C.AntechRehashPolicy{
+		minimum_memory_kib:         C.uint32_t(p.MinimumMemoryKiB),
+		preferred_memory_kib:       C.uint32_t(p.PreferredMemoryKiB),
+		preferred_fan_in:           C.uint32_t(p.PreferredFanIn),
+		preferred_output_length:    C.uint32_t(p.PreferredOutputLength),
+		preferred_secret_required:  sk,
+		preferred_associated_data:  ad,
+	}
+}
+
+// DeriveInputs carries optional secret and associated data.
+// nil slice = absent; non-nil empty slice = present but empty.
+type DeriveInputs struct {
+	Secret         []byte
+	AssociatedData []byte
+}
+
+var emptyScratch byte
+
+func bytePtr(b []byte) *C.uint8_t {
+	if len(b) == 0 {
+		return nil
+	}
+	return (*C.uint8_t)(unsafe.Pointer(&b[0]))
+}
+
+func optPtr(b []byte) (*C.uint8_t, C.size_t) {
+	if b == nil {
+		return nil, 0
+	}
+	if len(b) == 0 {
+		return (*C.uint8_t)(unsafe.Pointer(&emptyScratch)), 0
+	}
+	return (*C.uint8_t)(unsafe.Pointer(&b[0])), C.size_t(len(b))
 }
 
 func takeString(p *C.char) string {
@@ -120,12 +157,7 @@ func takeString(p *C.char) string {
 
 func Hash(password []byte) (string, error) {
 	var out *C.char
-	var st C.AntechStatus
-	if len(password) == 0 {
-		st = C.antech_hash_bytes(nil, 0, &out)
-	} else {
-		st = C.antech_hash_bytes((*C.uint8_t)(unsafe.Pointer(&password[0])), C.size_t(len(password)), &out)
-	}
+	st := C.antech_hash_bytes(bytePtr(password), C.size_t(len(password)), &out)
 	if err := mapStatus(st); err != nil {
 		return "", err
 	}
@@ -135,12 +167,7 @@ func Hash(password []byte) (string, error) {
 func HashWithConfig(password []byte, cfg Config) (string, error) {
 	c := cfg.c()
 	var out *C.char
-	var st C.AntechStatus
-	if len(password) == 0 {
-		st = C.antech_hash_with_config_bytes(nil, 0, &c, &out)
-	} else {
-		st = C.antech_hash_with_config_bytes((*C.uint8_t)(unsafe.Pointer(&password[0])), C.size_t(len(password)), &c, &out)
-	}
+	st := C.antech_hash_with_config_bytes(bytePtr(password), C.size_t(len(password)), &c, &out)
 	if err := mapStatus(st); err != nil {
 		return "", err
 	}
@@ -150,14 +177,41 @@ func HashWithConfig(password []byte, cfg Config) (string, error) {
 func HashWithConfigAndSalt(password, salt []byte, cfg Config) (string, error) {
 	c := cfg.c()
 	var out *C.char
-	var pwPtr, saltPtr *C.uint8_t
-	if len(password) > 0 {
-		pwPtr = (*C.uint8_t)(unsafe.Pointer(&password[0]))
+	st := C.antech_hash_with_config_and_salt(
+		bytePtr(password), C.size_t(len(password)),
+		bytePtr(salt), C.size_t(len(salt)),
+		&c, &out,
+	)
+	if err := mapStatus(st); err != nil {
+		return "", err
 	}
-	if len(salt) > 0 {
-		saltPtr = (*C.uint8_t)(unsafe.Pointer(&salt[0]))
+	return takeString(out), nil
+}
+
+func HashWithInputs(password []byte, cfg Config, inputs DeriveInputs) (string, error) {
+	c := cfg.c()
+	var out *C.char
+	sec, secLen := optPtr(inputs.Secret)
+	ad, adLen := optPtr(inputs.AssociatedData)
+	st := C.antech_hash_with_inputs_bytes(
+		bytePtr(password), C.size_t(len(password)), &c, sec, secLen, ad, adLen, &out,
+	)
+	if err := mapStatus(st); err != nil {
+		return "", err
 	}
-	st := C.antech_hash_with_config_and_salt(pwPtr, C.size_t(len(password)), saltPtr, C.size_t(len(salt)), &c, &out)
+	return takeString(out), nil
+}
+
+func HashWithInputsAndSalt(password, salt []byte, cfg Config, inputs DeriveInputs) (string, error) {
+	c := cfg.c()
+	var out *C.char
+	sec, secLen := optPtr(inputs.Secret)
+	ad, adLen := optPtr(inputs.AssociatedData)
+	st := C.antech_hash_with_inputs_and_salt(
+		bytePtr(password), C.size_t(len(password)),
+		bytePtr(salt), C.size_t(len(salt)),
+		&c, sec, secLen, ad, adLen, &out,
+	)
 	if err := mapStatus(st); err != nil {
 		return "", err
 	}
@@ -167,12 +221,25 @@ func HashWithConfigAndSalt(password, salt []byte, cfg Config) (string, error) {
 func Verify(password []byte, encodedHash string) (bool, error) {
 	ch := C.CString(encodedHash)
 	defer C.free(unsafe.Pointer(ch))
-	var st C.AntechStatus
-	if len(password) == 0 {
-		st = C.antech_verify_bytes(nil, 0, ch)
-	} else {
-		st = C.antech_verify_bytes((*C.uint8_t)(unsafe.Pointer(&password[0])), C.size_t(len(password)), ch)
+	st := C.antech_verify_bytes(bytePtr(password), C.size_t(len(password)), ch)
+	switch st {
+	case C.ANTECH_OK:
+		return true, nil
+	case C.ANTECH_VERIFICATION_FAILED:
+		return false, nil
+	default:
+		return false, mapStatus(st)
 	}
+}
+
+func VerifyWithInputs(password []byte, encodedHash string, inputs DeriveInputs) (bool, error) {
+	ch := C.CString(encodedHash)
+	defer C.free(unsafe.Pointer(ch))
+	sec, secLen := optPtr(inputs.Secret)
+	ad, adLen := optPtr(inputs.AssociatedData)
+	st := C.antech_verify_with_inputs_bytes(
+		bytePtr(password), C.size_t(len(password)), ch, sec, secLen, ad, adLen,
+	)
 	switch st {
 	case C.ANTECH_OK:
 		return true, nil

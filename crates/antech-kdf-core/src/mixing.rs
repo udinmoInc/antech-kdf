@@ -19,7 +19,6 @@ pub fn state_from_seed(seed: &[u8; 32]) -> [u64; 4] {
     ]
 }
 
-/// Seed-derived phantom block for DAG node 0.
 pub fn node0_material(seed: &[u8; 32], parent_slot: u32, block_size: usize) -> Vec<u8> {
     let mut hasher = Sha256::new();
     hasher.update(DOMAIN_NODE0);
@@ -56,7 +55,6 @@ pub fn node0_material(seed: &[u8; 32], parent_slot: u32, block_size: usize) -> V
     out
 }
 
-/// Multi-round ARX mix of state with two block views.
 #[inline(always)]
 pub fn mix_pair(state: &mut [u64; 4], block1: &[u8], block2: &[u8]) {
     let b10 = load_u64(block1, 0);
@@ -98,7 +96,6 @@ fn load_u64(block: &[u8], offset: usize) -> u64 {
     }
 }
 
-/// Write state words into a block buffer.
 pub fn state_to_block(state: &[u64; 4], block: &mut [u8]) {
     for (i, word) in state.iter().enumerate() {
         let bytes = word.to_le_bytes();

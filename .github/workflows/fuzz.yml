@@ -1,5 +1,6 @@
 name: Fuzz Testing
 
+# Research / security validation — separate from production CI.
 on:
   push:
     branches: [ main ]
@@ -11,6 +12,7 @@ on:
 
 jobs:
   fuzz-libfuzzer:
+    name: libFuzzer (cargo-fuzz)
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
@@ -28,32 +30,73 @@ jobs:
           cargo fuzz build ffi_api
           cargo fuzz build scheduler
       - name: Seed corpora present
-        run: find fuzz/corpus -type f | head -50
-      - name: Fuzz parser
-        run: cargo fuzz run hash_parser -- -max_total_time=${{ github.event_name == 'schedule' && '1800' || '600' }}
-      - name: Fuzz verify_input
-        run: cargo fuzz run verify_input -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
-      - name: Fuzz hash_verify
-        run: cargo fuzz run hash_verify -- -max_total_time=${{ github.event_name == 'schedule' && '1800' || '600' }}
-      - name: Fuzz config
-        run: cargo fuzz run config_builder -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
-      - name: Fuzz malformed_v2
-        run: cargo fuzz run malformed_v2 -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
-      - name: Fuzz FFI
-        run: cargo fuzz run ffi_api -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
-      - name: Fuzz scheduler
-        run: cargo fuzz run scheduler -- -max_total_time=${{ github.event_name == 'schedule' && '900' || '300' }}
-      - name: Upload crashes
-        if: failure()
+        run: find fuzz/corpus -type f | head -80
+      - name: Prepare results dirs
+        run: mkdir -p research/results/final-validation/fuzz research/results/fuzz
+      - name: Make CI helper executable
+        run: chmod +x fuzz/ci_run_and_report.sh
+      - name: Fuzz all targets (timed libFuzzer)
+        env:
+          REPORT: research/results/final-validation/fuzz/libfuzzer.jsonl
+        run: |
+          PR_SECS_PARSER=120
+          PR_SECS_LIGHT=60
+          PR_SECS_HEAVY=90
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            PR_SECS_PARSER=1800
+            PR_SECS_LIGHT=900
+            PR_SECS_HEAVY=1800
+          fi
+          : > "$REPORT"
+          ./fuzz/ci_run_and_report.sh hash_parser "$PR_SECS_PARSER" "$REPORT"
+          ./fuzz/ci_run_and_report.sh verify_input "$PR_SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh hash_verify "$PR_SECS_HEAVY" "$REPORT"
+          ./fuzz/ci_run_and_report.sh config_builder "$PR_SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh malformed_v2 "$PR_SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh ffi_api "$PR_SECS_LIGHT" "$REPORT"
+          ./fuzz/ci_run_and_report.sh scheduler "$PR_SECS_LIGHT" "$REPORT"
+      - name: Summarize libFuzzer campaign
+        if: always()
+        run: |
+          python3 <<'PY'
+          import json, pathlib
+          p = pathlib.Path("research/results/final-validation/fuzz/libfuzzer.jsonl")
+          rows = []
+          if p.exists():
+              for line in p.read_text().splitlines():
+                  line=line.strip()
+                  if line:
+                      rows.append(json.loads(line))
+          fails = [r for r in rows if r.get("status") != "PASS"]
+          summary = {
+              "engine": "libFuzzer",
+              "status": "FAIL" if fails else ("PASS" if rows else "NOT_RUN"),
+              "targets": rows,
+              "total_executions_approx": sum(int(r.get("executions_approx") or 0) for r in rows),
+              "total_artifact_files": sum(int(r.get("artifact_files") or 0) for r in rows),
+          }
+          out = pathlib.Path("research/results/final-validation/fuzz/summary.json")
+          out.write_text(json.dumps(summary, indent=2))
+          md = ["# libFuzzer campaign\n", f"**Status:** {summary['status']}\n", "| Target | Status | Execs | Corpus | Artifacts | Secs |\n|---|---|---:|---:|---:|---:|"]
+          for r in rows:
+              md.append(f"| {r['target']} | {r['status']} | {r.get('executions_approx',0)} | {r.get('corpus_after',0)} | {r.get('artifact_files',0)} | {r.get('elapsed_secs',0)} |")
+          pathlib.Path("research/results/final-validation/fuzz/summary.md").write_text("\n".join(md)+"\n")
+          print(json.dumps(summary, indent=2))
+          if fails:
+              raise SystemExit(1)
+          PY
+      - name: Upload fuzz results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fuzz-crashes
+          name: fuzz-libfuzzer-results
           path: |
+            research/results/final-validation/fuzz
             fuzz/artifacts
             fuzz/corpus
 
   fuzz-fallback:
-    # Cross-check the deterministic harness (also usable on Windows agents)
+    name: Fallback harness (non-libFuzzer)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -63,8 +106,18 @@ jobs:
         env:
           ANTECH_FUZZ_SECS: "120"
         run: cargo run --manifest-path fuzz/harness/Cargo.toml --release
+      - name: Copy fallback summary into final-validation
+        if: always()
+        run: |
+          mkdir -p research/results/final-validation/fuzz
+          if [ -f research/results/fuzz/summary.json ]; then
+            cp research/results/fuzz/summary.json research/results/final-validation/fuzz/fallback-summary.json
+          fi
       - name: Upload fallback results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: fuzz-fallback-results
-          path: research/results/fuzz
+          path: |
+            research/results/fuzz
+            research/results/final-validation/fuzz

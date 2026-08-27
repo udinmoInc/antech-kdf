@@ -6,21 +6,27 @@ order: 54
 ---
 
 ```text
-$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>$<salt_hex>$<digest_hex>
+$antech$v2$m=<kib>,s=<salt_len>,b=<block>,f=<fan>,g=<graph>,l=<out>[,sk=1][,adl=<n>]$<salt_hex>$<digest_hex>
 ```
 
 ## Rules
 
 - Parameter section is comma-separated `key=value`
 - Required keys: `m`, `s`, `b`, `f`, `g`, `l`
+- Optional keys (omitted when unused so legacy strings stay compatible):
+  - `sk=1` — derivation used an application secret; **secret bytes are never stored**
+  - `adl=<n>` — derivation used associated data of exactly `n` bytes (`n` may be `0`); **AD bytes are never stored**
 - Duplicate keys rejected
 - Unknown keys rejected
 - Salt/digest are lowercase hex with lengths matching `s` and `l`
 - Version must be `v2` — `v1` is rejected outright
 
+Verification of hashes with `sk=1` / `adl=` must supply matching caller-provided secret / AD (via advanced APIs). Plain `verify` fails closed with a missing-input error rather than silently returning false.
+
 Implemented in `antech-kdf-format`. Applications should treat the full string as opaque storage except for logging/redaction policies.
 
 <Related links={[
   { href: '../architecture/format', title: 'Format architecture' },
-  { href: './configuration-reference', title: 'Field bounds' }
+  { href: './configuration-reference', title: 'Field bounds' },
+  { href: '../guides/secret-and-associated-data', title: 'Secret and associated data' }
 ]} />

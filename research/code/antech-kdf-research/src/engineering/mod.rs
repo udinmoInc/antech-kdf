@@ -3,6 +3,7 @@
 
 pub mod asic_fpga;
 pub mod cpu_attacker;
+pub mod final_validation;
 pub mod hardware;
 pub mod multitarget_eng;
 pub mod property;

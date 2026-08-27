@@ -4,6 +4,7 @@ pub mod algorithm;
 pub mod config;
 pub mod errors;
 pub mod rehash;
+pub mod secret;
 
 pub use algorithm::{Algorithm, AlgorithmVersion, GraphKind};
 pub use config::{
@@ -12,6 +13,10 @@ pub use config::{
 };
 pub use errors::{ConfigError, KdfError};
 pub use rehash::{RehashPolicy, RehashPolicyBuilder};
+pub use secret::{
+    validate_associated_data_len, validate_secret_len, DeriveInputs, SecretBytes,
+    ASSOCIATED_DATA_MAX_BYTES, SECRET_MAX_BYTES,
+};
 
 /// Parsed fields from a self-describing password hash.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,6 +29,11 @@ pub struct RawHashComponents {
     pub fan_in: u32,
     pub graph: GraphKind,
     pub output_len: usize,
+    /// When true, verification must supply a secret (bytes never appear in the string).
+    pub secret_required: bool,
+    /// When `Some(n)`, verification must supply associated data of exactly `n` bytes
+    /// (`n` may be 0 for empty AD). `None` means AD was not used.
+    pub associated_data_length: Option<u32>,
     pub salt: Vec<u8>,
     pub digest: Vec<u8>,
 }

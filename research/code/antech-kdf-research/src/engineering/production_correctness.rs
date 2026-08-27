@@ -227,10 +227,21 @@ pub fn run_campaign(out: &Path) -> CampaignSummary {
     run_gpu(&mut acc, out);
     println!("done");
     suite!("property", run_property);
+    let ci = std::env::var("ANTECH_CORRECTNESS_PROFILE")
+        .map(|s| s.eq_ignore_ascii_case("ci"))
+        .unwrap_or(false);
+    if ci {
+        // Shorter sequential soak for PR CI; full 500 remains for local/full campaigns.
+        print!("[long_run_ci] … ");
+        let _ = std::io::stdout().flush();
+        run_long_run_n(&mut acc, 50);
+        println!("done");
+    } else {
+        suite!("long_run", run_long_run);
+    }
     suite!("small_graph", run_small_graph);
     suite!("serialization", run_serialization);
     suite!("rehash", run_rehash);
-    suite!("long_run", run_long_run);
     suite!("sanitizers", run_sanitizers);
     suite!("sdk_cli", run_sdk_cli);
 
@@ -1662,12 +1673,16 @@ fn run_rehash(acc: &mut Acc) {
 }
 
 fn run_long_run(acc: &mut Acc) {
+    run_long_run_n(acc, 500);
+}
+
+fn run_long_run_n(acc: &mut Acc, n: u64) {
     let suite = "long_run";
     let cfg = min_cfg();
     let salt = b"salt_16_bytes!!!";
     let mut ok = 0u64;
     let mut bad = 0u64;
-    for i in 0..500 {
+    for i in 0..n {
         let pw = format!("long_{i}");
         match hash_with_config_and_salt(pw.as_bytes(), salt, &cfg) {
             Ok(enc) => {
@@ -1685,8 +1700,8 @@ fn run_long_run(acc: &mut Acc) {
     wait_idle();
     acc.expect_ok(
         suite,
-        "seq_500",
-        bad == 0 && ok == 500,
+        &format!("seq_{n}"),
+        bad == 0 && ok == n,
         format!("ok={ok} bad={bad}"),
     );
 }

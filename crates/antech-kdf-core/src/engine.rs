@@ -1,22 +1,16 @@
 //! Canonical compute-memory derivation engine.
-//!
-//! # Security notice
-//!
-//! This is the project's current Antech construction. Benchmark results do not
-//! establish cryptographic security; independent review is still required.
 
 use crate::graph::{self, MAX_PARENTS};
 use crate::memory::FrontierRing;
 use crate::state::{
-    bind_seed, finalize, mix_parent_views, phantom_block, seed_to_state, state_to_block_fast,
-    xor_state_into_block_fast,
+    bind_seed_with_inputs, finalize, mix_parent_views, phantom_block, seed_to_state,
+    state_to_block_fast, xor_state_into_block_fast,
 };
 use crate::traits::KdfEngine;
-use antech_kdf_types::{Algorithm, AntechConfig, KdfError};
+use antech_kdf_types::{Algorithm, AntechConfig, DeriveInputs, KdfError};
 
 const MAX_BLOCK: usize = 64; // must match antech_kdf_types::BlockSize::MAX_BYTES
 
-/// Canonical Antech compute-memory engine.
 #[derive(Debug, Clone, Default)]
 pub struct AntechEngine;
 
@@ -31,7 +25,18 @@ impl AntechEngine {
         salt: &[u8],
         cfg: &AntechConfig,
     ) -> Result<Vec<u8>, KdfError> {
+        self.derive_with_inputs(password, salt, cfg, &DeriveInputs::default())
+    }
+
+    pub fn derive_with_inputs(
+        &self,
+        password: &[u8],
+        salt: &[u8],
+        cfg: &AntechConfig,
+        inputs: &DeriveInputs,
+    ) -> Result<Vec<u8>, KdfError> {
         cfg.validate()?;
+        inputs.validate()?;
         if cfg.algorithm != Algorithm::Antech {
             return Err(KdfError::Derivation("unsupported algorithm".into()));
         }
@@ -46,7 +51,7 @@ impl AntechEngine {
         let num_blocks = cfg.num_blocks();
         let period = cfg.critical_period();
         let tile_len = cfg.tile_len();
-        let seed = bind_seed(password, salt, cfg);
+        let seed = bind_seed_with_inputs(password, salt, cfg, inputs);
         let mut buffer = vec![0u8; cfg.memory.as_bytes()];
         let mut state = seed_to_state(&seed);
         let mut ring = FrontierRing::new(block_size);

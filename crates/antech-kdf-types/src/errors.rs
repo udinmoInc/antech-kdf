@@ -2,7 +2,6 @@
 
 use std::fmt;
 
-/// Errors returned during parameter validation or configuration building.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConfigError {
     InvalidSaltLength {
@@ -24,6 +23,14 @@ pub enum ConfigError {
     InvalidOutputLength {
         len: usize,
         min: usize,
+        max: usize,
+    },
+    InvalidSecretLength {
+        len: usize,
+        max: usize,
+    },
+    InvalidAssociatedDataLength {
+        len: usize,
         max: usize,
     },
     InvalidParameterValue(String),
@@ -65,6 +72,18 @@ impl fmt::Display for ConfigError {
                     "output length {len} bytes out of allowed bounds [{min}..{max}]"
                 )
             }
+            ConfigError::InvalidSecretLength { len, max } => {
+                write!(
+                    f,
+                    "secret length {len} bytes exceeds maximum of {max} bytes"
+                )
+            }
+            ConfigError::InvalidAssociatedDataLength { len, max } => {
+                write!(
+                    f,
+                    "associated data length {len} bytes exceeds maximum of {max} bytes"
+                )
+            }
             ConfigError::InvalidParameterValue(msg) => {
                 write!(f, "invalid parameter value: {msg}")
             }
@@ -74,13 +93,20 @@ impl fmt::Display for ConfigError {
 
 impl std::error::Error for ConfigError {}
 
-/// General KDF execution errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KdfError {
     Config(ConfigError),
     Encoding(String),
     Derivation(String),
     ResourceExhausted(String),
+    /// Stored hash requires a secret; caller did not provide one.
+    MissingSecret,
+    /// Stored hash requires associated data; caller did not provide it.
+    MissingAssociatedData,
+    AssociatedDataLengthMismatch {
+        expected: usize,
+        got: usize,
+    },
 }
 
 impl fmt::Display for KdfError {
@@ -90,6 +116,18 @@ impl fmt::Display for KdfError {
             KdfError::Encoding(msg) => write!(f, "encoding error: {msg}"),
             KdfError::Derivation(msg) => write!(f, "derivation error: {msg}"),
             KdfError::ResourceExhausted(msg) => write!(f, "resource exhausted: {msg}"),
+            KdfError::MissingSecret => write!(
+                f,
+                "verification requires an application secret; none was provided"
+            ),
+            KdfError::MissingAssociatedData => write!(
+                f,
+                "verification requires associated data; none was provided"
+            ),
+            KdfError::AssociatedDataLengthMismatch { expected, got } => write!(
+                f,
+                "associated data length mismatch: expected {expected} bytes, got {got}"
+            ),
         }
     }
 }

@@ -1,12 +1,15 @@
 {
   "version": "0.1.0",
   "api": {
-    "hash": "password -> encoded $antech$v2$\u2026",
+    "hash": "password -> encoded $antech$v2$…",
     "verify": "password + encoded -> bool",
     "needs_rehash": "encoded -> bool (default policy)",
     "hash_with_config": "password + config -> encoded",
+    "hash_with_inputs": "password + config + optional secret/AD -> encoded",
+    "verify_with_inputs": "password + encoded + optional secret/AD -> bool",
     "needs_rehash_with_policy": "encoded + policy -> bool",
-    "hash_with_config_and_salt": "password + salt + config -> encoded (KAT / interop)"
+    "hash_with_config_and_salt": "password + salt + config -> encoded (KAT / interop)",
+    "hash_with_inputs_and_salt": "password + salt + config + optional secret/AD -> encoded (KAT)"
   },
   "config_fields": [
     "memory_kib",
@@ -16,6 +19,14 @@
     "graph",
     "output_length"
   ],
+  "optional_inputs": {
+    "secret": "application-held; never stored; max 1024 bytes; null=absent, empty=present-empty",
+    "associated_data": "public context; not stored; max 65536 bytes; same presence rules"
+  },
+  "hash_markers": {
+    "sk": "1 when secret was used",
+    "adl": "associated-data length when AD was used"
+  },
   "graph_tags": {
     "1": "reduced-critical-path",
     "2": "cache-locality",

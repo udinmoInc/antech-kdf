@@ -17,8 +17,19 @@ Shared validation applies in Rust builders and FFI POD structs. Invalid values f
 | `fan_in` | 2 | 2…8 |
 | `graph` | CombinedFrontier (`3`) | `1`…`3` |
 | `output_length` | 32 | 8…128 |
+| `secret_required` | `false` | Public flag only (`sk=1` in encoding); secret bytes never stored |
+| `associated_data_length` | `None` | When `Some(n)`, encode `adl=n`; AD bytes never stored (`n` ≤ 65536) |
 
 Also requires `memory_bytes / block_size >= 64`.
+
+### Optional derive inputs (not stored in the hash)
+
+| Input | Bound | Notes |
+|---|---|---|
+| Secret | 0…1024 bytes | `None` = unused; `Some` (including empty) binds into the seed |
+| Associated data | 0…65536 bytes | Public context; same presence rules as secret |
+
+Limits are DoS / seed-input bounds for the canonical construction, not Argon2 copies.
 
 ## Graph tags
 
@@ -36,6 +47,8 @@ Also requires `memory_bytes / block_size >= 64`.
 | `preferred_memory` | 16 MiB |
 | `preferred_fan_in` | 2 |
 | `preferred_output_length` | 32 |
+| `preferred_secret_required` | `false` (when true, hashes without `sk=1` need rehash) |
+| `preferred_associated_data` | `false` (when true, hashes without `adl=` need rehash) |
 
 Shared schema JSON: `sdk/schema.json`.
 

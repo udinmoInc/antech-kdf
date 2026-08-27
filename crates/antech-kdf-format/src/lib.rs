@@ -74,4 +74,40 @@ mod tests {
         let encoded = "$antech$v2$m=16384,m=16384,s=16,b=32,f=2,g=3,l=32$0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff$0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff0011223344556677889900aabbccddeeff";
         assert!(parse_hash(encoded).is_err());
     }
+
+    #[test]
+    fn encode_optional_sk_and_adl_markers() {
+        let cfg = AntechConfig::builder()
+            .memory_kib(1024)
+            .salt_length(16)
+            .secret_required(true)
+            .associated_data_length(9)
+            .build()
+            .unwrap();
+        let salt = [0x11u8; 16];
+        let digest = [0x22u8; 32];
+        let encoded = encode_hash(&cfg, &salt, &digest).unwrap();
+        assert!(encoded.contains(",sk=1"));
+        assert!(encoded.contains(",adl=9"));
+        let parsed = parse_hash(&encoded).unwrap();
+        assert!(parsed.secret_required);
+        assert_eq!(parsed.associated_data_length, Some(9));
+    }
+
+    #[test]
+    fn legacy_without_sk_adl_parses_as_unused() {
+        let cfg = AntechConfig::builder()
+            .memory_kib(1024)
+            .salt_length(16)
+            .build()
+            .unwrap();
+        let salt = [0x33u8; 16];
+        let digest = [0x44u8; 32];
+        let encoded = encode_hash(&cfg, &salt, &digest).unwrap();
+        assert!(!encoded.contains(",sk="));
+        assert!(!encoded.contains(",adl="));
+        let parsed = parse_hash(&encoded).unwrap();
+        assert!(!parsed.secret_required);
+        assert_eq!(parsed.associated_data_length, None);
+    }
 }
