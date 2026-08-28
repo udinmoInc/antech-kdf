@@ -1,4 +1,4 @@
 test_id,api,median_ns,rust_median_ns,delta_ns,ratio,kind,notes
-F01_verify_cstr,antech_verify,3302500.0,3278600.0,23900.0,1.0072896968218141,MEASURED,"CString UTF-8 password; measures FFI+Rust stack, not extra password-dependent branches."
-F02_verify_bytes_wrong,antech_verify_bytes,3318000.0,3308800.0,9200.0,1.0027804642166345,MEASURED,Binary password buffer path.
-F03_verify_with_inputs,antech_verify_with_inputs_bytes,3285400.0,3277500.0,7900.0,1.0024103737604881,MEASURED,Secret+AD FFI path vs Rust verify_with_inputs.
+F01_verify_cstr,antech_verify,2283660.0,2280717.0,2943.0,1.0012903836819738,MEASURED,"CString UTF-8 password; measures FFI+Rust stack, not extra password-dependent branches."
+F02_verify_bytes_wrong,antech_verify_bytes,2287572.0,2278365.0,9207.0,1.004041055757089,MEASURED,Binary password buffer path.
+F03_verify_with_inputs,antech_verify_with_inputs_bytes,2278494.0,2288677.0,-10183.0,0.995550704621054,MEASURED,Secret+AD FFI path vs Rust verify_with_inputs.

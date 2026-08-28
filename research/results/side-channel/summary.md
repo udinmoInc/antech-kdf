@@ -1,26 +1,34 @@
-# Side-channel campaign summary
+# Side-channel campaign summary (Windows + Linux)
 
 | Field | Value |
 |---|---|
 | Verdict | **PASS** |
-| Host | windows / x86_64 |
-| Profile | derive_samples=80 fast_samples=800 |
-| Timing tests | 11 |
-| Significant derive-path leaks | 0 |
-| Fast-path timing oracles (expected) | 4 |
-| Cache PMU | **BLOCKED** on this host |
+| Date (UTC) | 2026-08-28T06:39:10Z |
+| CI run (Linux) | [33148612384](https://github.com/udinmoInc/antech-kdf/actions/runs/33148612384) |
+| Windows timing | **MEASURED** |
+| Linux timing | **MEASURED** |
+| Linux PMU/cache | **BLOCKED** (hosted VM; see `perf-probe.log`) |
+| PMU significant equal-length leaks | 0 (NOT RUN) |
 
-## Key questions
+## T01 correct vs wrong (timing, full derive)
 
-| Question | Answer |
-|---|---|
-| Correct vs wrong verification distinguishable (full derive)? | **NO** (median ratio 0.998, Welch t 0.41) |
-| Password length leaks beyond SHA bind? | **NO practical leak** — T03 shows length-dependent hash time dominated by memory-hard phase; not a verify shortcut. |
-| Secret/AD values create exploitable verify timing difference? | **NO cheaper verify** — wrong secret/AD still runs full derive; timing differences are password-independent digest mismatch. |
-| Parent selection / memory access leaks (cache)? | **MODELED risk** — data-dependent graph addressing is intentional; micro-architectural cache attacks not measured here unless Linux perf row present. |
-| Concurrency / scheduler oracle on password correctness? | **NO password oracle** — contention changes latency, not verify outcome branches on peer secrets. |
-| LLVM/perf cache counters measured? | BLOCKED on Windows; run Linux CI job |
+| Host | ratio_median | welch_t | significant |
+|---|---|---|---|
+| Windows | 0.998 | 0.41 | no |
+| Linux | 1.000 | 0.90 | no |
+
+**Conclusion unchanged:** no exploitable correct-vs-wrong verify shortcut on either host.
+
+## Status by layer
+
+| Layer | Windows | Linux |
+|---|---|---|
+| Wall-clock timing | MEASURED | MEASURED |
+| PMU / cache-miss / branch HW | BLOCKED (no perf) | **BLOCKED** (`perf-probe.log`) |
+| Static branch audit | MODELED | MODELED |
+| FFI overhead | MEASURED | MEASURED |
+| Scheduler contention | MEASURED | MEASURED |
 
 ## Artifacts
 
-`timing.csv`, `branch-analysis.csv`, `cache-analysis.csv`, `contention.csv`, `ffi.csv`, `regressions.csv`, `report.md`
+`timing-windows.csv`, `timing-linux.csv`, `cache-analysis.csv`, `cache-comparison.csv`, `perf-probe.log`, `branch-analysis.csv`, `contention.csv`, `ffi.csv`, `regressions.csv`, `report.md`

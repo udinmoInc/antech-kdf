@@ -1,0 +1,2 @@
+comparison_id,group_a,group_b,metric,n_a,n_b,median_a,median_b,ratio_median,welch_t,significant,exploitability,kind,notes
+(none),n/a,n/a,n/a,0,0,n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,hardware PMU not available on GitHub-hosted ubuntu-latest runner (NOT RUN)

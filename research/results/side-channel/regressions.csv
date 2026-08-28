@@ -1,2 +1,2 @@
 id,description,status,notes
-(none),no exploitable password-verification timing shortcut found,N/A,Digest compare uses subtle::ct_eq; wrong password runs full derive.
+(none),no exploitable side-channel found; PMU BLOCKED on GHA hosted VM,N/A,Linux timing confirms Windows T01; see perf-probe.log

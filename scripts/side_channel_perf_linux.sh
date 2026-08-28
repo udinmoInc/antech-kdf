@@ -13,6 +13,8 @@ COMP="${OUT}/cache-comparison.csv"
 
 write_blocked() {
   local reason="$1"
+  reason="${reason//$'\n'/ }"
+  reason="${reason//$'\r'/ }"
   cat > "${CSV}" <<EOF
 test_id,scenario,instructions,cycles,ipc,cache_misses,llc_loads,branch_misses,kind,notes
 pmu-all,BLOCKED: ${reason},n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,${reason}
@@ -96,7 +98,7 @@ else
   PMU_ITERS=3 perf stat -x, -e instructions,cycles "${BIN}" verify_correct_1mib 2>"${PROBE}" || true
 fi
 PROBE_LINE=$(parse_perf_file "${PROBE}" || echo "0,0,0,0,0")
-PROBE_INSTR=$(echo "${PROBE_LINE}" | cut -d, -f1)
+PROBE_INSTR=$(echo "${PROBE_LINE}" | head -1 | cut -d, -f1 | tr -d '[:space:]')
 if ! is_numeric "${PROBE_INSTR}" || [[ "${PROBE_INSTR}" -lt 1000000 ]]; then
   cp "${PROBE}" "${OUT}/perf-probe.log" 2>/dev/null || true
   write_blocked "perf stat returned '${PROBE_INSTR}' for instructions; GitHub-hosted runner blocks hardware PMU (see perf-probe.log)"

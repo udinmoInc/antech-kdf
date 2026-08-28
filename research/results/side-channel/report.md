@@ -1,72 +1,74 @@
 # Side-channel analysis report — Antech KDF v5 (production)
 
-**Verdict: PASS**
+**Combined verdict: PASS**
 
-Research-only validation of the **frozen** production implementation. No algorithm, API, v2 format, or parameter changes were made.
+Frozen production implementation; no algorithm, API, v2 format, or parameter changes.
 
-## Scope of constant-time claims
+CI: [validation run 33148612384](https://github.com/udinmoInc/antech-kdf/actions/runs/33148612384) (job `side-channel-linux` **success**).
+
+## Platforms
+
+| Layer | Windows | Linux (Ubuntu CI) |
+|---|---|---|
+| Wall-clock timing | **MEASURED** (`timing-windows.csv`) | **MEASURED** (`timing-linux.csv`) |
+| PMU / cache / branch HW counters | **BLOCKED** (no local perf) | **BLOCKED** (`perf-probe.log`) |
+| Branch static audit | **MODELED** (`branch-analysis.csv`) | same |
+| FFI / contention | **MEASURED** | **MEASURED** |
+
+## Constant-time scope (precise claims)
 
 | Claim | Scope | Evidence |
 |---|---|---|
-| Constant-time **digest comparison** | `core_verify_with_inputs` final step | `subtle::ConstantTimeEq::ct_eq` on equal-length digests (**MEASURED** via source + timing) |
-| **Not** constant-time w.r.t. password | Full `hash`/`verify` derive | Memory-hard walk is intentionally data-dependent (**MODELED**, accepted) |
-| **Not** constant-time parse | `parse_hash` on public encoding | Variable-time hex decode on attacker-controlled **public** string (**MEASURED**) |
+| Constant-time digest compare | `core_verify_with_inputs` final step | `subtle::ConstantTimeEq` (**MEASURED**) |
+| Not constant-time w.r.t. password | Full derive path | Data-dependent memory-hard walk (**MODELED**, accepted) |
+| Not constant-time parse | Public encoded hash | Variable-time hex decode (**MEASURED**) |
 
 Do **not** describe the KDF as globally constant-time.
 
-## Statistical timing (MEASURED)
+## Timing: correct vs wrong password (MEASURED)
 
-Profile: `80` derive samples, `800` fast-path samples per comparison on **windows**.
+| Host | median ratio | Welch t | Verdict |
+|---|---|---|---|
+| Windows (80 samples, 1 MiB) | 0.998 | 0.41 | no shortcut |
+| Linux (40 samples, 1 MiB CI) | 1.000 | 0.90 | no shortcut |
 
-Primary result **T01** (correct vs wrong password, 1 MiB verify):
-- median correct: 3377700 ns
-- median wrong: 3385400 ns
-- ratio: 0.9977
-- Welch t: 0.411
-- significant (derive): no
+Wrong password always runs full derive; digest compared with `ct_eq` after derive completes.
 
-Fast-path oracles (**expected**, not password-byte leaks):
-- Malformed / truncated encodings reject before derive (T07, T08).
-- Missing secret / AD length mismatch reject before derive (T09, T10) — API misuse oracle, not offline password guessing.
+## Linux PMU / cache analysis (BLOCKED — NOT RUN)
 
-## Branch / memory analysis
+`perf stat` on GitHub-hosted `ubuntu-latest` returns `<not supported>` / zero for `instructions` and hardware cache events even with `sudo` and `kernel.perf_event_paranoid=-1`. See `perf-probe.log`.
 
-See `branch-analysis.csv` (9 rows). Highlights:
-- Digest compare: constant-time primitive post-derive.
-- Engine graph: state-dependent indices + x86 prefetch hints — cache timing is a **theoretical** shared-core concern, not a verify shortcut.
-- No branch on `password == stored` before derive completes.
+| Item | Status |
+|---|---|
+| Per-scenario PMU rows (`cache-analysis.csv`) | **BLOCKED** |
+| Statistical PMU pairs P01–P07 (`cache-comparison.csv`) | **NOT RUN** |
+| Inferred PMU PASS | **No** — limitation documented honestly |
 
-## FFI boundary (MEASURED)
-
-3 FFI rows in `ffi.csv`. Overhead is ABI marshalling; no extra secret-dependent branches vs Rust.
-
-## Contention (MEASURED)
-
-1 contention scenario(s). Background hashing may increase verify latency via global scheduler; does not reveal password correctness.
-
-## Cache / PMU
-
-**BLOCKED** on this host — hardware counters require Linux `perf` (see CI job).
+PMU analysis requires a bare-metal or self-hosted Linux host with working perf events. The CI job still validates Linux wall-clock timing and reproduces the Windows T01 conclusion.
 
 ## Practical attack assessment
 
-| Vector | Assessment |
+| Vector | Result |
 |---|---|
-| Online password guess via verify timing shortcut | **Not observed** — wrong password pays full derive |
-| Parse malformed hash faster than verify | **Yes** — public encoding only |
-| Missing secret faster than wrong password | **Yes** — documented API precondition |
-| Cross-tenant cache probing on memory walk | **Theoretical** — requires shared hardware + co-resident attacker |
-| Scheduler queue as correctness oracle | **No** |
+| Online verify timing shortcut (correct vs wrong password) | **Not observed** (Windows + Linux) |
+| PMU cache-miss oracle on password bytes | **NOT RUN** (PMU BLOCKED on CI) |
+| Parse malformed hash faster than verify | **Yes** — public encoding only (expected) |
+| Missing secret / AD API misuse oracle | **Yes** — pre-derive fast path (expected) |
+| Cross-tenant cache probe on memory walk | **Theoretical** (MODELED; intentional graph design) |
+| Scheduler queue as password oracle | **No** (MEASURED) |
 
 ## Regressions
 
-See `regressions.csv`. No implementation defects requiring code changes in this campaign.
+None. See `regressions.csv`. No production code changes required.
 
 ## Reproduction
 
 ```bash
+# Full timing campaign (Windows or Linux)
 cargo run --manifest-path research/code/Cargo.toml --release \
   -p antech-kdf-research --example side_channel_runner
-```
 
-Linux CI: `.github/workflows/validation.yml` job `side-channel-linux` (perf counters, `ANTECH_SIDECHANNEL_PROFILE=ci`).
+# Linux PMU (requires working perf on host)
+./scripts/side_channel_perf_linux.sh
+./scripts/side_channel_finalize.sh
+```

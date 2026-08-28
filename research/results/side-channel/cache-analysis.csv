@@ -1,2 +1,2 @@
-test_id,scenario,instructions,cycles,ipc,cache_misses,llc_loads,kind,notes
-perf-cache-counters,"verify loop PMU (cache-misses, LLC)",n/a,n/a,n/a,n/a,n/a,BLOCKED,Hardware counters require Linux perf; run scripts/side_channel_perf_linux.sh on Ubuntu CI (host=windows).
+test_id,scenario,instructions,cycles,ipc,cache_misses,llc_loads,branch_misses,kind,notes
+pmu-all,BLOCKED: hardware PMU unavailable on GitHub-hosted ubuntu-latest,n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,"perf stat -e instructions,cycles returns <not supported> or zero; see perf-probe.log and CI run 33148612384"

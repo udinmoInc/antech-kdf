@@ -44,4 +44,5 @@ tmp/
 research/results/fuzz/ci-download*/
 research/results/fuzz/ci/corpus/
 research/results/sanitizers/ci-download*/
+research/results/side-channel/ci-download*/
 
