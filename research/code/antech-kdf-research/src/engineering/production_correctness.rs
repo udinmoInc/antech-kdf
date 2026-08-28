@@ -1408,6 +1408,13 @@ fn run_gpu(acc: &mut Acc, out: &Path) {
                     Status::Pass,
                     format!("imported {ok} matching rows from prior campaign CSV"),
                 );
+            } else if ok == 0 && bad == 0 {
+                acc.push(
+                    suite,
+                    "prior_v4_gpu_csv",
+                    Status::Blocked,
+                    "gpu/correctness.csv present but no parsed rows; live CUDA run required",
+                );
             } else {
                 acc.push(
                     suite,

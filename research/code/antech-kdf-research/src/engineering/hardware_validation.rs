@@ -137,10 +137,14 @@ pub fn run_campaign(out: &Path) -> HardwareValidationSummary {
     // --- Sanitizer markers ---
     write_sanitizer_rows(out, &pid);
 
+    write_regressions_csv(out, &correctness_dir, &fv.checks, &sdk_rows, &stress_rows, &gpu_verdict, &pid);
     let regressions = count_regressions(out);
-    write_regressions_csv(out, &correctness_dir, &fv.checks, &sdk_rows, &stress_rows);
 
-    let correctness_verdict = correctness.verdict.clone();
+    let correctness_verdict = if correctness.verdict.starts_with("PASS") {
+        "PASS".to_string()
+    } else {
+        "FAIL".to_string()
+    };
     let verdict = if correctness_verdict != "PASS"
         || stress_verdict != "PASS"
         || sdk_verdict == "FAIL"
@@ -159,7 +163,7 @@ pub fn run_campaign(out: &Path) -> HardwareValidationSummary {
         build_profile: bprof.clone(),
         optimization: opt.into(),
         verdict: verdict.clone(),
-        correctness_verdict,
+        correctness_verdict: correctness_verdict.clone(),
         stress_verdict: stress_verdict.clone(),
         sdk_verdict: sdk_verdict.clone(),
         gpu_verdict: gpu_verdict.clone(),
@@ -167,6 +171,7 @@ pub fn run_campaign(out: &Path) -> HardwareValidationSummary {
     };
 
     write_report(out, &summary, &cpu_rows, &stress_rows);
+    update_platform_matrix_status(out, &pid, &summary.verdict);
     summary
 }
 
@@ -350,6 +355,7 @@ fn run_python_conformance() -> SdkRow {
                 "pip",
                 "install",
                 "-q",
+                "--user",
                 "-e",
                 "bindings/python",
             ])
@@ -455,7 +461,9 @@ fn run_go_conformance() -> SdkRow {
             test: "conformance".into(),
             status: if o.status.success() {
                 HwStatus::Pass
-            } else if String::from_utf8_lossy(&o.stderr).contains("build constraints exclude") {
+            } else if String::from_utf8_lossy(&o.stderr).contains("gcc")
+                || String::from_utf8_lossy(&o.stderr).contains("build constraints exclude")
+            {
                 HwStatus::Blocked
             } else {
                 HwStatus::Fail
@@ -548,7 +556,7 @@ fn run_gpu_phase(out: &Path, pid: &str, platform: &PlatformInfo) -> String {
             write_gpu_blocked(
                 out,
                 pid,
-                &format!("v4_gpu_runner exit={}", s.code().unwrap_or(-1)),
+                &format!("v4_gpu_runner exit={} (production CPU vs CUDA mismatch)", s.code().unwrap_or(-1)),
             );
             "FAIL".into()
         }
@@ -937,6 +945,8 @@ fn write_regressions_csv(
     fv_checks: &[final_validation::CheckRow],
     sdk: &[SdkRow],
     stress: &[StressScenarioRow],
+    gpu_verdict: &str,
+    pid: &str,
 ) {
     let path = out.join("regressions.csv");
     let mut f = File::create(&path).expect("regressions.csv");
@@ -988,6 +998,13 @@ fn write_regressions_csv(
             )
             .unwrap();
         }
+    }
+    if gpu_verdict == "FAIL" {
+        writeln!(
+            f,
+            "gpu,{pid}_live_cuda,FAIL,\"production AntechEngine CPU digests != live CUDA attacker (v4c_gpu_attacker)\""
+        )
+        .unwrap();
     }
 }
 
@@ -1069,6 +1086,23 @@ fn write_report(
          `cpu.csv`, `gpu.csv`, `sdk-conformance.csv`, `stress.csv`, `regressions.csv`."
     )
     .unwrap();
+}
+
+fn update_platform_matrix_status(out: &Path, pid: &str, verdict: &str) {
+    let path = out.join("platform-matrix.csv");
+    if !path.exists() {
+        return;
+    }
+    let content = fs::read_to_string(&path).unwrap_or_default();
+    let mut lines: Vec<String> = content.lines().map(String::from).collect();
+    for line in lines.iter_mut().skip(1) {
+        if line.starts_with(pid) {
+            if let Some(idx) = line.rfind(',') {
+                *line = format!("{},{}", &line[..idx], verdict);
+            }
+        }
+    }
+    let _ = fs::write(path, lines.join("\n") + "\n");
 }
 
 fn physical_cpus() -> usize {

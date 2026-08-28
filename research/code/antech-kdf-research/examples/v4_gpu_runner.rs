@@ -1,6 +1,7 @@
-//! Generate CPU reference digests and orchestrate v4-C GPU correctness + results.
+//! Generate production CPU reference digests and orchestrate v4-C GPU correctness + results.
 
-use antech_kdf_research::compute_memory_v4::{ComputeMemoryV4Config, GraphKind, V4Engine};
+use antech_kdf::{AntechConfig, GraphKind};
+use antech_kdf_core::AntechEngine;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -17,10 +18,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out = PathBuf::from("research/results/compute-memory-v4/gpu");
     fs::create_dir_all(&out)?;
 
-    let eng = V4Engine::new(GraphKind::CombinedFrontier);
-    let cfg = ComputeMemoryV4Config::default()
-        .with_memory_mib(16)
-        .with_graph(GraphKind::CombinedFrontier);
+    let eng = AntechEngine::new();
+    let cfg = AntechConfig::builder()
+        .memory_mib(16)
+        .graph(GraphKind::CombinedFrontier)
+        .build()?;
 
     let salt = b"v4_gpu_correct_salt";
     let mut correctness_csv = File::create(out.join("correctness.csv"))?;
@@ -37,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut cpu_file = File::create(&cpu_path)?;
         for i in 0..count {
             let pw = format!("v4c_gpu_vector_{:02}", i);
-            let dig = eng.derive_cfg(pw.as_bytes(), salt, &cfg)?;
+            let dig = eng.derive(pw.as_bytes(), salt, &cfg)?;
             writeln!(cpu_file, "{} {}", pw, hex32(&dig))?;
         }
         drop(cpu_file);
