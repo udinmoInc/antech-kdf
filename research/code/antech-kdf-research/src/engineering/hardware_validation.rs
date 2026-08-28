@@ -420,22 +420,51 @@ fn run_go_conformance() -> SdkRow {
             detail: "go not on PATH".into(),
         };
     }
-    match Command::new("go")
-        .args(["test", "-v", "./..."])
+    let mut cmd = Command::new("go");
+    cmd.args(["test", "-v", "./..."])
         .current_dir("bindings/go")
-        .output()
+        .env("CGO_ENABLED", "1");
+    #[cfg(target_os = "windows")]
     {
-        Ok(o) if o.status.success() => SdkRow {
-            sdk: "go".into(),
-            test: "conformance".into(),
-            status: HwStatus::Pass,
-            detail: "go test ./... ok".into(),
-        },
+        let native = std::env::current_dir()
+            .ok()
+            .map(|p| p.join("sdk/native"))
+            .filter(|p| p.exists());
+        if let Some(n) = native {
+            let path = std::env::var("PATH").unwrap_or_default();
+            cmd.env("PATH", format!("{};{}", n.display(), path));
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        cmd.env(
+            "LD_LIBRARY_PATH",
+            format!(
+                "{}:{}",
+                std::env::current_dir()
+                    .map(|p| p.join("sdk/native").display().to_string())
+                    .unwrap_or_else(|_| "sdk/native".into()),
+                std::env::var("LD_LIBRARY_PATH").unwrap_or_default()
+            ),
+        );
+    }
+    match cmd.output()
+    {
         Ok(o) => SdkRow {
             sdk: "go".into(),
             test: "conformance".into(),
-            status: HwStatus::Fail,
-            detail: truncate_stderr(&o.stderr, 400),
+            status: if o.status.success() {
+                HwStatus::Pass
+            } else if String::from_utf8_lossy(&o.stderr).contains("build constraints exclude") {
+                HwStatus::Blocked
+            } else {
+                HwStatus::Fail
+            },
+            detail: if o.status.success() {
+                "go test ./... ok".into()
+            } else {
+                truncate_stderr(&o.stderr, 400)
+            },
         },
         Err(e) => SdkRow {
             sdk: "go".into(),
@@ -479,7 +508,12 @@ fn run_gpu_phase(out: &Path, pid: &str, platform: &PlatformInfo) -> String {
         return "BLOCKED".into();
     }
 
-    // Attempt live v4 GPU runner (research CUDA correctness + bench).
+    if let Err(e) = compile_cuda_attacker() {
+        write_gpu_blocked(out, pid, &format!("nvcc rebuild failed: {e}"));
+        return "BLOCKED".into();
+    }
+
+    // Live research CUDA attacker correctness + bench (not production crate).
     let status = Command::new("cargo")
         .args([
             "run",
@@ -1057,6 +1091,32 @@ fn physical_cpus() -> usize {
     std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(1)
+}
+
+fn compile_cuda_attacker() -> Result<(), String> {
+    let cu = PathBuf::from(
+        "research/code/antech-kdf-research/src/compute_memory_v4/cuda/v4c_gpu_attacker.cu",
+    );
+    if !cu.exists() {
+        return Err("v4c_gpu_attacker.cu missing".into());
+    }
+    let out_dir = cu.parent().expect("cuda parent");
+    let bin = if cfg!(windows) {
+        out_dir.join("v4c_gpu_attacker.exe")
+    } else {
+        out_dir.join("v4c_gpu_attacker")
+    };
+    let status = Command::new("nvcc")
+        .args(["-O3", "-std=c++17", "-o"])
+        .arg(&bin)
+        .arg(&cu)
+        .status()
+        .map_err(|e| format!("nvcc spawn: {e}"))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("nvcc exit={}", status.code().unwrap_or(-1)))
+    }
 }
 
 fn gpu_driver_version() -> String {

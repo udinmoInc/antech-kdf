@@ -5,8 +5,9 @@
 //! cross-implementation disagreements.
 
 use antech_kdf::{
-    hash, hash_with_config, hash_with_config_and_salt, needs_rehash, needs_rehash_with_policy,
-    verify, AntechConfig, Error, GraphKind, RehashPolicy,
+    hash, hash_with_config, hash_with_config_and_salt, hash_with_inputs_and_salt, needs_rehash,
+    needs_rehash_with_policy, verify, verify_with_inputs, AntechConfig, DeriveInputs, Error,
+    GraphKind, RehashPolicy, SecretBytes,
 };
 use antech_kdf_core::{scheduler_stats, AntechEngine};
 use antech_kdf_format::{encode_hash, parse_hash};
@@ -358,6 +359,7 @@ fn run_hash_verify(acc: &mut Acc) {
                         let password = hex_to_bytes(case["password_hex"].as_str().unwrap_or(""));
                         let salt = hex_to_bytes(case["salt_hex"].as_str().unwrap_or(""));
                         let expect = case["digest_hex"].as_str().unwrap_or("");
+                        let inputs = kat_inputs_from_case(case);
                         let c = &case["config"];
                         let cfg = try_build(
                             c["memory_kib"].as_u64().unwrap_or(1024) as usize,
@@ -369,10 +371,20 @@ fn run_hash_verify(acc: &mut Acc) {
                             c["output_length"].as_u64().unwrap_or(32) as usize,
                         );
                         match cfg {
-                            Ok(cfg) => match hash_with_config_and_salt(&password, &salt, &cfg) {
+                            Ok(cfg) => {
+                                let hash_r = if inputs.has_extras() {
+                                    hash_with_inputs_and_salt(&password, &salt, &cfg, &inputs)
+                                } else {
+                                    hash_with_config_and_salt(&password, &salt, &cfg)
+                                };
+                                match hash_r {
                                 Ok(enc) => {
                                     let dig = enc.rsplit('$').next().unwrap_or("");
-                                    let ver = verify(&password, &enc).unwrap_or(false);
+                                    let ver = if inputs.has_extras() {
+                                        verify_with_inputs(&password, &enc, &inputs).unwrap_or(false)
+                                    } else {
+                                        verify(&password, &enc).unwrap_or(false)
+                                    };
                                     acc.expect_ok(
                                         suite,
                                         &format!("kat_{i}_{id}"),
@@ -383,7 +395,8 @@ fn run_hash_verify(acc: &mut Acc) {
                                 Err(e) => {
                                     acc.push(suite, &format!("kat_{i}"), Status::Fail, e.to_string())
                                 }
-                            },
+                            }
+                            }
                             Err(e) => {
                                 acc.push(suite, &format!("kat_{i}_cfg"), Status::Fail, e)
                             }
@@ -402,6 +415,19 @@ fn hex_to_bytes(s: &str) -> Vec<u8> {
         .step_by(2)
         .filter_map(|i| u8::from_str_radix(s.get(i..i + 2)?, 16).ok())
         .collect()
+}
+
+fn kat_inputs_from_case(case: &serde_json::Value) -> DeriveInputs {
+    let mut inputs = DeriveInputs::default();
+    if let Some(hex) = case.get("secret_hex").and_then(|v| v.as_str()) {
+        inputs.secret = Some(SecretBytes::new(hex_to_bytes(hex)).expect("secret"));
+    }
+    if let Some(hex) = case.get("associated_data_hex").and_then(|v| v.as_str()) {
+        inputs = inputs
+            .with_associated_data(hex_to_bytes(hex))
+            .expect("associated data");
+    }
+    inputs
 }
 
 fn run_salt_matrix(acc: &mut Acc) {
@@ -1224,12 +1250,19 @@ fn run_ffi(acc: &mut Acc) {
 
 fn run_concurrency(acc: &mut Acc) {
     let suite = "concurrency";
-    let levels = [1usize, 2, 4, 8, 16, 32, 64, 100, 250, 500, 1000];
+    let full = [
+        1usize, 2, 4, 8, 16, 32, 64, 100, 250, 500, 1000,
+    ];
+    let ci_subset = [1usize, 2, 4, 8, 16, 32, 64, 100, 250];
+    let ci = std::env::var("ANTECH_CORRECTNESS_PROFILE")
+        .map(|s| s.eq_ignore_ascii_case("ci"))
+        .unwrap_or(false);
+    let levels: &[usize] = if ci { &ci_subset } else { &full };
     let cfg = min_cfg();
     let salt = b"salt_16_bytes!!!";
     let fixed = hash_with_config_and_salt(b"shared", salt, &cfg).expect("shared");
 
-    for &n in &levels {
+    for &n in levels {
         acc.concurrency += n as u64;
         wait_idle();
         let bad = Arc::new(AtomicU64::new(0));
@@ -1270,7 +1303,6 @@ fn run_concurrency(acc: &mut Acc) {
                             bad.fetch_add(1, Ordering::Relaxed);
                         }
                         Ok(Err(Error::ResourceExhausted(_))) => {
-                            // Under extreme overload admission may reject — not a digest error
                             good.fetch_add(1, Ordering::Relaxed);
                         }
                         Ok(Err(_)) | Err(_) => {

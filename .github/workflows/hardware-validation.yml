@@ -52,7 +52,7 @@ jobs:
         run: ./sdk/scripts/build-native.ps1
       - name: Run hardware validation (Unix)
         if: runner.os != 'Windows'
-        run: ./scripts/hardware_validation_ci.sh
+        run: bash scripts/hardware_validation_ci.sh
       - name: Run hardware validation (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -99,15 +99,12 @@ jobs:
             head -1 "$(find artifacts -name "${f}.csv" | head -1)" > "${OUT}/${f}.csv" 2>/dev/null || true
             find artifacts -name "${f}.csv" -exec tail -n +2 {} \; >> "${OUT}/${f}.csv" 2>/dev/null || true
           done
-          cat > "${OUT}/report.md" <<'EOF'
-          # Hardware validation - merged matrix report
-          
-          See per-platform artifacts for full report.md bodies. Status legend:
-          PASS, FAIL, BLOCKED, NOT RUN, NOT APPLICABLE.
-          
-          Merged CSVs: platform-matrix.csv, environment.csv, correctness.csv,
-          cpu.csv, gpu.csv, sdk-conformance.csv, stress.csv, regressions.csv.
-          EOF
+          {
+            echo "# Hardware validation - merged matrix report"
+            echo
+            echo "See per-platform artifacts for full report.md bodies."
+            echo "Status legend: PASS, FAIL, BLOCKED, NOT RUN, NOT APPLICABLE."
+          } > "${OUT}/report.md"
           echo "Merged $(find artifacts -name '*.csv' | wc -l) CSV fragments"
       - name: Upload merged results
         uses: actions/upload-artifact@v4
@@ -130,7 +127,7 @@ jobs:
         with:
           components: clippy, rustfmt
       - name: Run hardware validation (CUDA host)
-        run: ./scripts/hardware_validation_ci.sh
+        run: bash scripts/hardware_validation_ci.sh
       - name: Upload CUDA results
         uses: actions/upload-artifact@v4
         with:
