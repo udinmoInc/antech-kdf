@@ -661,7 +661,7 @@ fn write_platform_matrix_row(
     }
     writeln!(
         f,
-        "{pid},{},{},{},{},{},{},{},{build_profile},{optimization},{},{},{},{}",
+        "{pid},{},{},{},{},{},{},{build_profile},{optimization},{},{},{},{},RUNNING",
         p.os,
         p.arch,
         csv_escape(&p.cpu_model),
@@ -672,7 +672,6 @@ fn write_platform_matrix_row(
         p.gpu_model.as_deref().unwrap_or(""),
         p.cuda_version.as_deref().unwrap_or(""),
         p.profile,
-        "RUNNING",
     )
     .unwrap();
 }
