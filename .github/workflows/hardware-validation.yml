@@ -1,0 +1,142 @@
+name: Hardware Validation
+
+# Cross-platform correctness, stress, SDK, and throughput validation for frozen Antech v5.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  hardware-matrix:
+    name: Hardware validation (${{ matrix.os }} / ${{ matrix.build }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build: release
+            shell: bash
+            script: ./scripts/hardware_validation_ci.sh
+          - os: windows-latest
+            build: release
+            shell: pwsh
+            script: ./scripts/hardware_validation_ci.ps1
+          - os: macos-latest
+            build: release
+            shell: bash
+            script: ./scripts/hardware_validation_ci.sh
+          - os: ubuntu-latest
+            build: debug
+            shell: bash
+            script: ./scripts/hardware_validation_ci.sh
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    env:
+      ANTECH_HARDWARE_VALIDATION_PROFILE: ci
+      ANTECH_BUILD_PROFILE: ${{ matrix.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+      - name: Build FFI (SDK conformance)
+        run: cargo build -p antech-kdf-ffi --release
+      - name: Stage native artifacts (Unix)
+        if: runner.os != 'Windows'
+        run: bash sdk/scripts/build-native.sh
+      - name: Stage native artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./sdk/scripts/build-native.ps1
+      - name: Run hardware validation
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.script }}
+      - name: Upload platform results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-validation-${{ matrix.os }}-${{ matrix.build }}
+          path: research/results/hardware-validation
+
+  merge-results:
+    name: Merge hardware-validation artifacts
+    needs: hardware-matrix
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hardware-validation-*
+          path: artifacts
+          merge-multiple: true
+      - name: Compare debug/release identity digests
+        run: |
+          set -euo pipefail
+          REL=$(find artifacts -path '*ubuntu*release*' -name identity-digests.txt -exec grep -P '\trelease\t' {} \; 2>/dev/null | head -1 | cut -f3 || true)
+          DBG=$(find artifacts -path '*ubuntu*debug*' -name identity-digests.txt -exec grep -P '\tdebug\t' {} \; 2>/dev/null | head -1 | cut -f3 || true)
+          if [[ -n "${REL}" && -n "${DBG}" ]]; then
+            if [[ "${REL}" != "${DBG}" ]]; then
+              echo "FAIL: debug/release digest mismatch rel=${REL} dbg=${DBG}"
+              exit 1
+            fi
+            echo "PASS: debug and release identity digests match (${REL})"
+          else
+            echo "SKIP: missing identity digests (rel=${REL:-empty} dbg=${DBG:-empty})"
+          fi
+      - name: Merge CSVs and write summary report
+        run: |
+          set -euo pipefail
+          OUT=research/results/hardware-validation
+          mkdir -p "${OUT}"
+          for f in platform-matrix environment correctness cpu gpu sdk-conformance stress regressions; do
+            head -1 "$(find artifacts -name "${f}.csv" | head -1)" > "${OUT}/${f}.csv" 2>/dev/null || true
+            find artifacts -name "${f}.csv" -exec tail -n +2 {} \; >> "${OUT}/${f}.csv" 2>/dev/null || true
+          done
+          cat > "${OUT}/report.md" <<'EOF'
+          # Hardware validation — merged matrix report
+
+          See per-platform artifacts for full `report.md` bodies. Status legend:
+          **PASS**, **FAIL**, **BLOCKED**, **NOT RUN**, **NOT APPLICABLE**.
+
+          Merged CSVs: `platform-matrix.csv`, `environment.csv`, `correctness.csv`,
+          `cpu.csv`, `gpu.csv`, `sdk-conformance.csv`, `stress.csv`, `regressions.csv`.
+          EOF
+          echo "Merged $(find artifacts -name '*.csv' | wc -l) CSV fragments"
+      - name: Upload merged results
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-validation-merged
+          path: research/results/hardware-validation
+
+  cuda-hardware:
+    name: Hardware validation (CUDA self-hosted)
+    if: ${{ vars.ANTECH_CUDA_RUNNER == 'true' }}
+    runs-on: [self-hosted, cuda]
+    timeout-minutes: 240
+    env:
+      ANTECH_HARDWARE_VALIDATION_PROFILE: full
+      ANTECH_BUILD_PROFILE: release
+      ANTECH_REQUIRE_CUDA: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Run hardware validation (CUDA host)
+        run: ./scripts/hardware_validation_ci.sh
+      - name: Upload CUDA results
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-validation-cuda
+          path: research/results/hardware-validation

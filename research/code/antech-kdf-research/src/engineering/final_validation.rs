@@ -426,7 +426,7 @@ fn run_gpu_cross(out: &Path) -> Vec<CheckRow> {
     }]
 }
 
-fn collect_platform(profile: String) -> PlatformInfo {
+pub fn collect_platform(profile: String) -> PlatformInfo {
     let logical = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(1);
