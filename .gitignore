@@ -43,4 +43,5 @@ tmp/
 # Local CI artifact downloads + grown corpora (large; keep summaries/reports only)
 research/results/fuzz/ci-download*/
 research/results/fuzz/ci/corpus/
+research/results/sanitizers/ci-download*/
 

@@ -22,10 +22,10 @@ case "${MODE}" in
     export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1:abort_on_error=1:print_summary=1}"
     ;;
   ubsan)
-    # nightly 1.100+ dropped `-Zsanitizer=undefined`; pin via SANITIZER_TOOLCHAIN in CI.
-    SAN_FLAGS="-Zsanitizer=undefined"
+    # LLVM `-Zsanitizer=undefined` is not supported on current rustc (see skipped.csv).
+    # Run Rust's supported runtime UB checks instead (`-Zub-checks`).
+    SAN_FLAGS="-Zub-checks"
     USE_BUILD_STD=1
-    export UBSAN_OPTIONS="${UBSAN_OPTIONS:-print_stacktrace=1:halt_on_error=1}"
     ;;
   *)
     echo "unknown mode: ${MODE}" >&2
@@ -80,12 +80,25 @@ run_cargo_test() {
 
 count_passed() {
   local f="$1"
-  grep -E 'test result: ok\.' "${f}" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="passed;") print $(i-1)}' | awk '{s+=$1} END {print s+0}'
+  if [[ ! -f "${f}" ]]; then
+    echo 0
+    return 0
+  fi
+  # grep exits 1 when there are no matches; avoid aborting under `set -o pipefail`.
+  (grep -E 'test result: ok\.' "${f}" 2>/dev/null || true) \
+    | awk '{for(i=1;i<=NF;i++) if($i=="passed;") print $(i-1)}' \
+    | awk '{s+=$1} END {print s+0}'
 }
 
 count_failed() {
   local f="$1"
-  grep -E 'test result: FAILED\.' "${f}" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="failed;") print $(i-1)}' | awk '{s+=$1} END {print s+0}'
+  if [[ ! -f "${f}" ]]; then
+    echo 0
+    return 0
+  fi
+  (grep -E 'test result: FAILED\.' "${f}" 2>/dev/null || true) \
+    | awk '{for(i=1;i<=NF;i++) if($i=="failed;") print $(i-1)}' \
+    | awk '{s+=$1} END {print s+0}'
 }
 
 FAILS=0
@@ -140,6 +153,9 @@ CSV="${OUT}/${MODE}.csv"
     echo "reference_impl,debug,${STATUS_REF_DEBUG},${RPD},${RFD},cargo test -p antech-kdf-reference --lib,research parity crate (not production SOT)"
     echo "reference_impl,release,${STATUS_REF_RELEASE},${RPR},${RFR},cargo test -p antech-kdf-reference --lib --release,research parity crate"
   fi
+  if [[ "${MODE}" == "ubsan" ]]; then
+    echo "llvm_ubsan,host,BLOCKED,0,0,-Zsanitizer=undefined,not supported on current rustc; see skipped.csv"
+  fi
 } > "${CSV}"
 
 # Merge into summary fragments (per-mode block appended by workflow or second invocation)
@@ -155,7 +171,7 @@ ENV_FILE="${OUT}/environment.txt"
   if [[ "${MODE}" == "asan" ]]; then
     echo "ASAN_OPTIONS=${ASAN_OPTIONS}"
   else
-    echo "UBSAN_OPTIONS=${UBSAN_OPTIONS}"
+    echo "UB_CHECKS=-Zub-checks (LLVM -Zsanitizer=undefined unavailable on rustc)"
   fi
 } >> "${ENV_FILE}"
 

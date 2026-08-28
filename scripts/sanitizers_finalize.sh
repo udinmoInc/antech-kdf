@@ -78,11 +78,13 @@ cat > "${OUT}/report.md" <<EOF
 | Sanitizer | Verdict |
 |---|---|
 | AddressSanitizer (ASan) | **${ASAN_OVERALL}** |
-| UndefinedBehaviorSanitizer (UBSan) | **${UBSAN_OVERALL}** |
+| UndefinedBehaviorSanitizer (UBSan) | **${UBSAN_OVERALL}** (Rust \`-Zub-checks\`; LLVM UBSan BLOCKED) |
 
-This campaign targets memory safety and undefined behavior under Linux nightly
-\`-Zsanitizer=\` with \`-Zbuild-std\` on \`x86_64-unknown-linux-gnu\`. It does **not**
-change KDF algorithms, public API, v2 encoding, or canonical parameters.
+This campaign targets memory safety (ASan) and undefined behavior (Rust
+\`-Zub-checks\` with \`-Zbuild-std\`) on \`x86_64-unknown-linux-gnu\`. LLVM
+\`-Zsanitizer=undefined\` is **not supported** on current rustc — see
+\`skipped.csv\`. It does **not** change KDF algorithms, public API, v2 encoding,
+or canonical parameters.
 
 ## Verdict key
 

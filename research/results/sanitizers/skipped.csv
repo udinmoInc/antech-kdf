@@ -1,7 +1,7 @@
 target,verdict,reason,notes
-CUDA GPU attackers,NOT APPLICABLE,Device code not built under host ASan/UBSan,Separate CUDA validation path
+CUDA GPU attackers,NOT APPLICABLE,Device code not built under host ASan/UB checks,Separate CUDA validation path
 antech-kdf-research workspace,NOT APPLICABLE,Research-only benchmarks/runners not in production sanitizer scope,Reference crate tested separately
-Windows MSVC host,BLOCKED,`-Zsanitizer=*` requires Linux nightly,Use Ubuntu CI jobs
-UBSan std library,NOT APPLICABLE,UBSan job pins nightly-2025-08-15 (`-Zsanitizer=undefined`); current nightly dropped it
+Windows MSVC host,BLOCKED,`-Zsanitizer=address` and `-Zub-checks` require Linux nightly,Use Ubuntu CI jobs
+LLVM UBSan (`-Zsanitizer=undefined`),BLOCKED,Not in rustc sanitizer list on nightly 1.91+ (also absent on nightly-2025-08-15),Campaign uses Rust `-Zub-checks` instead; see ubsan.csv `llvm_ubsan` row
 antech-kdf-cli,NOT APPLICABLE,No unit tests; binary-only thin wrapper,Compiled via workspace check
 fuzz/libFuzzer harness,NOT APPLICABLE,Separate fuzz.yml campaign,Not sanitizer-interpreter tests
