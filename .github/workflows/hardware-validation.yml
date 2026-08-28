@@ -19,20 +19,12 @@ jobs:
         include:
           - os: ubuntu-latest
             build: release
-            shell: bash
-            script: ./scripts/hardware_validation_ci.sh
           - os: windows-latest
             build: release
-            shell: pwsh
-            script: ./scripts/hardware_validation_ci.ps1
           - os: macos-latest
             build: release
-            shell: bash
-            script: ./scripts/hardware_validation_ci.sh
           - os: ubuntu-latest
             build: debug
-            shell: bash
-            script: ./scripts/hardware_validation_ci.sh
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     env:
@@ -58,9 +50,13 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./sdk/scripts/build-native.ps1
-      - name: Run hardware validation
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.script }}
+      - name: Run hardware validation (Unix)
+        if: runner.os != 'Windows'
+        run: ./scripts/hardware_validation_ci.sh
+      - name: Run hardware validation (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/hardware_validation_ci.ps1
       - name: Upload platform results
         if: always()
         uses: actions/upload-artifact@v4
@@ -104,13 +100,13 @@ jobs:
             find artifacts -name "${f}.csv" -exec tail -n +2 {} \; >> "${OUT}/${f}.csv" 2>/dev/null || true
           done
           cat > "${OUT}/report.md" <<'EOF'
-          # Hardware validation — merged matrix report
-
-          See per-platform artifacts for full `report.md` bodies. Status legend:
-          **PASS**, **FAIL**, **BLOCKED**, **NOT RUN**, **NOT APPLICABLE**.
-
-          Merged CSVs: `platform-matrix.csv`, `environment.csv`, `correctness.csv`,
-          `cpu.csv`, `gpu.csv`, `sdk-conformance.csv`, `stress.csv`, `regressions.csv`.
+          # Hardware validation - merged matrix report
+          
+          See per-platform artifacts for full report.md bodies. Status legend:
+          PASS, FAIL, BLOCKED, NOT RUN, NOT APPLICABLE.
+          
+          Merged CSVs: platform-matrix.csv, environment.csv, correctness.csv,
+          cpu.csv, gpu.csv, sdk-conformance.csv, stress.csv, regressions.csv.
           EOF
           echo "Merged $(find artifacts -name '*.csv' | wc -l) CSV fragments"
       - name: Upload merged results
