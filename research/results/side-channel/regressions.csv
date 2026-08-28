@@ -1,0 +1,2 @@
+id,description,status,notes
+(none),no exploitable password-verification timing shortcut found,N/A,Digest compare uses subtle::ct_eq; wrong password runs full derive.

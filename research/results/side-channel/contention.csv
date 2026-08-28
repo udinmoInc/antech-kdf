@@ -1,0 +1,2 @@
+test_id,scenario,idle_median_ns,loaded_median_ns,ratio,waiting_jobs_max,kind,exploitability,notes
+C01_scheduler_background_hash,verify while concurrent hash,3287000.0,3299300.0,1.003742013994524,0,MEASURED,none,Shared scheduler may delay verify; does not branch on peer password content.

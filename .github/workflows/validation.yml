@@ -72,6 +72,34 @@ jobs:
           name: adversarial-validation-linux
           path: research/results/adversarial-validation
 
+  side-channel-linux:
+    name: Side-channel validation (Linux + perf)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run side-channel campaign (CI profile)
+        env:
+          ANTECH_SIDECHANNEL_PROFILE: ci
+        run: |
+          cargo run --manifest-path research/code/Cargo.toml --release \
+            -p antech-kdf-research --example side_channel_runner
+          cp research/results/side-channel/timing.csv research/results/side-channel/timing-linux.csv
+      - name: Linux perf PMU analysis
+        env:
+          PMU_REPEATS: 20
+          PMU_ITERS: 12
+        run: |
+          chmod +x scripts/side_channel_perf_linux.sh scripts/side_channel_finalize.sh
+          ./scripts/side_channel_perf_linux.sh
+          ./scripts/side_channel_finalize.sh
+      - name: Upload side-channel results
+        uses: actions/upload-artifact@v4
+        with:
+          name: side-channel-linux
+          path: research/results/side-channel
+
   cross-platform-build:
     name: Cross-OS production build/test
     strategy:

@@ -1,0 +1,2 @@
+test_id,scenario,instructions,cycles,ipc,cache_misses,llc_loads,kind,notes
+perf-cache-counters,"verify loop PMU (cache-misses, LLC)",n/a,n/a,n/a,n/a,n/a,BLOCKED,Hardware counters require Linux perf; run scripts/side_channel_perf_linux.sh on Ubuntu CI (host=windows).

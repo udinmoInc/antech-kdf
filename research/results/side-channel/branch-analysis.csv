@@ -1,0 +1,10 @@
+location,construct,input_dependent,scope,kind,risk,notes
+antech-kdf-core/src/lib.rs:169,subtle::ConstantTimeEq::ct_eq digest,digest bytes only (post-derive),final compare,MEASURED,low,Constant-time compare on equal-length digests after full derive.
+antech-kdf-core/src/lib.rs:165-167,digest length mismatch => Ok(false),encoded hash params (public),post-derive,MODELED,negligible,Skips ct_eq when lengths differ; derive already ran; config-bound lengths normally match.
+antech-kdf-core/src/lib.rs:74-90,check_verify_inputs early Err,caller supplied secret/AD presence,pre-derive,MODELED,api_oracle,"MissingSecret/MissingAD/AD length mismatch returns before derive — distinguishes API misuse from wrong password, not password byte content."
+antech-kdf-format/src/parser.rs,parse_hash validation branches,public encoded string,pre-derive,MEASURED,parse_oracle,Malformed/truncated hashes fail fast; attacker observes parse vs derive latency on public blob.
+antech-kdf-core/src/engine.rs:gather_mix_words,_mm_prefetch parent indices,state-derived parent addresses,derive,MODELED,cache_theoretical,Prefetch hints on password-dependent indices; may affect cache residency on shared cores.
+antech-kdf-core/src/graph.rs,"combined_local/remote_parents, scatter_dests","rolling state from seed(password,salt,secret,ad)",derive,MODELED,accepted_design,Memory-hard data-dependent addressing by construction; offline attacker knows salt/hash.
+antech-kdf-core/src/state.rs:bind_seed_with_inputs,SHA-256 over password/secret/AD,password length and bytes,seed,MODELED,length_leak_minor,Password length encoded in hash input; SHA-256 not constant-time w.r.t. password; dominated by derive for typical lengths.
+antech-kdf-core/src/resource.rs:acquire,scheduler queue / Condvar wait,global load not password,admission,MODELED,contention_noise,Wall-clock varies with concurrent jobs; not a password-content oracle.
+antech-kdf-ffi/src/lib.rs:map_err,status mapping MissingSecret => InvalidInput,API inputs,ffi,MODELED,api_oracle,FFI maps pre-derive input errors to InvalidInput; same timing class as Rust Err.

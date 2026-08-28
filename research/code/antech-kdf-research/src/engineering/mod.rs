@@ -11,6 +11,7 @@ pub mod property;
 pub mod production_correctness;
 pub mod production_stress;
 pub mod side_channel;
+pub mod side_channel_campaign;
 pub mod stress;
 pub mod validation_100k;
 
