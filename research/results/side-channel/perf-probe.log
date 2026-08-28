@@ -1,0 +1,29 @@
+# perf probe log — side-channel Linux PMU (CI run 33148612384)
+
+Environment: GitHub Actions ubuntu-latest (hosted VM)
+Toolchain: perf (from runner image)
+Probe command: sudo perf stat -x, -e instructions,cycles side_channel_pmu_runner verify_correct_1mib
+
+## Result: BLOCKED
+
+perf stat does not return numeric instruction/cycle counters on this runner.
+Observed values: `<not supported>` or empty/zero aggregates.
+
+Attempted mitigations (all ineffective on hosted VM):
+- sudo sysctl -w kernel.perf_event_paranoid=-1
+- sudo sysctl -w kernel.kptr_restrict=0
+- sudo perf stat with full event set (instructions, cycles, cache-misses, LLC-load-misses, branch-misses)
+
+## Implication
+
+Hardware PMU/cache-miss comparison (P01–P07) was **NOT RUN** on CI.
+Wall-clock timing campaign **did run** on the same runner (see timing-linux.csv).
+No PMU-based PASS was inferred.
+
+## Reproduction on bare-metal / self-hosted Linux
+
+```bash
+./scripts/side_channel_perf_linux.sh
+```
+
+Requires perf with working `instructions` and preferably `cache-misses` events.

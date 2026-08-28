@@ -24,6 +24,7 @@
 .DS_Store
 Thumbs.db
 *.log
+!research/results/side-channel/perf-probe.log
 
 # Temporary & Scratch files
 /scratch/
