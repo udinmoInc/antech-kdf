@@ -31,7 +31,7 @@ fi
 
 # Best-effort: widen perf access on CI VMs (may require sudo).
 if command -v sudo >/dev/null 2>&1; then
-  sudo sysctl -w kernel.perf_event_paranoid=1 >/dev/null 2>&1 || true
+  sudo sysctl -w kernel.perf_event_paranoid=-1 >/dev/null 2>&1 || true
   sudo sysctl -w kernel.kptr_restrict=0 >/dev/null 2>&1 || true
 fi
 
@@ -52,6 +52,10 @@ fi
 
 EVENTS="instructions,cycles,cache-misses,LLC-load-misses,branch-misses"
 
+is_numeric() {
+  [[ "${1}" =~ ^[0-9]+$ ]]
+}
+
 parse_perf_file() {
   local f="$1"
   local instr cycles misses llc br
@@ -60,14 +64,14 @@ parse_perf_file() {
   misses=$(awk -F, '$3 ~ /cache-misses/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
   llc=$(awk -F, '$3 ~ /LLC-load-misses/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
   br=$(awk -F, '$3 ~ /branch-misses/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
-  # Reject <not counted> or empty
-  for v in "${instr}" "${cycles}"; do
-    if [[ -z "${v}" || "${v}" == "<not" ]]; then
-      echo "0,0,0,0,0"
-      return 1
-    fi
-  done
-  echo "${instr:-0},${cycles:-0},${misses:-0},${llc:-0},${br:-0}"
+  if ! is_numeric "${instr}" || ! is_numeric "${cycles}"; then
+    echo "0,0,0,0,0"
+    return 1
+  fi
+  is_numeric "${misses}" || misses=0
+  is_numeric "${llc}" || llc=0
+  is_numeric "${br}" || br=0
+  echo "${instr},${cycles},${misses},${llc},${br}"
 }
 
 measure_scenario() {
@@ -92,13 +96,13 @@ else
   PMU_ITERS=3 perf stat -x, -e instructions,cycles "${BIN}" verify_correct_1mib 2>"${PROBE}" || true
 fi
 PROBE_LINE=$(parse_perf_file "${PROBE}" || echo "0,0,0,0,0")
-rm -f "${PROBE}"
 PROBE_INSTR=$(echo "${PROBE_LINE}" | cut -d, -f1)
-if [[ -z "${PROBE_INSTR}" || "${PROBE_INSTR}" == "0" || "${PROBE_INSTR}" -lt 1000000 ]]; then
-  write_blocked "perf stat returned invalid/zero instructions (probe=${PROBE_INSTR}); VM may block PMU (kernel.perf_event_paranoid)"
-  cat "${ROOT}/research/results/side-channel/perf-probe.log" 2>/dev/null || true
+if ! is_numeric "${PROBE_INSTR}" || [[ "${PROBE_INSTR}" -lt 1000000 ]]; then
+  cp "${PROBE}" "${OUT}/perf-probe.log" 2>/dev/null || true
+  write_blocked "perf stat returned '${PROBE_INSTR}' for instructions; GitHub-hosted runner blocks hardware PMU (see perf-probe.log)"
   exit 0
 fi
+rm -f "${PROBE}"
 
 collect_samples() {
   local scenario="$1"
