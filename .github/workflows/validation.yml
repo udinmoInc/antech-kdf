@@ -92,7 +92,8 @@ jobs:
           PMU_ITERS: 12
         run: |
           chmod +x scripts/side_channel_perf_linux.sh scripts/side_channel_finalize.sh
-          ./scripts/side_channel_perf_linux.sh
+          # Capture probe log if PMU blocked
+          ./scripts/side_channel_perf_linux.sh 2>&1 | tee research/results/side-channel/perf-run.log
           ./scripts/side_channel_finalize.sh
       - name: Upload side-channel results
         uses: actions/upload-artifact@v4

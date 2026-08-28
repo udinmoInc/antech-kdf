@@ -27,7 +27,7 @@ elif [[ -f "${OUT}/timing.csv" ]]; then
 fi
 
 PMU_KIND="BLOCKED"
-if [[ -f "${CACHE}" ]] && grep -q ',MEASURED,' "${CACHE}"; then
+if [[ -f "${CACHE}" ]] && grep -q ',MEASURED,' "${CACHE}" && ! grep -q ',0,0,0.0000,0,0,0,MEASURED,' "${CACHE}"; then
   PMU_KIND="MEASURED"
 fi
 

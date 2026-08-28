@@ -11,22 +11,31 @@ ITERS="${PMU_ITERS:-12}"
 CSV="${OUT}/cache-analysis.csv"
 COMP="${OUT}/cache-comparison.csv"
 
-if ! command -v perf >/dev/null 2>&1; then
+write_blocked() {
+  local reason="$1"
   cat > "${CSV}" <<EOF
 test_id,scenario,instructions,cycles,ipc,cache_misses,llc_loads,branch_misses,kind,notes
-pmu-all,BLOCKED: perf binary not found,n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,perf not in PATH on CI runner
+pmu-all,BLOCKED: ${reason},n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,${reason}
 EOF
+  cat > "${COMP}" <<EOF
+comparison_id,group_a,group_b,metric,n_a,n_b,median_a,median_b,ratio_median,welch_t,significant,exploitability,kind,notes
+(none),n/a,n/a,n/a,0,0,n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,${reason}
+EOF
+  echo "PMU BLOCKED: ${reason}" >&2
+}
+
+if ! command -v perf >/dev/null 2>&1; then
+  write_blocked "perf binary not found in PATH"
   exit 0
 fi
 
-# GitHub-hosted runners typically allow user-space perf events.
-if ! perf list 2>/dev/null | head -1 | grep -q .; then
-  cat > "${CSV}" <<EOF
-test_id,scenario,instructions,cycles,ipc,cache_misses,llc_loads,branch_misses,kind,notes
-pmu-all,BLOCKED: perf list empty,n/a,n/a,n/a,n/a,n/a,n/a,BLOCKED,kernel.perf_event_paranoid or permissions
-EOF
-  exit 0
+# Best-effort: widen perf access on CI VMs (may require sudo).
+if command -v sudo >/dev/null 2>&1; then
+  sudo sysctl -w kernel.perf_event_paranoid=1 >/dev/null 2>&1 || true
+  sudo sysctl -w kernel.kptr_restrict=0 >/dev/null 2>&1 || true
 fi
+
+PERF=(perf stat -x,)
 
 cd "${ROOT}"
 cargo build --manifest-path research/code/Cargo.toml --release \
@@ -37,30 +46,60 @@ if [[ ! -x "${BIN}" ]]; then
   BIN="${ROOT}/target/release/examples/side_channel_pmu_runner"
 fi
 if [[ ! -x "${BIN}" ]]; then
-  echo "PMU runner binary missing" >&2
-  exit 1
+  write_blocked "side_channel_pmu_runner binary missing after build"
+  exit 0
 fi
 
 EVENTS="instructions,cycles,cache-misses,LLC-load-misses,branch-misses"
+
+parse_perf_file() {
+  local f="$1"
+  local instr cycles misses llc br
+  instr=$(awk -F, '$3 ~ /instructions/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
+  cycles=$(awk -F, '$3 ~ /cycles/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
+  misses=$(awk -F, '$3 ~ /cache-misses/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
+  llc=$(awk -F, '$3 ~ /LLC-load-misses/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
+  br=$(awk -F, '$3 ~ /branch-misses/{gsub(/^[ \t]+/,"",$1); print $1; exit}' "${f}")
+  # Reject <not counted> or empty
+  for v in "${instr}" "${cycles}"; do
+    if [[ -z "${v}" || "${v}" == "<not" ]]; then
+      echo "0,0,0,0,0"
+      return 1
+    fi
+  done
+  echo "${instr:-0},${cycles:-0},${misses:-0},${llc:-0},${br:-0}"
+}
 
 measure_scenario() {
   local scenario="$1"
   local tmp
   tmp="$(mktemp)"
   export PMU_ITERS="${ITERS}"
-  # One perf invocation per repeat; parse aggregate counters.
-  perf stat -x, -e "${EVENTS}" "${BIN}" "${scenario}" 2>"${tmp}" || true
-  local instr cycles misses llc br
-  instr=$(awk -F, '$3=="instructions"{print $1}' "${tmp}" | tail -1)
-  cycles=$(awk -F, '$3=="cycles"{print $1}' "${tmp}" | tail -1)
-  misses=$(awk -F, '$3=="cache-misses"{print $1}' "${tmp}" | tail -1)
-  llc=$(awk -F, '$3=="LLC-load-misses"{print $1}' "${tmp}" | tail -1)
-  br=$(awk -F, '$3=="branch-misses"{print $1}' "${tmp}" | tail -1)
+  if command -v sudo >/dev/null 2>&1; then
+    sudo -E env "PMU_ITERS=${ITERS}" perf stat -x, -e "${EVENTS}" "${BIN}" "${scenario}" 2>"${tmp}" || true
+  else
+    perf stat -x, -e "${EVENTS}" "${BIN}" "${scenario}" 2>"${tmp}" || true
+  fi
+  parse_perf_file "${tmp}" || true
   rm -f "${tmp}"
-  echo "${instr:-0},${cycles:-0},${misses:-0},${llc:-0},${br:-0}"
 }
 
-# Collect REPEATS samples per scenario into temp files
+# Probe: one run must show non-trivial instruction count.
+PROBE="$(mktemp)"
+if command -v sudo >/dev/null 2>&1; then
+  sudo -E env "PMU_ITERS=3" perf stat -x, -e instructions,cycles "${BIN}" verify_correct_1mib 2>"${PROBE}" || true
+else
+  PMU_ITERS=3 perf stat -x, -e instructions,cycles "${BIN}" verify_correct_1mib 2>"${PROBE}" || true
+fi
+PROBE_LINE=$(parse_perf_file "${PROBE}" || echo "0,0,0,0,0")
+rm -f "${PROBE}"
+PROBE_INSTR=$(echo "${PROBE_LINE}" | cut -d, -f1)
+if [[ -z "${PROBE_INSTR}" || "${PROBE_INSTR}" == "0" || "${PROBE_INSTR}" -lt 1000000 ]]; then
+  write_blocked "perf stat returned invalid/zero instructions (probe=${PROBE_INSTR}); VM may block PMU (kernel.perf_event_paranoid)"
+  cat "${ROOT}/research/results/side-channel/perf-probe.log" 2>/dev/null || true
+  exit 0
+fi
+
 collect_samples() {
   local scenario="$1"
   local outf="$2"
@@ -106,7 +145,9 @@ def load_col(path, col):
             if len(parts) <= col:
                 continue
             try:
-                vals.append(float(parts[col]))
+                v = float(parts[col])
+                if v > 0:
+                    vals.append(v)
             except ValueError:
                 pass
     return vals
@@ -136,26 +177,22 @@ scenarios = [
     "hash_password_len4", "hash_password_len256", "verify_secret_correct", "verify_secret_wrong",
     "verify_ad_correct", "verify_ad_wrong", "verify_correct_under_load",
 ]
-# columns: instr, cycles, misses, llc, branch
-col_names = ["instructions", "cycles", "cache_misses", "llc_load_misses", "branch_misses"]
 
 rows = []
+any_valid = False
 for sc in scenarios:
     path = os.path.join(tmpdir, f"{sc}.csv")
-    if not os.path.isfile(path):
-        continue
-    samples = [load_col(path, i) for i in range(5)]
+    samples = [load_col(path, i) for i in range(5)] if os.path.isfile(path) else [[]] * 5
     if not samples[0]:
         rows.append({
             "test_id": f"pmu-{sc}", "scenario": sc,
             "instructions": "n/a", "cycles": "n/a", "ipc": "n/a",
             "cache_misses": "n/a", "llc_loads": "n/a", "branch_misses": "n/a",
-            "kind": "BLOCKED", "notes": "perf produced no samples",
+            "kind": "BLOCKED", "notes": "no valid perf samples",
         })
         continue
-    si = stats(samples[0])
-    scy = stats(samples[1])
-    sm = stats(samples[2])
+    any_valid = True
+    si, scy, sm = stats(samples[0]), stats(samples[1]), stats(samples[2])
     ipc = si["mean"] / scy["mean"] if scy["mean"] else 0
     rows.append({
         "test_id": f"pmu-{sc}",
@@ -167,8 +204,38 @@ for sc in scenarios:
         "llc_loads": f"{stats(samples[3])['median']:.0f}",
         "branch_misses": f"{stats(samples[4])['median']:.0f}",
         "kind": "MEASURED",
-        "notes": f"Linux perf stat; median of {repeats} runs on ubuntu-latest",
+        "notes": f"Linux perf stat (sudo); median of {repeats} runs",
     })
+
+if not any_valid:
+    with open(csv_path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=[
+            "test_id", "scenario", "instructions", "cycles", "ipc",
+            "cache_misses", "llc_loads", "branch_misses", "kind", "notes",
+        ])
+        w.writeheader()
+        w.writerow({
+            "test_id": "pmu-all", "scenario": "BLOCKED: all scenarios zero/invalid",
+            "instructions": "n/a", "cycles": "n/a", "ipc": "n/a",
+            "cache_misses": "n/a", "llc_loads": "n/a", "branch_misses": "n/a",
+            "kind": "BLOCKED",
+            "notes": "perf ran but counters unusable on runner",
+        })
+    with open(comp_path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=[
+            "comparison_id", "group_a", "group_b", "metric", "n_a", "n_b",
+            "median_a", "median_b", "ratio_median", "welch_t", "significant",
+            "exploitability", "kind", "notes",
+        ])
+        w.writeheader()
+        w.writerow({
+            "comparison_id": "(none)", "group_a": "n/a", "group_b": "n/a", "metric": "n/a",
+            "n_a": 0, "n_b": 0, "median_a": "n/a", "median_b": "n/a",
+            "ratio_median": "n/a", "welch_t": "n/a", "significant": "n/a",
+            "exploitability": "n/a", "kind": "BLOCKED",
+            "notes": "no valid PMU samples",
+        })
+    sys.exit(0)
 
 with open(csv_path, "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=[
@@ -219,7 +286,7 @@ for tid, a, b, metric, equal_length in pairs:
         "significant": sig,
         "exploitability": exploit,
         "kind": "MEASURED",
-        "notes": "Equal-length password pairs where noted; compares PMU distributions not wall-clock.",
+        "notes": "Equal-length password pairs where noted; PMU not wall-clock.",
     })
 
 with open(comp_path, "w", newline="") as f:
