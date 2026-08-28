@@ -1,0 +1,16 @@
+last_run_utc=2026-08-28T04:02:01Z
+commit_sha=402d9d3cfb8367c630dbc201b05fdf4c92916244
+rustc=rustc 1.100.0-nightly (e457a7b0d 2026-08-27)
+toolchain=nightly
+target=x86_64-unknown-linux-gnu
+mode=asan
+RUSTFLAGS=-Zsanitizer=address
+ASAN_OPTIONS=detect_leaks=1:abort_on_error=1:print_summary=1
+last_run_utc=2026-08-28T04:01:59Z
+commit_sha=402d9d3cfb8367c630dbc201b05fdf4c92916244
+rustc=rustc 1.100.0-nightly (e457a7b0d 2026-08-27)
+toolchain=nightly
+target=x86_64-unknown-linux-gnu
+mode=ubsan
+RUSTFLAGS=-Zub-checks
+UB_CHECKS=-Zub-checks (LLVM -Zsanitizer=undefined unavailable on rustc)

@@ -1,3 +1,6 @@
 suite,profile,status,passed,failed,command,notes
-production_workspace,debug,NOT_RUN,0,0,pending Ubuntu CI,
-production_workspace,release,NOT_RUN,0,0,pending Ubuntu CI,
+production_workspace,debug,PASS,97,0,cargo test [types format core kdf ffi] --lib --tests,Rust -Zub-checks (LLVM UBSan unavailable)
+production_workspace,release,PASS,97,0,cargo test --release [types format core kdf ffi] --lib --tests,Rust -Zub-checks release profile
+reference_impl,debug,PASS,2,0,cargo test -p antech-kdf-reference --lib,research parity crate (not production SOT)
+reference_impl,release,PASS,2,0,cargo test -p antech-kdf-reference --lib --release,research parity crate
+llvm_ubsan,host,BLOCKED,0,0,-Zsanitizer=undefined,not supported on current rustc; see skipped.csv

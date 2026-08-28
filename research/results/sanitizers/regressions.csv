@@ -1,2 +1,2 @@
 id,description,status,notes
-(none),no sanitizer defects found this campaign,N/A,pending CI/local run
+(none),no sanitizer or UB-check defects found in CI run 33140604849,N/A,ASan + -Zub-checks on Ubuntu nightly 1.100

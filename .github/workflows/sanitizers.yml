@@ -62,7 +62,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: asan-logs
-          path: research/results/sanitizers
+          path: |
+            research/results/sanitizers/asan.csv
+            research/results/sanitizers/logs/asan-*
+            research/results/sanitizers/campaign-status.env
+            research/results/sanitizers/environment.txt
 
   ubsan:
     name: UB checks (-Zub-checks, Linux)
@@ -83,7 +87,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ubsan-logs
-          path: research/results/sanitizers
+          path: |
+            research/results/sanitizers/ubsan.csv
+            research/results/sanitizers/logs/ubsan-*
+            research/results/sanitizers/campaign-status.env
+            research/results/sanitizers/environment.txt
 
   sanitizer-report:
     name: Sanitizer report + artifacts
@@ -105,11 +113,14 @@ jobs:
       - name: Merge sanitizer results
         run: |
           mkdir -p research/results/sanitizers/logs
-          cp -a research/results/sanitizers-asan/* research/results/sanitizers/ 2>/dev/null || true
-          cp -a research/results/sanitizers-ubsan/* research/results/sanitizers/ 2>/dev/null || true
-          # Merge campaign-status.env from both runs
-          touch research/results/sanitizers/campaign-status.env
-          grep -h . research/results/sanitizers-asan/campaign-status.env research/results/sanitizers-ubsan/campaign-status.env >> research/results/sanitizers/campaign-status.env 2>/dev/null || true
+          cp -f research/results/sanitizers-asan/asan.csv research/results/sanitizers/
+          cp -f research/results/sanitizers-ubsan/ubsan.csv research/results/sanitizers/
+          cp -a research/results/sanitizers-asan/logs/. research/results/sanitizers/logs/ 2>/dev/null || true
+          cp -a research/results/sanitizers-ubsan/logs/. research/results/sanitizers/logs/ 2>/dev/null || true
+          : > research/results/sanitizers/campaign-status.env
+          cat research/results/sanitizers-asan/campaign-status.env research/results/sanitizers-ubsan/campaign-status.env >> research/results/sanitizers/campaign-status.env 2>/dev/null || true
+          : > research/results/sanitizers/environment.txt
+          cat research/results/sanitizers-asan/environment.txt research/results/sanitizers-ubsan/environment.txt >> research/results/sanitizers/environment.txt 2>/dev/null || true
           chmod +x scripts/sanitizers_finalize.sh
           ./scripts/sanitizers_finalize.sh
       - name: Upload combined sanitizer results

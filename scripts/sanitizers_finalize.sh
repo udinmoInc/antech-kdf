@@ -45,7 +45,8 @@ cat > "${OUT}/summary.md" <<EOF
 | Date (UTC) | ${DATE_UTC} |
 | Commit | \`${COMMIT_SHA}\` |
 | ASan overall | **${ASAN_OVERALL}** |
-| UBSan overall | **${UBSAN_OVERALL}** |
+| UB checks (\`-Zub-checks\`) overall | **${UBSAN_OVERALL}** |
+| LLVM UBSan | **BLOCKED** |
 | Combined | **${OVERALL}** |
 
 ## Suite matrix
