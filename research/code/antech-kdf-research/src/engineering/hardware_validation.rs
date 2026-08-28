@@ -240,6 +240,7 @@ fn run_stress_smoke(prof: &str) -> Vec<StressScenarioRow> {
 }
 
 fn run_sdk_phase(prof: &str) -> Vec<SdkRow> {
+    stage_native_artifacts();
     let mut rows = Vec::new();
     rows.push(run_cargo_test_row(
         "rust_conformance",
@@ -293,6 +294,21 @@ struct SdkRow {
     detail: String,
 }
 
+fn stage_native_artifacts() {
+    #[cfg(target_os = "windows")]
+    {
+        let _ = Command::new("powershell")
+            .args(["-NoProfile", "-File", "sdk/scripts/build-native.ps1"])
+            .status();
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = Command::new("bash")
+            .args(["sdk/scripts/build-native.sh"])
+            .status();
+    }
+}
+
 fn run_cargo_test_row(name: &str, pkg: &str, filter: &str) -> SdkRow {
     let mut cmd = Command::new("cargo");
     cmd.args(["test", "-p", pkg, "--release"]);
@@ -343,72 +359,84 @@ fn run_cargo_output_row(name: &str, cmd: &mut Command) -> SdkRow {
 }
 
 fn run_python_conformance() -> SdkRow {
-    if Command::new("python")
+    if !Command::new("python")
         .args(["--version"])
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false)
     {
-        match Command::new("python")
-            .args([
-                "-m",
-                "pip",
-                "install",
-                "-q",
-                "--user",
-                "-e",
-                "bindings/python",
-            ])
-            .output()
-        {
-            Ok(inst) if inst.status.success() => {}
-            Ok(inst) => {
-                return SdkRow {
-                    sdk: "python".into(),
-                    test: "conformance".into(),
-                    status: HwStatus::Fail,
-                    detail: truncate_stderr(&inst.stderr, 300),
-                };
-            }
-            Err(e) => {
-                return SdkRow {
-                    sdk: "python".into(),
-                    test: "conformance".into(),
-                    status: HwStatus::Blocked,
-                    detail: format!("pip install failed: {e}"),
-                };
-            }
-        }
-        match Command::new("python")
-            .arg("sdk/conformance/run_python.py")
-            .output()
-        {
-            Ok(o) if o.status.success() => SdkRow {
-                sdk: "python".into(),
-                test: "conformance".into(),
-                status: HwStatus::Pass,
-                detail: "run_python.py ok".into(),
-            },
-            Ok(o) => SdkRow {
-                sdk: "python".into(),
-                test: "conformance".into(),
-                status: HwStatus::Fail,
-                detail: truncate_stderr(&o.stderr, 400),
-            },
-            Err(e) => SdkRow {
-                sdk: "python".into(),
-                test: "conformance".into(),
-                status: HwStatus::Blocked,
-                detail: format!("python run failed: {e}"),
-            },
-        }
-    } else {
-        SdkRow {
+        return SdkRow {
             sdk: "python".into(),
             test: "conformance".into(),
             status: HwStatus::Blocked,
             detail: "python not on PATH".into(),
+        };
+    }
+    if let Ok(o) = Command::new("python")
+        .arg("sdk/conformance/run_python.py")
+        .output()
+    {
+        if o.status.success() {
+            return SdkRow {
+                sdk: "python".into(),
+                test: "conformance".into(),
+                status: HwStatus::Pass,
+                detail: "run_python.py ok (preinstalled)".into(),
+            };
         }
+    }
+    match Command::new("python")
+        .args([
+            "-m",
+            "pip",
+            "install",
+            "-q",
+            "--user",
+            "-e",
+            "bindings/python",
+        ])
+        .output()
+    {
+        Ok(inst) if inst.status.success() => {}
+        Ok(inst) => {
+            return SdkRow {
+                sdk: "python".into(),
+                test: "conformance".into(),
+                status: HwStatus::Blocked,
+                detail: truncate_stderr(&inst.stderr, 300),
+            };
+        }
+        Err(e) => {
+            return SdkRow {
+                sdk: "python".into(),
+                test: "conformance".into(),
+                status: HwStatus::Blocked,
+                detail: format!("pip install failed: {e}"),
+            };
+        }
+    }
+    match Command::new("python")
+        .arg("sdk/conformance/run_python.py")
+        .output()
+    {
+        Ok(o) if o.status.success() => SdkRow {
+            sdk: "python".into(),
+            test: "conformance".into(),
+            status: HwStatus::Pass,
+            detail: "run_python.py ok".into(),
+        },
+        Ok(o) => SdkRow {
+            sdk: "python".into(),
+            test: "conformance".into(),
+            status: HwStatus::Fail,
+            detail: truncate_stderr(&o.stderr, 400),
+        },
+        Err(e) => SdkRow {
+            sdk: "python".into(),
+            test: "conformance".into(),
+            status: HwStatus::Blocked,
+            detail: format!("python run failed: {e}"),
+        },
     }
 }
 

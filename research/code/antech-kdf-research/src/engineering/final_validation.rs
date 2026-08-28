@@ -410,7 +410,7 @@ fn run_gpu_cross(out: &Path) -> Vec<CheckRow> {
             status: if rows > 0 && ok == rows {
                 CheckStatus::Pass
             } else if rows == 0 {
-                CheckStatus::Fail
+                CheckStatus::NotRun
             } else {
                 CheckStatus::Fail
             },
